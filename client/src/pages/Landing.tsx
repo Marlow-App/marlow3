@@ -1,0 +1,145 @@
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Mic2, MessageCircle, TrendingUp, ChevronRight } from "lucide-react";
+
+export default function Landing() {
+  return (
+    <div className="min-h-screen flex flex-col font-sans bg-background text-foreground overflow-x-hidden">
+      {/* Navigation */}
+      <nav className="p-6 md:px-12 flex justify-between items-center z-10">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-2xl">T</div>
+          <span className="font-display font-bold text-2xl tracking-tight">TonePerfect</span>
+        </div>
+        <a href="/api/login">
+          <Button variant="ghost" className="font-medium">Log In</Button>
+        </a>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative pt-12 pb-24 md:pt-24 md:pb-32 px-6 md:px-12 max-w-7xl mx-auto w-full">
+        {/* Abstract Background Decoration */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl z-0"></div>
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl z-0"></div>
+
+        <div className="grid md:grid-cols-2 gap-12 items-center relative z-10">
+          <div className="space-y-8 animate-in">
+            <h1 className="text-5xl md:text-7xl font-display font-bold leading-[1.1] tracking-tight text-balance">
+              Master Chinese <span className="text-primary">Tones</span> with Real Feedback.
+            </h1>
+            <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
+              Don't guess if you sound right. Submit voice recordings and get personalized correction from native speakers.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <a href="/api/login">
+                <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-primary hover:bg-primary/90 shadow-xl shadow-primary/30 transition-all hover:-translate-y-1">
+                  Start Recording Free
+                </Button>
+              </a>
+              <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2">
+                How it works
+              </Button>
+            </div>
+            
+            <div className="flex items-center gap-4 text-sm text-muted-foreground pt-4">
+               <div className="flex -space-x-2">
+                 {[1,2,3,4].map(i => (
+                   <div key={i} className="w-8 h-8 rounded-full border-2 border-background bg-gray-200" />
+                 ))}
+               </div>
+               <p>Joined by 10,000+ learners</p>
+            </div>
+          </div>
+
+          <div className="relative animate-in" style={{ animationDelay: '0.2s' }}>
+            <div className="relative bg-card rounded-3xl shadow-2xl border border-border/50 p-6 md:p-8 transform rotate-3 hover:rotate-0 transition-transform duration-500 ease-out">
+              <div className="absolute -top-6 -right-6 bg-secondary text-secondary-foreground px-4 py-2 rounded-full font-bold shadow-lg rotate-12 z-20">
+                Feedback Received!
+              </div>
+              
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 border-b border-border/50 pb-6">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <Mic2 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">你好，很高兴认识你</h3>
+                    <div className="h-1.5 w-32 bg-gray-200 rounded-full mt-2 overflow-hidden">
+                       <div className="h-full bg-primary w-2/3"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-muted/30 rounded-xl p-4">
+                  <div className="flex gap-3">
+                    <div className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold text-xs">E</div>
+                    <div>
+                      <p className="text-sm font-medium">Native Speaker</p>
+                      <p className="text-foreground/80 mt-1">
+                        Your "shì" in "rènshí" was a bit too high. Try dropping the pitch sharply. Listen to my recording below.
+                      </p>
+                      <div className="mt-3 bg-background rounded-full p-2 flex items-center gap-2 border shadow-sm w-48">
+                        <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                          <svg className="w-3 h-3 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                        </div>
+                        <div className="h-1 flex-1 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="w-1/3 h-full bg-primary/50"></div>
+                        </div>
+                        <span className="text-xs font-mono">0:04</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section className="py-24 bg-muted/20">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="text-center mb-16 max-w-2xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Why TonePerfect works</h2>
+            <p className="text-muted-foreground text-lg">AI isn't enough for tonal languages. You need human ears to catch the subtle nuances.</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-6">
+                <Mic2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Record Daily</h3>
+              <p className="text-muted-foreground">Practice makes perfect. Submit a sentence every day to build your muscle memory.</p>
+            </div>
+            <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary mb-6">
+                <MessageCircle className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Human Feedback</h3>
+              <p className="text-muted-foreground">Get corrections from real native speakers who can explain exactly what went wrong.</p>
+            </div>
+            <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mb-6">
+                <TrendingUp className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Track Progress</h3>
+              <p className="text-muted-foreground">Watch your recordings improve over time and build a library of your spoken Chinese.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 px-6 md:px-12 border-t border-border">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-lg">T</div>
+            <span className="font-display font-bold text-xl">TonePerfect</span>
+          </div>
+          <p className="text-sm text-muted-foreground">© 2025 TonePerfect. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
