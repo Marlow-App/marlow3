@@ -32,9 +32,9 @@ export function Layout({ children }: LayoutProps) {
       <header className="md:hidden border-b border-border p-4 flex justify-between items-center bg-card sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-lg">
-            T
+            6
           </div>
-          <span className="font-display font-bold text-xl tracking-tight">TonePerfect</span>
+          <span className="font-display font-bold text-xl tracking-tight">666 Tones</span>
         </div>
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
           {isMobileMenuOpen ? <X /> : <Menu />}
@@ -49,9 +49,9 @@ export function Layout({ children }: LayoutProps) {
         <div className="p-6 border-b border-border/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-red-700 flex items-center justify-center text-primary-foreground font-bold font-display text-2xl shadow-lg shadow-primary/20">
-              T
+              6
             </div>
-            <span className="font-display font-bold text-2xl tracking-tight text-foreground">TonePerfect</span>
+            <span className="font-display font-bold text-2xl tracking-tight text-foreground">666 Tones</span>
           </div>
           <p className="text-xs text-muted-foreground mt-2 pl-1">Master Chinese Tones</p>
         </div>
