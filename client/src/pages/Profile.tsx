@@ -48,7 +48,7 @@ export default function Profile() {
                <Crown className="w-6 h-6 text-secondary fill-secondary" />
                <span className="text-secondary font-bold uppercase tracking-widest text-xs">Premium</span>
             </div>
-            <CardTitle className="text-2xl font-display">Upgrade to 666 Tones Pro</CardTitle>
+            <CardTitle className="text-2xl font-display">Upgrade to SixTone Studio Pro</CardTitle>
             <CardDescription className="text-base">Accelerate your learning with faster feedback and more practice.</CardDescription>
           </CardHeader>
           

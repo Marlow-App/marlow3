@@ -9,7 +9,7 @@ export default function Landing() {
       <nav className="p-6 md:px-12 flex justify-between items-center z-10">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-2xl">6</div>
-          <span className="font-display font-bold text-2xl tracking-tight">666 Tones</span>
+          <span className="font-display font-bold text-2xl tracking-tight">SixTone Studio</span>
         </div>
         <a href="/api/login">
           <Button variant="ghost" className="font-medium">Log In</Button>
@@ -100,7 +100,7 @@ export default function Landing() {
       <section className="py-24 bg-muted/20">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="text-center mb-16 max-w-2xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Why 666 Tones works</h2>
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Why SixTone Studio works</h2>
             <p className="text-muted-foreground text-lg">AI isn't enough for tonal languages. You need human ears to catch the subtle nuances.</p>
           </div>
 
@@ -135,9 +135,9 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-lg">6</div>
-            <span className="font-display font-bold text-xl">666 Tones</span>
+            <span className="font-display font-bold text-xl">SixTone Studio</span>
           </div>
-          <p className="text-sm text-muted-foreground">© 2025 666 Tones. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">© 2025 SixTone Studio. All rights reserved.</p>
         </div>
       </footer>
     </div>

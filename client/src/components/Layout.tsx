@@ -34,7 +34,7 @@ export function Layout({ children }: LayoutProps) {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-lg">
             6
           </div>
-          <span className="font-display font-bold text-xl tracking-tight">666 Tones</span>
+          <span className="font-display font-bold text-xl tracking-tight">SixTone Studio</span>
         </div>
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
           {isMobileMenuOpen ? <X /> : <Menu />}
@@ -51,7 +51,7 @@ export function Layout({ children }: LayoutProps) {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-red-700 flex items-center justify-center text-primary-foreground font-bold font-display text-2xl shadow-lg shadow-primary/20">
               6
             </div>
-            <span className="font-display font-bold text-2xl tracking-tight text-foreground">666 Tones</span>
+            <span className="font-display font-bold text-2xl tracking-tight text-foreground">SixTone Studio</span>
           </div>
           <p className="text-xs text-muted-foreground mt-2 pl-1">Master Chinese Tones</p>
         </div>
