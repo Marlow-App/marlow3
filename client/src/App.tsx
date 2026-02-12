@@ -31,7 +31,9 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/">
+        {user.role === "reviewer" ? <ReviewerPortal /> : <Home />}
+      </Route>
       <Route path="/record" component={RecordPage} />
       <Route path="/learner-portal" component={LearnerPortal} />
       <Route path="/reviewer-portal" component={ReviewerPortal} />

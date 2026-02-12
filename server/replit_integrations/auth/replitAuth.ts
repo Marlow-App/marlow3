@@ -50,13 +50,14 @@ function updateUserSession(
   user.expires_at = user.claims?.exp;
 }
 
-async function upsertUser(claims: any) {
+async function upsertUser(claims: any, role: string = "learner") {
   await authStorage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
+    role: role as "learner" | "reviewer",
   });
 }
 
@@ -69,12 +70,14 @@ export async function setupAuth(app: Express) {
   const config = await getOidcConfig();
 
   const verify: VerifyFunction = async (
+    req: any,
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
     const user = {};
     updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
+    const role = req.session?.pendingRole || "learner";
+    await upsertUser(tokens.claims(), role);
     verified(null, user);
   };
 
@@ -91,6 +94,7 @@ export async function setupAuth(app: Express) {
           config,
           scope: "openid email profile offline_access",
           callbackURL: `https://${domain}/api/callback`,
+          passReqToCallback: true,
         },
         verify
       );
@@ -104,6 +108,8 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/login", (req, res, next) => {
     ensureStrategy(req.hostname);
+    const role = req.query.role || "learner";
+    (req.session as any).pendingRole = role;
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],

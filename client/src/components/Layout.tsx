@@ -17,13 +17,20 @@ export function Layout({ children }: LayoutProps) {
 
   const isActive = (path: string) => location === path;
 
-  const navItems = [
+  const learnerItems = [
     { href: "/", label: "Home", icon: LayoutDashboard },
     { href: "/record", label: "Record New", icon: Mic2 },
-    { href: "/learner-portal", label: "Learner Portal", icon: UserCircle },
-    { href: "/reviewer-portal", label: "Reviewer Portal", icon: FileAudio }, 
+    { href: "/learner-portal", label: "My Progress", icon: UserCircle },
     { href: "/profile", label: "Profile", icon: UserCircle },
   ];
+
+  const reviewerItems = [
+    { href: "/", label: "Home", icon: LayoutDashboard },
+    { href: "/reviewer-portal", label: "Reviewer Hub", icon: FileAudio },
+    { href: "/profile", label: "Profile", icon: UserCircle },
+  ];
+
+  const navItems = user?.role === "reviewer" ? reviewerItems : learnerItems;
 
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row font-sans text-foreground">

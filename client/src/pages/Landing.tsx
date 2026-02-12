@@ -11,9 +11,14 @@ export default function Landing() {
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-2xl">6</div>
           <span className="font-display font-bold text-2xl tracking-tight">SixTone Studio</span>
         </div>
-        <a href="/api/login">
-          <Button variant="ghost" className="font-medium">Log In</Button>
-        </a>
+        <div className="flex items-center gap-4">
+          <a href="/api/login?role=reviewer" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+            Reviewer Login
+          </a>
+          <a href="/api/login?role=learner">
+            <Button variant="ghost" className="font-medium">Log In</Button>
+          </a>
+        </div>
       </nav>
 
       {/* Hero Section */}
@@ -31,7 +36,7 @@ export default function Landing() {
               Don't guess if you sound right. Submit voice recordings and get personalized correction from native speakers.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <a href="/api/login">
+              <a href="/api/login?role=learner">
                 <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-primary hover:bg-primary/90 shadow-xl shadow-primary/30 transition-all hover:-translate-y-1">
                   Start Recording Free
                 </Button>
