@@ -18,11 +18,10 @@ export function Layout({ children }: LayoutProps) {
   const isActive = (path: string) => location === path;
 
   const navItems = [
-    { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/", label: "Home", icon: LayoutDashboard },
     { href: "/record", label: "Record New", icon: Mic2 },
-    // Show Control Center only if user could be a reviewer (simple check for now)
-    // In real app, check user.role or similar
-    { href: "/control-center", label: "Control Center", icon: FileAudio }, 
+    { href: "/learner-portal", label: "Learner Portal", icon: UserCircle },
+    { href: "/reviewer-portal", label: "Reviewer Portal", icon: FileAudio }, 
     { href: "/profile", label: "Profile", icon: UserCircle },
   ];
 

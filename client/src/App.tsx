@@ -8,7 +8,8 @@ import { useAuth } from "@/hooks/use-auth";
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import RecordPage from "@/pages/Record";
-import ControlCenter from "@/pages/ControlCenter";
+import ReviewerPortal from "@/pages/ReviewerPortal";
+import LearnerPortal from "@/pages/LearnerPortal";
 import RecordingDetail from "@/pages/RecordingDetail";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/not-found";
@@ -32,7 +33,8 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/record" component={RecordPage} />
-      <Route path="/control-center" component={ControlCenter} />
+      <Route path="/learner-portal" component={LearnerPortal} />
+      <Route path="/reviewer-portal" component={ReviewerPortal} />
       <Route path="/recordings/:id" component={RecordingDetail} />
       <Route path="/profile" component={Profile} />
       <Route component={NotFound} />
