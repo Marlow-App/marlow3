@@ -88,7 +88,7 @@ export default function RecordPage() {
                 
                 <Textarea
                   id="sentence"
-                  placeholder="Type the Chinese sentence (and Pinyin) here..."
+                  placeholder="Type the Chinese sentence here..."
                   className="min-h-[100px] text-lg resize-none bg-muted/20 focus:bg-background transition-colors"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
@@ -99,7 +99,7 @@ export default function RecordPage() {
                     <button
                       key={i}
                       onClick={() => setText(s)}
-                      className="text-xs px-3 py-1.5 rounded-full bg-secondary/10 text-secondary-foreground hover:bg-secondary/20 transition-colors border border-secondary/20 truncate max-w-full"
+                      className="text-xs px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-colors border border-secondary/20 truncate max-w-full"
                     >
                       {s.slice(0, 20)}...
                     </button>

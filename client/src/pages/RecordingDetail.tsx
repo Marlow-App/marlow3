@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, User, MessageSquare, Play } from "lucide-react";
+import { ChevronLeft, User, MessageSquare, Play, Mic } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
 
