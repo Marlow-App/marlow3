@@ -36,7 +36,10 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+          ? 'audio/webm;codecs=opus' 
+          : 'audio/webm';
+        const blob = new Blob(chunksRef.current, { type: mimeType });
         const url = URL.createObjectURL(blob);
         setAudioBlob(blob);
         setAudioUrl(url);
@@ -73,7 +76,9 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
 
   const handleSubmit = () => {
     if (audioBlob) {
-      const file = new File([audioBlob], `recording-${Date.now()}.webm`, { type: 'audio/webm' });
+      const mimeType = audioBlob.type || 'audio/webm';
+      const extension = mimeType.includes('wav') ? 'wav' : 'webm';
+      const file = new File([audioBlob], `recording-${Date.now()}.${extension}`, { type: mimeType });
       onRecordingComplete(file);
     }
   };

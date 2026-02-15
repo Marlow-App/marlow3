@@ -146,12 +146,19 @@ export class ObjectStorageService {
     const { bucketName, objectName } = parseObjectPath(fullPath);
 
     // Sign URL for PUT method with TTL
-    return signObjectURL({
+    const signedUrl = await signObjectURL({
       bucketName,
       objectName,
       method: "PUT",
       ttlSec: 900,
     });
+    
+    // Auto-set public access for simplicity in this app
+    const bucket = objectStorageClient.bucket(bucketName);
+    const file = bucket.file(objectName);
+    // We can't set ACL before file exists, but we can return a path that our server serves
+    
+    return signedUrl;
   }
 
   // Gets the object entity file from the object path.

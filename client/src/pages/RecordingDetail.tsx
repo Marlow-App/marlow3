@@ -113,7 +113,14 @@ export default function RecordingDetail() {
 
                 <div className="bg-muted/30 p-6 rounded-2xl border border-border/50">
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Learner Audio</h3>
-                  <audio src={recording.audioUrl} controls className="w-full" />
+                  <audio 
+                    src={recording.audioUrl} 
+                    controls 
+                    className="w-full"
+                    onError={(e) => console.error("Audio playback error:", e)}
+                  >
+                    Your browser does not support the audio element.
+                  </audio>
                 </div>
               </CardContent>
             </Card>

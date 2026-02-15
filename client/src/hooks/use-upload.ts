@@ -125,9 +125,16 @@ export function useUpload(options: UseUploadOptions = {}) {
         setProgress(30);
         await uploadToPresignedUrl(file, uploadResponse.uploadURL);
 
+        // Step 3: Get a readable URL for the uploaded file
+        // Replit Object Storage serves private files via /objects/ prefix through the sidecar
+        const publicResponse = {
+          ...uploadResponse,
+          uploadURL: uploadResponse.objectPath // objectPath is already /objects/uuid
+        };
+
         setProgress(100);
-        options.onSuccess?.(uploadResponse);
-        return uploadResponse;
+        options.onSuccess?.(publicResponse);
+        return publicResponse;
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Upload failed");
         setError(error);
