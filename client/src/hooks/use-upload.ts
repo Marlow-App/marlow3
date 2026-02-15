@@ -127,9 +127,10 @@ export function useUpload(options: UseUploadOptions = {}) {
 
         // Step 3: Get a readable URL for the uploaded file
         // Replit Object Storage serves private files via /objects/ prefix through the sidecar
+        // We use window.location.origin to ensure the URL is absolute and clickable
         const publicResponse = {
           ...uploadResponse,
-          uploadURL: uploadResponse.objectPath // objectPath is already /objects/uuid
+          uploadURL: `${window.location.origin}${uploadResponse.objectPath}`
         };
 
         setProgress(100);

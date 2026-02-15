@@ -78,6 +78,12 @@ export function registerObjectStorageRoutes(app: Express): void {
       const fullPath = `/objects/${objectPath}`;
       
       const objectFile = await objectStorageService.getObjectEntityFile(fullPath);
+      
+      // Get file metadata to set correct Content-Type
+      const [metadata] = await objectFile.getMetadata();
+      res.setHeader("Content-Type", metadata.contentType || "audio/webm");
+      res.setHeader("Accept-Ranges", "bytes");
+
       await objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
       console.error("Error serving object:", error);
