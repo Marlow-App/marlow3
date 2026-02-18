@@ -117,7 +117,24 @@ export default function RecordingDetail() {
                     src={recording.audioUrl} 
                     controls 
                     className="w-full"
-                    onError={(e) => console.error("Audio playback error:", e)}
+                    onCanPlay={() => console.log("Audio can play")}
+                    onPlay={() => console.log("Audio playing")}
+                    onWaiting={() => console.log("Audio waiting")}
+                    onStalled={() => console.warn("Audio stalled")}
+                    onSuspend={() => console.warn("Audio suspended")}
+                    onAbort={() => console.warn("Audio aborted")}
+                    onEmptied={() => console.warn("Audio emptied")}
+                    onEncrypted={() => console.warn("Audio encrypted")}
+                    onError={(e: React.SyntheticEvent<HTMLAudioElement, Event>) => {
+                      const target = e.currentTarget;
+                      console.error("Audio playback error details:", {
+                        code: target.error?.code,
+                        message: target.error?.message,
+                        networkState: target.networkState,
+                        readyState: target.readyState,
+                        src: target.src
+                      });
+                    }}
                   >
                     Your browser does not support the audio element.
                   </audio>

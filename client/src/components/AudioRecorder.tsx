@@ -36,6 +36,8 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
       };
 
       mediaRecorder.onstop = () => {
+        // Use a more widely supported MIME type if possible
+        // Prefer audio/webm;codecs=opus as it's standard for MediaRecorder
         const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
           ? 'audio/webm;codecs=opus' 
           : 'audio/webm';
@@ -76,9 +78,8 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
 
   const handleSubmit = () => {
     if (audioBlob) {
-      const mimeType = audioBlob.type || 'audio/webm';
-      const extension = mimeType.includes('wav') ? 'wav' : 'webm';
-      const file = new File([audioBlob], `recording-${Date.now()}.${extension}`, { type: mimeType });
+      // Use standard webm for better compatibility across browsers
+      const file = new File([audioBlob], `recording-${Date.now()}.webm`, { type: 'audio/webm' });
       onRecordingComplete(file);
     }
   };

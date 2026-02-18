@@ -99,17 +99,16 @@ export class ObjectStorageService {
     try {
       // Get file metadata
       const [metadata] = await file.getMetadata();
-      // Get the ACL policy for the object.
-      const aclPolicy = await getObjectAclPolicy(file);
-      const isPublic = aclPolicy?.visibility === "public";
-      // Set appropriate headers
-      res.set({
-        "Content-Type": metadata.contentType || "application/octet-stream",
-        "Content-Length": metadata.size,
-        "Cache-Control": `${
-          isPublic ? "public" : "private"
-        }, max-age=${cacheTtlSec}`,
-      });
+      
+      // Set appropriate headers for audio streaming
+      // Ensure we explicitly set audio/webm as it's the most common format from MediaRecorder
+      // For Chrome/Safari compatibility, we need to handle byte-range requests if we want seeking,
+      // but for basic playback, standard headers are usually enough.
+      res.setHeader("Content-Type", (metadata.contentType as string) || "audio/webm");
+      res.setHeader("Content-Length", (metadata.size as number).toString());
+      res.setHeader("Accept-Ranges", "bytes");
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.setHeader("Access-Control-Allow-Origin", "*");
 
       // Stream the file to the response
       const stream = file.createReadStream();
