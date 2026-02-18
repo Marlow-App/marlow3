@@ -79,13 +79,6 @@ export function registerObjectStorageRoutes(app: Express): void {
       
       const objectFile = await objectStorageService.getObjectEntityFile(fullPath);
       
-      // Get file metadata to set correct Content-Type and support streaming
-      const [metadata] = await objectFile.getMetadata();
-      const contentType = metadata.contentType || "audio/webm";
-      
-      res.setHeader("Content-Type", contentType);
-      res.setHeader("Accept-Ranges", "bytes");
-
       await objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
       console.error("Error serving object:", error);

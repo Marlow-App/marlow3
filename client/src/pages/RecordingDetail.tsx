@@ -127,9 +127,10 @@ export default function RecordingDetail() {
                     onEncrypted={() => console.warn("Audio encrypted")}
                     onError={(e: React.SyntheticEvent<HTMLAudioElement, Event>) => {
                       const target = e.currentTarget;
+                      const error = target.error;
                       console.error("Audio playback error details:", {
-                        code: target.error?.code,
-                        message: target.error?.message,
+                        code: error?.code,
+                        message: error?.message,
                         networkState: target.networkState,
                         readyState: target.readyState,
                         src: target.src

@@ -100,27 +100,48 @@ export class ObjectStorageService {
       // Get file metadata
       const [metadata] = await file.getMetadata();
       
-      // Set appropriate headers for audio streaming
-      // Ensure we explicitly set audio/webm as it's the most common format from MediaRecorder
-      // For Chrome/Safari compatibility, we need to handle byte-range requests if we want seeking,
-      // but for basic playback, standard headers are usually enough.
-      res.setHeader("Content-Type", (metadata.contentType as string) || "audio/webm");
-      res.setHeader("Content-Length", (metadata.size as number).toString());
-      res.setHeader("Accept-Ranges", "bytes");
-      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-      res.setHeader("Access-Control-Allow-Origin", "*");
+      const contentType = (metadata.contentType as string) || "audio/webm";
+      const size = Number(metadata.size);
 
-      // Stream the file to the response
-      const stream = file.createReadStream();
-
-      stream.on("error", (err) => {
-        console.error("Stream error:", err);
-        if (!res.headersSent) {
-          res.status(500).json({ error: "Error streaming file" });
+      // Support byte-range requests for audio seeking/streaming
+      const range = res.req.headers.range;
+      
+      if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : size - 1;
+        
+        // Validate range
+        if (start >= size || end >= size) {
+          res.writeHead(416, {
+            "Content-Range": `bytes */${size}`
+          });
+          return res.end();
         }
-      });
 
-      stream.pipe(res);
+        const chunksize = (end - start) + 1;
+        
+        res.writeHead(206, {
+          "Content-Range": `bytes ${start}-${end}/${size}`,
+          "Accept-Ranges": "bytes",
+          "Content-Length": chunksize,
+          "Content-Type": contentType,
+          "Cache-Control": "no-cache",
+          "Access-Control-Allow-Origin": "*",
+        });
+
+        file.createReadStream({ start, end }).pipe(res);
+      } else {
+        res.writeHead(200, {
+          "Content-Length": size,
+          "Content-Type": contentType,
+          "Accept-Ranges": "bytes",
+          "Cache-Control": "no-cache",
+          "Access-Control-Allow-Origin": "*",
+        });
+
+        file.createReadStream().pipe(res);
+      }
     } catch (error) {
       console.error("Error downloading file:", error);
       if (!res.headersSent) {
