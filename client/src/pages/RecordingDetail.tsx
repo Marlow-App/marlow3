@@ -31,6 +31,10 @@ export default function RecordingDetail() {
   const backUrl = user?.role === 'reviewer' ? "/control-center" : "/";
 
   const handleFeedbackSubmit = async (audioFile?: File) => {
+    if (!feedbackText.trim() && !audioFile) {
+      toast({
+        title: "Empty Feedback",
+        description: "Please provide either text or audio feedback.",
         variant: "destructive",
       });
       return;
