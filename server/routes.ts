@@ -118,10 +118,11 @@ export async function registerRoutes(
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
+      const dailyLimit = 50;
       const userRecordings = await storage.getRecordingsByUser(userId);
       const todaysRecordings = userRecordings.filter(r => new Date(r.createdAt) >= today);
       
-      if (todaysRecordings.length >= 1) {
+      if (todaysRecordings.length >= dailyLimit) {
          return res.status(403).json({ message: "Daily limit reached. Upgrade to Premium for more." });
       }
       
