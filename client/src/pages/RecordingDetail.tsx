@@ -13,11 +13,14 @@ import { Separator } from "@/components/ui/separator";
 import { ChevronLeft, User, MessageSquare, Play, Mic } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { type User as SharedUser } from "@shared/schema";
 
 export default function RecordingDetail() {
   const { id } = useParams<{ id: string }>();
   const recordingId = parseInt(id || "0");
   const { data: recording, isLoading } = useRecording(recordingId);
+  const { data: user } = useQuery<SharedUser>({ queryKey: ["/api/auth/user"] });
   const createFeedback = useCreateFeedback(recordingId);
   const { uploadFile, isUploading } = useUpload();
   const { toast } = useToast();
@@ -25,11 +28,9 @@ export default function RecordingDetail() {
   const [feedbackText, setFeedbackText] = useState("");
   const [isRecordingFeedback, setIsRecordingFeedback] = useState(false);
 
+  const backUrl = user?.role === 'reviewer' ? "/control-center" : "/";
+
   const handleFeedbackSubmit = async (audioFile?: File) => {
-    if (!feedbackText.trim() && !audioFile) {
-      toast({
-        title: "Empty Feedback",
-        description: "Please provide either text or audio feedback.",
         variant: "destructive",
       });
       return;
@@ -82,7 +83,7 @@ export default function RecordingDetail() {
     <Layout>
       <div className="max-w-4xl mx-auto space-y-8 animate-in">
         <div className="flex items-center gap-2">
-           <Link href={recording.status === 'pending' ? "/control-center" : "/"}>
+           <Link href={backUrl}>
              <Button variant="ghost" size="sm">
                <ChevronLeft className="w-4 h-4 mr-1" />
                Back

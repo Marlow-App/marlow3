@@ -1,17 +1,21 @@
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
-import { usePendingRecordings } from "@/hooks/use-recordings";
+import { usePendingRecordings, useRecordings } from "@/hooks/use-recordings";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mic, PlayCircle, ArrowRight } from "lucide-react";
+import { Mic, PlayCircle, ArrowRight, ListFilter } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function ReviewerPortal() {
-  const { data: pendingRecordings, isLoading } = usePendingRecordings();
+  const { data: pendingRecordings, isLoading: loadingPending } = usePendingRecordings();
+  const { data: allRecordings, isLoading: loadingAll } = useRecordings();
 
-  if (isLoading) {
+  const reviewedRecordings = allRecordings?.filter(r => r.status === 'reviewed') || [];
+
+  if (loadingPending || loadingAll) {
     return (
       <Layout>
         <div className="flex justify-center py-20">
@@ -27,55 +31,113 @@ export default function ReviewerPortal() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold font-display">Reviewer Portal</h1>
-            <p className="text-muted-foreground mt-1">Review pending recordings from learners</p>
+            <p className="text-muted-foreground mt-1">Manage learner recordings and feedback</p>
           </div>
-          <Badge className="px-3 py-1 text-base bg-primary text-white">
-            {pendingRecordings?.length || 0} Pending
-          </Badge>
         </div>
 
-        <div className="grid gap-4">
-          {pendingRecordings?.map((recording) => (
-            <Card key={recording.id} className="hover:shadow-md transition-shadow duration-200">
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
-                  <div className="flex items-start gap-4 flex-1">
-                    <div className="w-12 h-12 rounded-full bg-secondary/10 text-secondary-foreground flex items-center justify-center shrink-0">
-                      <Mic className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-medium mb-1">{recording.sentenceText}</h3>
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                         <span>Submitted {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}</span>
-                         <span>•</span>
-                         <span>ID: #{recording.id}</span>
+        <Tabs defaultValue="pending" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsTrigger value="pending" className="flex items-center gap-2">
+              Pending
+              <Badge variant="secondary" className="ml-auto">
+                {pendingRecordings?.length || 0}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="flex items-center gap-2">
+              Completed
+              <Badge variant="outline" className="ml-auto">
+                {reviewedRecordings.length}
+              </Badge>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="pending" className="mt-6">
+            <div className="grid gap-4">
+              {pendingRecordings?.map((recording) => (
+                <Card key={recording.id} className="hover:shadow-md transition-shadow duration-200">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+                      <div className="flex items-start gap-4 flex-1">
+                        <div className="w-12 h-12 rounded-full bg-secondary/10 text-secondary-foreground flex items-center justify-center shrink-0">
+                          <Mic className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-medium mb-1">{recording.sentenceText}</h3>
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                             <span>Submitted {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}</span>
+                             <span>•</span>
+                             <span>ID: #{recording.id}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 w-full md:w-auto">
+                        <Link href={`/recordings/${recording.id}`}>
+                          <Button className="w-full md:w-auto group">
+                            Review Now
+                            <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                          </Button>
+                        </Link>
                       </div>
                     </div>
-                  </div>
+                  </CardContent>
+                </Card>
+              ))}
 
-                  <div className="flex items-center gap-3 w-full md:w-auto">
-                    <Link href={`/recordings/${recording.id}`}>
-                      <Button className="w-full md:w-auto group">
-                        Review Now
-                        <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    </Link>
+              {(!pendingRecordings || pendingRecordings.length === 0) && (
+                <div className="text-center py-20 bg-muted/10 rounded-2xl border border-dashed border-border">
+                  <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <PlayCircle className="w-8 h-8" />
                   </div>
+                  <h3 className="text-xl font-medium">All caught up!</h3>
+                  <p className="text-muted-foreground mt-2">No pending recordings to review.</p>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {(!pendingRecordings || pendingRecordings.length === 0) && (
-            <div className="text-center py-20 bg-muted/10 rounded-2xl border border-dashed border-border">
-              <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <PlayCircle className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-medium">All caught up!</h3>
-              <p className="text-muted-foreground mt-2">No pending recordings to review.</p>
+              )}
             </div>
-          )}
-        </div>
+          </TabsContent>
+
+          <TabsContent value="completed" className="mt-6">
+            <div className="grid gap-4">
+              {reviewedRecordings.map((recording) => (
+                <Card key={recording.id} className="hover:shadow-md transition-shadow duration-200 bg-muted/5">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+                      <div className="flex items-start gap-4 flex-1">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                          <PlayCircle className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-medium mb-1">{recording.sentenceText}</h3>
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                             <span>Reviewed {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}</span>
+                             <span>•</span>
+                             <span>ID: #{recording.id}</span>
+                             <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200">Reviewed</Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 w-full md:w-auto">
+                        <Link href={`/recordings/${recording.id}`}>
+                          <Button variant="outline" className="w-full md:w-auto">
+                            View Feedback
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {reviewedRecordings.length === 0 && (
+                <div className="text-center py-20 bg-muted/10 rounded-2xl border border-dashed border-border">
+                  <h3 className="text-xl font-medium">No reviewed clips yet</h3>
+                  <p className="text-muted-foreground mt-2">Start reviewing to see your completed work here.</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );

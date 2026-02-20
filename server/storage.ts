@@ -70,6 +70,19 @@ export class DatabaseStorage implements IStorage {
     return results.map(r => ({ ...r.recording, user: r.user }));
   }
 
+  async getAllRecordings(): Promise<(Recording & { user: User | null })[]> {
+    const results = await db
+      .select({
+        recording: recordings,
+        user: users,
+      })
+      .from(recordings)
+      .leftJoin(users, eq(recordings.userId, users.id))
+      .orderBy(desc(recordings.createdAt));
+    
+    return results.map(r => ({ ...r.recording, user: r.user }));
+  }
+
   async createFeedback(feedbackData: InsertFeedback): Promise<Feedback> {
     const [newFeedback] = await db
       .insert(feedback)
