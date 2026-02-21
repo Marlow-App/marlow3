@@ -51,13 +51,21 @@ function updateUserSession(
 }
 
 async function upsertUser(claims: any, role: string = "learner") {
+  const email = claims["email"] as string;
+  let assignedRole = role;
+  
+  // Restrict reviewer signup to Jujusees@gmail.com
+  if (role === "reviewer" && email.toLowerCase() !== "jujusees@gmail.com") {
+    assignedRole = "learner";
+  }
+
   await authStorage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
-    role: role as "learner" | "reviewer",
+    role: assignedRole as "learner" | "reviewer",
   });
 }
 
@@ -76,8 +84,17 @@ export async function setupAuth(app: Express) {
   ) => {
     const user = {};
     updateUserSession(user, tokens);
-    const role = req.session?.pendingRole || "learner";
-    await upsertUser(tokens.claims(), role);
+    const role = (req.session as any)?.pendingRole || "learner";
+    const claims = tokens.claims();
+    const email = claims["email"] as string;
+
+    // Restrict reviewer signup to Jujusees@gmail.com
+    let assignedRole = role;
+    if (role === "reviewer" && email?.toLowerCase() !== "jujusees@gmail.com") {
+      assignedRole = "learner";
+    }
+
+    await upsertUser(claims, assignedRole);
     verified(null, user);
   };
 

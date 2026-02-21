@@ -36,7 +36,7 @@ function Router() {
       </Route>
       <Route path="/record" component={RecordPage} />
       <Route path="/learner-portal" component={LearnerPortal} />
-      <Route path="/reviewer-portal" component={ReviewerPortal} />
+      <Route path="/reviewer-hub" component={ReviewerPortal} />
       <Route path="/recordings/:id" component={RecordingDetail} />
       <Route path="/profile" component={Profile} />
       <Route component={NotFound} />

@@ -28,7 +28,7 @@ export default function RecordingDetail() {
   const [feedbackText, setFeedbackText] = useState("");
   const [isRecordingFeedback, setIsRecordingFeedback] = useState(false);
 
-  const backUrl = user?.role === 'reviewer' ? "/control-center" : "/";
+  const backUrl = user?.role === 'reviewer' ? "/reviewer-hub" : "/learner-portal";
 
   const handleFeedbackSubmit = async (audioFile?: File) => {
     if (!feedbackText.trim() && !audioFile) {
