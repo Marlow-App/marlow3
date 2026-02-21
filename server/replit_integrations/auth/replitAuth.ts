@@ -77,7 +77,7 @@ export async function setupAuth(app: Express) {
 
   const config = await getOidcConfig();
 
-  const verify: VerifyFunction = async (
+  const verify: any = async (
     req: any,
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
@@ -86,7 +86,10 @@ export async function setupAuth(app: Express) {
     updateUserSession(user, tokens);
     const role = (req.session as any)?.pendingRole || "learner";
     const claims = tokens.claims();
-    const email = claims["email"] as string;
+    // Replit Auth claims might use different keys for email/username
+    const email = (claims?.email as string | undefined) || 
+                  (claims?.preferred_username as string | undefined) || 
+                  (claims?.sub as string | undefined);
 
     // Restrict reviewer signup to Jujusees@gmail.com
     let assignedRole = role;

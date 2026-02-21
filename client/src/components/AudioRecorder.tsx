@@ -27,7 +27,19 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      
+      // Check for supported MIME types, prioritizing those that work on mobile
+      let mimeType = '';
+      if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        mimeType = 'audio/mp4';
+      } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        mimeType = 'audio/webm;codecs=opus';
+      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        mimeType = 'audio/webm';
+      }
+
+      const options = mimeType ? { mimeType } : {};
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -36,12 +48,7 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
       };
 
       mediaRecorder.onstop = () => {
-        // Use a more widely supported MIME type if possible
-        // Prefer audio/webm;codecs=opus as it's standard for MediaRecorder
-        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
-          ? 'audio/webm;codecs=opus' 
-          : 'audio/webm';
-        const blob = new Blob(chunksRef.current, { type: mimeType });
+        const blob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
         const url = URL.createObjectURL(blob);
         setAudioBlob(blob);
         setAudioUrl(url);
@@ -58,7 +65,7 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
 
     } catch (err) {
       console.error("Error accessing microphone:", err);
-      alert("Microphone access denied or not available.");
+      alert("Microphone access denied or not available. Please ensure you have granted permission.");
     }
   };
 
@@ -78,8 +85,9 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
 
   const handleSubmit = () => {
     if (audioBlob) {
-      // Use a more standard name and ensure type is set
-      const file = new File([audioBlob], `recording-${Date.now()}.webm`, { type: 'audio/webm' });
+      // Use .mp4 extension for blobs typed as audio/mp4 to help server content-type detection
+      const extension = audioBlob.type.includes('mp4') ? 'mp4' : 'webm';
+      const file = new File([audioBlob], `recording-${Date.now()}.${extension}`, { type: audioBlob.type });
       onRecordingComplete(file);
     }
   };

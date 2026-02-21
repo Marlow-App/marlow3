@@ -100,7 +100,13 @@ export class ObjectStorageService {
       // Get file metadata
       const [metadata] = await file.getMetadata();
       
-      const contentType = (metadata.contentType as string) || "audio/webm";
+      let contentType = (metadata.contentType as string) || "audio/webm";
+      // Basic extension-based fallback if contentType is generic
+      if (contentType === "application/octet-stream" || !contentType) {
+        if (file.name.endsWith(".mp4") || file.name.endsWith(".m4a")) contentType = "audio/mp4";
+        else if (file.name.endsWith(".webm")) contentType = "audio/webm";
+      }
+      
       const size = Number(metadata.size);
 
       // Support byte-range requests for audio seeking/streaming

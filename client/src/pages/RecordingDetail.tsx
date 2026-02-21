@@ -19,8 +19,8 @@ import { type User as SharedUser } from "@shared/schema";
 export default function RecordingDetail() {
   const { id } = useParams<{ id: string }>();
   const recordingId = parseInt(id || "0");
-  const { data: recording, isLoading } = useRecording(recordingId);
-  const { data: user } = useQuery<SharedUser>({ queryKey: ["/api/auth/user"] });
+  const { data: recording, isLoading: loadingRecording } = useRecording(recordingId);
+  const { data: user, isLoading: loadingUser } = useQuery<SharedUser>({ queryKey: ["/api/auth/user"] });
   const createFeedback = useCreateFeedback(recordingId);
   const { uploadFile, isUploading } = useUpload();
   const { toast } = useToast();
@@ -28,6 +28,7 @@ export default function RecordingDetail() {
   const [feedbackText, setFeedbackText] = useState("");
   const [isRecordingFeedback, setIsRecordingFeedback] = useState(false);
 
+  const isLoading = loadingRecording || loadingUser;
   const backUrl = user?.role === 'reviewer' ? "/reviewer-hub" : "/learner-portal";
 
   const handleFeedbackSubmit = async (audioFile?: File) => {
@@ -46,11 +47,12 @@ export default function RecordingDetail() {
       if (audioFile) {
         const uploadRes = await uploadFile(audioFile);
         if (uploadRes) {
-          audioUrl = uploadRes.uploadURL.split('?')[0];
+          audioUrl = uploadRes.objectPath;
         }
       }
 
       await createFeedback.mutateAsync({
+        recordingId,
         textFeedback: feedbackText,
         audioFeedbackUrl: audioUrl,
       });

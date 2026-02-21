@@ -42,7 +42,7 @@ export default function RecordPage() {
 
       // 2. Create DB record
       await createRecording.mutateAsync({
-        audioUrl: uploadRes.uploadURL.split('?')[0], // Remove query params if any
+        audioUrl: uploadRes.objectPath, // Always use the normalized /objects/ path
         sentenceText: text,
       });
 
