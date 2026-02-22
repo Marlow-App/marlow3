@@ -1,16 +1,18 @@
 import { useAuth } from "@/hooks/use-auth";
-import { useRecordings } from "@/hooks/use-recordings";
+import { useRecordings, usePendingRecordings } from "@/hooks/use-recordings";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
-import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export default function Home() {
   const { user } = useAuth();
+  const isReviewer = user?.role === "reviewer";
   const { data: recordings, isLoading } = useRecordings();
+  const { data: pendingRecordings } = usePendingRecordings();
 
   if (isLoading) {
     return (
@@ -25,6 +27,67 @@ export default function Home() {
   // Greeting based on time of day
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
+  if (isReviewer) {
+    return (
+      <Layout>
+        <div className="space-y-8 animate-in">
+          <header>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+              {greeting}, {user?.firstName || "Reviewer"}
+            </h1>
+            <p className="text-muted-foreground mt-2 text-lg">
+              {pendingRecordings?.length ? `There are ${pendingRecordings.length} recordings waiting for your expertise.` : "All recordings have been reviewed. Great job!"}
+            </p>
+          </header>
+
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/10">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="text-4xl font-bold text-primary mb-1">
+                      {pendingRecordings?.length || 0}
+                    </div>
+                    <div className="text-muted-foreground font-medium">Pending Reviews</div>
+                  </div>
+                  <Link href="/reviewer-hub">
+                    <Button variant="outline" size="sm">Go to Hub</Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-4xl font-bold text-foreground mb-1">
+                  {recordings?.filter(r => r.status === 'reviewed').length || 0}
+                </div>
+                <div className="text-muted-foreground font-medium">Your Completed Reviews</div>
+              </CardContent>
+            </Card>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold font-display mb-6">Quick Actions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Link href="/reviewer-hub">
+                <Button className="w-full justify-start h-16 text-lg" variant="outline">
+                  <PlayCircle className="mr-3 h-6 w-6 text-primary" />
+                  Start Reviewing
+                </Button>
+              </Link>
+              <Link href="/profile">
+                <Button className="w-full justify-start h-16 text-lg" variant="outline">
+                  <UserCircle className="mr-3 h-6 w-6 text-primary" />
+                  Manage Profile
+                </Button>
+              </Link>
+            </div>
+          </section>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

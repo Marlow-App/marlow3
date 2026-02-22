@@ -32,7 +32,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/">
-        {user.role === "reviewer" ? <ReviewerPortal /> : <Home />}
+        <Home />
       </Route>
       <Route path="/record" component={RecordPage} />
       <Route path="/learner-portal" component={LearnerPortal} />
