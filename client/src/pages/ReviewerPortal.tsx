@@ -43,7 +43,7 @@ export default function ReviewerPortal() {
                 {pendingRecordings?.length || 0}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="completed" className="flex items-center gap-2">
+            <TabsTrigger value="reviewed" className="flex items-center gap-2">
               Completed
               <Badge variant="outline" className="ml-auto">
                 {reviewedRecordings.length}
@@ -102,7 +102,7 @@ export default function ReviewerPortal() {
             </div>
           </TabsContent>
 
-          <TabsContent value="completed" className="mt-6">
+          <TabsContent value="reviewed" className="mt-6">
             <div className="grid gap-4">
               {reviewedRecordings.map((recording) => (
                 <Card key={recording.id} className="hover:shadow-md transition-shadow duration-200 bg-muted/5">

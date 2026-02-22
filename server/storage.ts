@@ -18,6 +18,7 @@ export interface IStorage {
   getRecording(id: number): Promise<Recording | undefined>;
   getRecordingsByUser(userId: string): Promise<Recording[]>;
   getAllPendingRecordings(): Promise<(Recording & { user: User | null })[]>;
+  getAllRecordings(): Promise<(Recording & { user: User | null })[]>;
   
   // Feedback
   createFeedback(feedbackData: InsertFeedback): Promise<Feedback>;
@@ -86,7 +87,12 @@ export class DatabaseStorage implements IStorage {
   async createFeedback(feedbackData: InsertFeedback): Promise<Feedback> {
     const [newFeedback] = await db
       .insert(feedback)
-      .values(feedbackData)
+      .values({
+        recordingId: feedbackData.recordingId,
+        reviewerId: (feedbackData as any).reviewerId,
+        textFeedback: feedbackData.textFeedback,
+        audioFeedbackUrl: feedbackData.audioFeedbackUrl,
+      })
       .returning();
     
     // Update recording status to reviewed

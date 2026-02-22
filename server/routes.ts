@@ -41,19 +41,33 @@ async function seedDatabase() {
   });
 
   // Create a sample recording (Reviewed)
-  const reviewedRec = await storage.createRecording(learnerId, {
+  const reviewedRec1 = await storage.createRecording(learnerId, {
     audioUrl: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg",
     sentenceText: "Xièxiè (Thank you)",
   });
 
   // Add feedback
   await storage.createFeedback({
-    recordingId: reviewedRec.id,
+    recordingId: reviewedRec1.id,
     reviewerId: teacherId,
     textFeedback: "Great tone on 'xiè', but the second 'xie' should be neutral tone. It sounds like a falling tone here.",
     audioFeedbackUrl: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg",
+  } as any);
+
+  // Create another sample recording (Reviewed)
+  const reviewedRec2 = await storage.createRecording(learnerId, {
+    audioUrl: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg",
+    sentenceText: "Xièxiè (Thank you)",
   });
-  
+
+  // Add feedback
+  await storage.createFeedback({
+    recordingId: reviewedRec2.id,
+    reviewerId: teacherId,
+    textFeedback: "Great tone on 'xiè', but the second 'xie' should be neutral tone. It sounds like a falling tone here.",
+    audioFeedbackUrl: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg",
+  } as any);
+
   console.log("Database seeded!");
 }
 
@@ -127,17 +141,17 @@ export async function registerRoutes(
   app.get("/api/all-recordings", isAuthenticated, async (req, res) => {
     try {
       const recordings = await storage.getAllRecordings();
+      
       const recordingsEnhanced = await Promise.all(recordings.map(async (r: any) => {
         const user = await storage.getUser(r.userId);
-        let feedback: any[] = [];
-        if (r.status === 'reviewed') {
-          try {
-            feedback = await storage.getFeedbackForRecording(r.id);
-          } catch (e) {
-            console.error(`Error fetching feedback for recording ${r.id}:`, e);
-          }
+        let feedbackList: any[] = [];
+        // ALWAYS fetch feedback regardless of status to ensure data consistency
+        try {
+          feedbackList = await storage.getFeedbackForRecording(r.id);
+        } catch (e) {
+          console.error(`Error fetching feedback for recording ${r.id}:`, e);
         }
-        return { ...r, feedback, user };
+        return { ...r, feedback: feedbackList, user };
       }));
       res.json(recordingsEnhanced);
     } catch (error) {
