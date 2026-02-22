@@ -5,13 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight, ChevronLeft, Crown, Loader2, MapPin, Calendar } from "lucide-react";
-import { format, formatDistanceToNow, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, isToday, isBefore, startOfDay } from "date-fns";
+import { format, formatDistanceToNow, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, isToday, isBefore, startOfDay, isThisWeek, isThisMonth, differenceInMonths } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+interface RecordingEntry {
+  id: number;
+  sentenceText: string;
+}
 
 function JournalCalendar({ recordings }: { recordings: any[] }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -41,12 +46,12 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
     return map;
   }, [recordings]);
 
-  const sentencesByDay = useMemo(() => {
-    const map = new Map<string, string[]>();
+  const recordingsByDay = useMemo(() => {
+    const map = new Map<string, RecordingEntry[]>();
     recordings?.forEach((r: any) => {
       const key = format(new Date(r.createdAt), "yyyy-MM-dd");
       const arr = map.get(key) || [];
-      arr.push(r.sentenceText);
+      arr.push({ id: r.id, sentenceText: r.sentenceText });
       map.set(key, arr);
     });
     return map;
@@ -123,7 +128,7 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
             const count = countsByDay.get(key) || 0;
             const today = isToday(day);
             const future = isBefore(new Date(), startOfDay(day));
-            const sentences = sentencesByDay.get(key) || [];
+            const entries = recordingsByDay.get(key) || [];
 
             const dayCell = (
               <div
@@ -153,14 +158,21 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
                   <PopoverTrigger asChild>
                     {dayCell}
                   </PopoverTrigger>
-                  <PopoverContent className="w-56 p-3" side="top" align="center">
+                  <PopoverContent className="w-60 p-3" side="top" align="center">
                     <p className="text-xs font-semibold mb-1.5">{format(day, "MMM d, yyyy")}</p>
                     <p className="text-[11px] text-muted-foreground mb-2">{count} recording{count > 1 ? "s" : ""}</p>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {sentences.map((s, i) => (
-                        <div key={i} className="text-xs bg-muted/50 rounded px-2 py-1 truncate" title={s}>
-                          {s}
-                        </div>
+                    <div className="space-y-1 max-h-36 overflow-y-auto">
+                      {entries.map((entry) => (
+                        <Link key={entry.id} href={`/recordings/${entry.id}`}>
+                          <div
+                            className="text-xs bg-muted/50 hover:bg-primary/10 hover:text-primary rounded px-2 py-1.5 truncate cursor-pointer transition-colors flex items-center gap-1.5"
+                            title={entry.sentenceText}
+                            data-testid={`popover-recording-${entry.id}`}
+                          >
+                            <Mic2 className="w-3 h-3 shrink-0 opacity-50" />
+                            <span className="truncate">{entry.sentenceText}</span>
+                          </div>
+                        </Link>
                       ))}
                     </div>
                   </PopoverContent>
@@ -187,10 +199,58 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
   );
 }
 
+function getTimeGroup(date: Date): string {
+  const now = new Date();
+  if (isThisWeek(date, { weekStartsOn: 0 })) return "This Week";
+  if (isThisMonth(date)) return "Earlier This Month";
+  const months = differenceInMonths(now, date);
+  if (months <= 1) return "Last Month";
+  if (months < 6) return format(date, "MMMM");
+  return format(date, "MMMM yyyy");
+}
+
+function GroupedRecordingsList({ recordings }: { recordings: any[] }) {
+  const grouped = useMemo(() => {
+    const sorted = [...recordings].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    const groups: { label: string; items: any[] }[] = [];
+    let currentLabel = "";
+    for (const rec of sorted) {
+      const label = getTimeGroup(new Date(rec.createdAt));
+      if (label !== currentLabel) {
+        groups.push({ label, items: [] });
+        currentLabel = label;
+      }
+      groups[groups.length - 1].items.push(rec);
+    }
+    return groups;
+  }, [recordings]);
+
+  if (recordings.length === 0) return null;
+
+  return (
+    <div className="space-y-5">
+      {grouped.map((group) => (
+        <div key={group.label}>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2" data-testid={`group-header-${group.label}`}>
+            {group.label}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {group.items.map((recording: any) => (
+              <RecordingCard key={recording.id} recording={recording} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function RecordingCard({ recording }: { recording: any }) {
   return (
     <Card className="overflow-hidden border-border/50 hover:border-primary/30 transition-colors" data-testid={`recording-card-${recording.id}`}>
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="p-4 space-y-2.5">
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1 min-w-0">
             <p className="font-medium text-sm truncate">{recording.sentenceText}</p>
@@ -210,18 +270,18 @@ function RecordingCard({ recording }: { recording: any }) {
             )}
           </Badge>
         </div>
-        <div className="bg-muted/30 px-3 py-2 rounded-lg border border-border/50 max-w-md">
+        <div className="bg-muted/30 px-2.5 py-1.5 rounded-lg border border-border/50">
           <audio
             key={recording.audioUrl}
             src={recording.audioUrl}
             controls
-            className="w-full h-8"
+            className="w-full h-7"
             preload="metadata"
           />
         </div>
         {recording.status === "reviewed" && recording.feedback?.[0] ? (
           <div className="space-y-2">
-            <div className="bg-primary/5 rounded-lg p-3 border border-primary/10">
+            <div className="bg-primary/5 rounded-lg p-2.5 border border-primary/10">
               <div className="flex items-start gap-2">
                 <MessageCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
@@ -245,8 +305,8 @@ function RecordingCard({ recording }: { recording: any }) {
               </div>
             </div>
             <Link href={`/recordings/${recording.id}`}>
-              <Button variant="outline" size="sm" className="w-full text-xs h-8">
-                View Full Details <ChevronRight className="w-3.5 h-3.5 ml-1" />
+              <Button variant="outline" size="sm" className="w-full text-xs h-7">
+                View Details <ChevronRight className="w-3.5 h-3.5 ml-1" />
               </Button>
             </Link>
           </div>
@@ -375,33 +435,27 @@ export default function LearnerPortal() {
           </TabsList>
 
           <TabsContent value="waiting" className="mt-4">
-            <div className="grid gap-3">
-              {pendingRecordings.map((recording: any) => (
-                <RecordingCard key={recording.id} recording={recording} />
-              ))}
-              {pendingRecordings.length === 0 && (
-                <div className="text-center py-10 bg-muted/10 rounded-2xl border border-dashed border-border">
-                  <CheckCircle2 className="w-8 h-8 text-green-500/40 mx-auto mb-2" />
-                  <h3 className="text-base font-medium">All caught up!</h3>
-                  <p className="text-sm text-muted-foreground mt-1">No recordings waiting for review.</p>
-                </div>
-              )}
-            </div>
+            {pendingRecordings.length > 0 ? (
+              <GroupedRecordingsList recordings={pendingRecordings} />
+            ) : (
+              <div className="text-center py-10 bg-muted/10 rounded-2xl border border-dashed border-border">
+                <CheckCircle2 className="w-8 h-8 text-green-500/40 mx-auto mb-2" />
+                <h3 className="text-base font-medium">All caught up!</h3>
+                <p className="text-sm text-muted-foreground mt-1">No recordings waiting for review.</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="completed" className="mt-4">
-            <div className="grid gap-3">
-              {reviewedRecordings.map((recording: any) => (
-                <RecordingCard key={recording.id} recording={recording} />
-              ))}
-              {reviewedRecordings.length === 0 && (
-                <div className="text-center py-10 bg-muted/10 rounded-2xl border border-dashed border-border">
-                  <MessageCircle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                  <h3 className="text-base font-medium">No feedback yet</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Your reviewed recordings will appear here.</p>
-                </div>
-              )}
-            </div>
+            {reviewedRecordings.length > 0 ? (
+              <GroupedRecordingsList recordings={reviewedRecordings} />
+            ) : (
+              <div className="text-center py-10 bg-muted/10 rounded-2xl border border-dashed border-border">
+                <MessageCircle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                <h3 className="text-base font-medium">No feedback yet</h3>
+                <p className="text-sm text-muted-foreground mt-1">Your reviewed recordings will appear here.</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 
