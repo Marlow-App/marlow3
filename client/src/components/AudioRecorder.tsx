@@ -50,6 +50,7 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
       mediaRecorder.onstop = () => {
         // Use the actual MIME type from the recorder for the blob
         // This ensures the blob's internal type matches what was recorded
+        // For Safari/iOS, this will likely be audio/mp4
         const blob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType });
         const url = URL.createObjectURL(blob);
         setAudioBlob(blob);

@@ -95,7 +95,9 @@ export default function RecordingDetail() {
                Back
              </Button>
            </Link>
-           <h1 className="text-xl font-medium text-muted-foreground">Recording #{id}</h1>
+           <h1 className="text-xl font-medium text-muted-foreground">
+             Recording #{id} by {recording.user?.firstName || recording.user?.email || "Unknown User"}
+           </h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

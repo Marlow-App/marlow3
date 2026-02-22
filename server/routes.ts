@@ -76,36 +76,60 @@ export async function registerRoutes(
   // === Recordings ===
 
   // List my recordings
-  app.get(api.recordings.list.path, isAuthenticated, async (req, res) => {
-    const userId = (req.user as any).claims.sub;
-    const recordings = await storage.getRecordingsByUser(userId);
-    
-    // Enhance with feedback if reviewed
-    const recordingsWithFeedback = await Promise.all(recordings.map(async (r) => {
-      if (r.status === 'reviewed') {
-        const feedback = await storage.getFeedbackForRecording(r.id);
-        return { ...r, feedback };
-      }
-      return r;
-    }));
+  app.get(api.recordings.list.path, isAuthenticated, async (req: any, res: any) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const recordings = await storage.getRecordingsByUser(userId);
+      
+      // Enhance with feedback and user info
+      const recordingsEnhanced = await Promise.all(recordings.map(async (r: any) => {
+        const user = await storage.getUser(r.userId);
+        let feedback: any[] = [];
+        if (r.status === 'reviewed') {
+          try {
+            feedback = await storage.getFeedbackForRecording(r.id);
+          } catch (e) {
+            console.error(`Error fetching feedback for recording ${r.id}:`, e);
+          }
+        }
+        return { ...r, feedback, user };
+      }));
 
-    res.json(recordingsWithFeedback);
+      res.json(recordingsEnhanced);
+    } catch (error) {
+      console.error("Error listing recordings:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
   });
 
   // List all pending recordings (Control Center)
-  // In a real app, you'd check if user is admin/teacher
-  app.get(api.recordings.listPending.path, isAuthenticated, async (req, res) => {
-    const pending = await storage.getAllPendingRecordings();
-    res.json(pending);
+  app.get(api.recordings.listPending.path, isAuthenticated, async (req: any, res: any) => {
+    try {
+      const pending = await storage.getAllPendingRecordings();
+      const pendingWithUser = await Promise.all(pending.map(async (r: any) => {
+        const user = await storage.getUser(r.userId);
+        return { ...r, user };
+      }));
+      res.json(pendingWithUser);
+    } catch (error) {
+      console.error("Error listing pending recordings:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
   });
 
   // Get single recording
-  app.get(api.recordings.get.path, isAuthenticated, async (req, res) => {
-    const recording = await storage.getRecording(Number(req.params.id));
-    if (!recording) return res.status(404).json({ message: "Not found" });
-    
-    const feedback = await storage.getFeedbackForRecording(recording.id);
-    res.json({ ...recording, feedback });
+  app.get(api.recordings.get.path, isAuthenticated, async (req: any, res: any) => {
+    try {
+      const recording = await storage.getRecording(Number(req.params.id));
+      if (!recording) return res.status(404).json({ message: "Not found" });
+      
+      const user = await storage.getUser(recording.userId);
+      const feedback = await storage.getFeedbackForRecording(recording.id);
+      res.json({ ...recording, feedback, user });
+    } catch (error) {
+      console.error("Error getting recording:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
   });
 
   // Create recording

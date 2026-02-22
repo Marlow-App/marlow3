@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mic, PlayCircle, ArrowRight, ListFilter } from "lucide-react";
+import { Mic, PlayCircle, ArrowRight, User as UserIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
@@ -63,7 +63,13 @@ export default function ReviewerPortal() {
                         </div>
                         <div>
                           <h3 className="text-xl font-medium mb-1">{recording.sentenceText}</h3>
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                             <div className="flex items-center gap-1.5 bg-muted px-2 py-0.5 rounded-md">
+                               <UserIcon className="w-3.5 h-3.5" />
+                               <span className="font-medium text-foreground/80">
+                                 {(recording as any).user?.firstName || (recording as any).user?.email?.split('@')[0] || "Learner"}
+                               </span>
+                             </div>
                              <span>Submitted {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}</span>
                              <span>•</span>
                              <span>ID: #{recording.id}</span>
@@ -108,7 +114,13 @@ export default function ReviewerPortal() {
                         </div>
                         <div>
                           <h3 className="text-xl font-medium mb-1">{recording.sentenceText}</h3>
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                             <div className="flex items-center gap-1.5 bg-muted px-2 py-0.5 rounded-md">
+                               <UserIcon className="w-3.5 h-3.5" />
+                               <span className="font-medium text-foreground/80">
+                                 {(recording as any).user?.firstName || (recording as any).user?.email?.split('@')[0] || "Learner"}
+                               </span>
+                             </div>
                              <span>Reviewed {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}</span>
                              <span>•</span>
                              <span>ID: #{recording.id}</span>

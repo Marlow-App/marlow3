@@ -108,8 +108,11 @@ export class ObjectStorageService {
       }
 
       // Ensure Safari/iOS compatibility by force-setting audio/mp4 for .mp4 files if needed
-      if (file.name.endsWith(".mp4") && !contentType.includes("video")) {
+      // Added x-m4a and other common mobile audio types for better compatibility
+      if (file.name.endsWith(".mp4") || file.name.endsWith(".m4a")) {
         contentType = "audio/mp4";
+      } else if (file.name.endsWith(".webm")) {
+        contentType = "audio/webm";
       }
       
       const size = Number(metadata.size);
@@ -137,8 +140,9 @@ export class ObjectStorageService {
           "Accept-Ranges": "bytes",
           "Content-Length": chunksize,
           "Content-Type": contentType,
-          "Cache-Control": "no-cache",
+          "Cache-Control": "public, max-age=31536000",
           "Access-Control-Allow-Origin": "*",
+          "X-Content-Type-Options": "nosniff",
         });
 
         file.createReadStream({ start, end }).pipe(res);
@@ -147,8 +151,9 @@ export class ObjectStorageService {
           "Content-Length": size,
           "Content-Type": contentType,
           "Accept-Ranges": "bytes",
-          "Cache-Control": "no-cache",
+          "Cache-Control": "public, max-age=31536000",
           "Access-Control-Allow-Origin": "*",
+          "X-Content-Type-Options": "nosniff",
         });
 
         file.createReadStream().pipe(res);
