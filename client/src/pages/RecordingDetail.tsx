@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, User, MessageSquare, Play, Mic } from "lucide-react";
+import { ChevronLeft, User, MessageSquare, Play, Mic, GraduationCap, MapPin } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
@@ -110,10 +110,16 @@ export default function RecordingDetail() {
                   <h2 className="text-3xl font-display font-bold text-foreground mb-4 leading-tight">
                     {recording.sentenceText}
                   </h2>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <Badge variant={recording.status === 'reviewed' ? 'default' : 'secondary'} className="px-3 py-1">
                       {recording.status.toUpperCase()}
                     </Badge>
+                    {recording.user?.chineseLevel && (
+                      <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md" data-testid="learner-level-badge">
+                        <GraduationCap className="w-3.5 h-3.5" />
+                        <span className="font-medium text-xs">{recording.user.chineseLevel}</span>
+                      </div>
+                    )}
                     <span className="text-sm text-muted-foreground">
                       Submitted on {format(new Date(recording.createdAt), 'MMM d, yyyy')}
                     </span>
@@ -169,11 +175,21 @@ export default function RecordingDetail() {
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4">
                         <div className="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold">
-                          E
+                          {item.reviewer?.firstName?.[0] || "R"}
                         </div>
                         <div className="flex-1">
                           <div className="flex justify-between items-baseline mb-2">
-                            <span className="font-bold text-foreground">Expert Reviewer</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-foreground" data-testid={`reviewer-name-${item.id}`}>
+                                {item.reviewer ? `${item.reviewer.firstName || ''} ${item.reviewer.lastName || ''}`.trim() || 'Reviewer' : 'Reviewer'}
+                              </span>
+                              {item.reviewer?.city && (
+                                <span className="flex items-center gap-1 text-xs text-muted-foreground" data-testid={`reviewer-city-${item.id}`}>
+                                  <MapPin className="w-3 h-3" />
+                                  {item.reviewer.city}
+                                </span>
+                              )}
+                            </div>
                             <span className="text-xs text-muted-foreground">{format(new Date(item.createdAt), 'MMM d, HH:mm')}</span>
                           </div>
                           

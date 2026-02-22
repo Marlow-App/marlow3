@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mic, PlayCircle, ArrowRight, User as UserIcon } from "lucide-react";
+import { Mic, PlayCircle, ArrowRight, User as UserIcon, GraduationCap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
@@ -70,9 +70,13 @@ export default function ReviewerPortal() {
                                  {(recording as any).user?.firstName || (recording as any).user?.email?.split('@')[0] || "Learner"}
                                </span>
                              </div>
+                             {(recording as any).user?.chineseLevel && (
+                               <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-md">
+                                 <GraduationCap className="w-3.5 h-3.5" />
+                                 <span className="font-medium text-xs">{(recording as any).user.chineseLevel}</span>
+                               </div>
+                             )}
                              <span>Submitted {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}</span>
-                             <span>•</span>
-                             <span>ID: #{recording.id}</span>
                           </div>
                         </div>
                       </div>
@@ -121,9 +125,13 @@ export default function ReviewerPortal() {
                                  {(recording as any).user?.firstName || (recording as any).user?.email?.split('@')[0] || "Learner"}
                                </span>
                              </div>
+                             {(recording as any).user?.chineseLevel && (
+                               <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-md">
+                                 <GraduationCap className="w-3.5 h-3.5" />
+                                 <span className="font-medium text-xs">{(recording as any).user.chineseLevel}</span>
+                               </div>
+                             )}
                              <span>Reviewed {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}</span>
-                             <span>•</span>
-                             <span>ID: #{recording.id}</span>
                              <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200">Reviewed</Badge>
                           </div>
                         </div>

@@ -4,7 +4,7 @@ import { Link, useSearch } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight, Crown, Zap, Shield, Loader2 } from "lucide-react";
+import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight, Crown, Zap, Shield, Loader2, MapPin } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -133,8 +133,20 @@ export default function LearnerPortal() {
                     <div className="bg-primary/5 rounded-xl p-4 border border-primary/10">
                       <div className="flex items-start gap-3">
                         <MessageCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium text-primary">Native Speaker Feedback</p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-primary">
+                              {recording.feedback[0].reviewer
+                                ? `${recording.feedback[0].reviewer.firstName || ''} ${recording.feedback[0].reviewer.lastName || ''}`.trim() || 'Reviewer'
+                                : 'Native Speaker Feedback'}
+                            </p>
+                            {recording.feedback[0].reviewer?.city && (
+                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <MapPin className="w-3 h-3" />
+                                {recording.feedback[0].reviewer.city}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-sm text-foreground/80 mt-1 italic">
                             "{recording.feedback[0].textFeedback}"
                           </p>

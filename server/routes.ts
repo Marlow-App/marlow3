@@ -104,18 +104,21 @@ export async function registerRoutes(
         recordings = await storage.getRecordingsByUser(userId);
       }
       
-      // Enhance with feedback and user info
       const recordingsEnhanced = await Promise.all(recordings.map(async (r: any) => {
         const u = await storage.getUser(r.userId);
-        let feedback: any[] = [];
+        let feedbackList: any[] = [];
         if (r.status === 'reviewed') {
           try {
-            feedback = await storage.getFeedbackForRecording(r.id);
+            const rawFeedback = await storage.getFeedbackForRecording(r.id);
+            feedbackList = await Promise.all(rawFeedback.map(async (f: any) => {
+              const reviewer = await storage.getUser(f.reviewerId);
+              return { ...f, reviewer };
+            }));
           } catch (e) {
             console.error(`Error fetching feedback for recording ${r.id}:`, e);
           }
         }
-        return { ...r, feedback, user: u };
+        return { ...r, feedback: feedbackList, user: u };
       }));
 
       res.json(recordingsEnhanced);
@@ -148,9 +151,12 @@ export async function registerRoutes(
       const recordingsEnhanced = await Promise.all(recordings.map(async (r: any) => {
         const user = await storage.getUser(r.userId);
         let feedbackList: any[] = [];
-        // ALWAYS fetch feedback regardless of status to ensure data consistency
         try {
-          feedbackList = await storage.getFeedbackForRecording(r.id);
+          const rawFeedback = await storage.getFeedbackForRecording(r.id);
+          feedbackList = await Promise.all(rawFeedback.map(async (f: any) => {
+            const reviewer = await storage.getUser(f.reviewerId);
+            return { ...f, reviewer };
+          }));
         } catch (e) {
           console.error(`Error fetching feedback for recording ${r.id}:`, e);
         }
@@ -170,8 +176,12 @@ export async function registerRoutes(
       if (!recording) return res.status(404).json({ message: "Not found" });
       
       const user = await storage.getUser(recording.userId);
-      const feedback = await storage.getFeedbackForRecording(recording.id);
-      res.json({ ...recording, feedback, user });
+      const rawFeedback = await storage.getFeedbackForRecording(recording.id);
+      const feedbackWithReviewer = await Promise.all(rawFeedback.map(async (f: any) => {
+        const reviewer = await storage.getUser(f.reviewerId);
+        return { ...f, reviewer };
+      }));
+      res.json({ ...recording, feedback: feedbackWithReviewer, user });
     } catch (error) {
       console.error("Error getting recording:", error);
       res.status(500).json({ message: "Internal server error" });
