@@ -48,17 +48,16 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
       };
 
       mediaRecorder.onstop = () => {
-        // Use the actual MIME type from the recorder for the blob
-        // This ensures the blob's internal type matches what was recorded
-        // For Safari/iOS, this will likely be audio/mp4
-        const blob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType || mimeType });
+        const recordedType = mediaRecorder.mimeType || mimeType || 'audio/webm';
+        console.log("Recording stopped. MIME type:", recordedType);
+        const blob = new Blob(chunksRef.current, { type: recordedType });
         const url = URL.createObjectURL(blob);
         setAudioBlob(blob);
         setAudioUrl(url);
         stream.getTracks().forEach(track => track.stop());
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(100); // Request data in 100ms chunks to ensure capture
       setIsRecording(true);
       setDuration(0);
       

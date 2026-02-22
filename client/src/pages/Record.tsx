@@ -36,6 +36,7 @@ export default function RecordPage() {
     }
 
     try {
+      console.log("Starting upload for file:", file.name, "type:", file.type, "size:", file.size);
       // 1. Upload file
       const uploadRes = await uploadFile(file);
       if (!uploadRes) throw new Error("Upload failed");

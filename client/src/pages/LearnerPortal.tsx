@@ -8,7 +8,7 @@ import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight } from "lucide-r
 import { formatDistanceToNow } from "date-fns";
 
 export default function LearnerPortal() {
-  const { data: recordings, isLoading } = useRecordings();
+  const { data: recordings, isLoading } = useRecordings() as { data: any[], isLoading: boolean };
 
   if (isLoading) {
     return (

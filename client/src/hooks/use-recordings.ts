@@ -23,7 +23,7 @@ export function useRecordings() {
     queryFn: async () => {
       const res = await fetch(api.recordings.list.path, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch recordings");
-      return await res.json() as Recording[];
+      return await res.json() as (Recording & { feedback?: any[] })[];
     },
   });
 }

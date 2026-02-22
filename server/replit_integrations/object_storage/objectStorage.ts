@@ -112,6 +112,15 @@ export class ObjectStorageService {
         contentType = "audio/mp4";
       } else if (file.name.endsWith(".webm")) {
         contentType = "audio/webm";
+      } else if (file.name.endsWith(".ogg")) {
+        contentType = "audio/ogg";
+      } else if (file.name.endsWith(".wav")) {
+        contentType = "audio/wav";
+      }
+      
+      // Fallback for Safari which sometimes sends audio/mpeg but expects audio/mp4
+      if (contentType === "audio/mpeg" && file.name.endsWith(".mp4")) {
+        contentType = "audio/mp4";
       }
       
       const size = Number(metadata.size);
