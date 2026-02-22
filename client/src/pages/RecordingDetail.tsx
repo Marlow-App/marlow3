@@ -20,7 +20,7 @@ function RatingDisplay({ rating }: { rating: number | null | undefined }) {
   if (!rating) return null;
 
   const levels = [
-    { value: 1, label: "Needs Work", color: "bg-gray-400", activeGlow: "shadow-gray-400/40", textColor: "text-gray-600" },
+    { value: 1, label: "Needs Improvement", color: "bg-gray-400", activeGlow: "shadow-gray-400/40", textColor: "text-gray-600" },
     { value: 2, label: "Good", color: "bg-amber-400", activeGlow: "shadow-amber-400/40", textColor: "text-amber-600" },
     { value: 3, label: "Excellent", color: "bg-emerald-400", activeGlow: "shadow-emerald-400/40", textColor: "text-emerald-600" },
   ];
@@ -50,15 +50,34 @@ function RatingDisplay({ rating }: { rating: number | null | undefined }) {
 
 function RatingSelector({ value, onChange }: { value: number | null; onChange: (v: number) => void }) {
   const levels = [
-    { value: 1, label: "Needs Improvement", color: "bg-gray-400", ring: "ring-gray-400/50", hoverBg: "hover:bg-gray-50 dark:hover:bg-gray-900", textColor: "text-gray-600 dark:text-gray-400", desc: "Tones need more practice" },
-    { value: 2, label: "Good", color: "bg-amber-400", ring: "ring-amber-400/50", hoverBg: "hover:bg-amber-50 dark:hover:bg-amber-950", textColor: "text-amber-600 dark:text-amber-400", desc: "On the right track" },
-    { value: 3, label: "Excellent", color: "bg-emerald-400", ring: "ring-emerald-400/50", hoverBg: "hover:bg-emerald-50 dark:hover:bg-emerald-950", textColor: "text-emerald-600 dark:text-emerald-400", desc: "Nearly native-like" },
+    { value: 1, label: "Needs Improvement", color: "bg-gray-400", shadow: "shadow-[0_0_8px_rgba(156,163,175,0.6)]", textColor: "text-gray-600 dark:text-gray-400" },
+    { value: 2, label: "Good", color: "bg-amber-400", shadow: "shadow-[0_0_8px_rgba(251,191,36,0.6)]", textColor: "text-amber-600 dark:text-amber-400" },
+    { value: 3, label: "Excellent", color: "bg-emerald-400", shadow: "shadow-[0_0_8px_rgba(52,211,153,0.6)]", textColor: "text-emerald-600 dark:text-emerald-400" },
   ];
 
+  const activeLevel = levels.find((l) => l.value === value);
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <label className="text-sm font-medium">Rating</label>
-      <div className="flex gap-2">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1.5 bg-muted/40 rounded-full px-3 py-2">
+          {levels.map((level) => (
+            <div
+              key={level.value}
+              className={`w-4 h-4 rounded-full transition-all duration-200 ${
+                value === level.value
+                  ? `${level.color} ${level.shadow} scale-110`
+                  : "bg-muted-foreground/15"
+              }`}
+            />
+          ))}
+        </div>
+        {activeLevel && (
+          <span className={`text-sm font-semibold ${activeLevel.textColor}`}>{activeLevel.label}</span>
+        )}
+      </div>
+      <div className="flex flex-col gap-1">
         {levels.map((level) => {
           const isActive = value === level.value;
           return (
@@ -66,29 +85,16 @@ function RatingSelector({ value, onChange }: { value: number | null; onChange: (
               key={level.value}
               type="button"
               onClick={() => onChange(level.value)}
-              className={`flex-1 flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 transition-all duration-200 ${
+              className={`text-left px-3 py-2 rounded-lg border transition-all duration-150 ${
                 isActive
-                  ? `border-current ${level.textColor} bg-current/5 ring-2 ${level.ring}`
-                  : `border-border/60 ${level.hoverBg}`
+                  ? `border-current ${level.textColor} bg-current/5`
+                  : "border-transparent hover:bg-muted/50"
               }`}
               data-testid={`rating-btn-${level.value}`}
             >
-              <div className="flex items-center gap-1">
-                {levels.map((dot) => (
-                  <div
-                    key={dot.value}
-                    className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                      dot.value <= level.value ? dot.color : "bg-muted-foreground/15"
-                    }`}
-                  />
-                ))}
-              </div>
-              <div className="text-left min-w-0">
-                <p className={`text-xs font-semibold leading-tight ${isActive ? level.textColor : "text-foreground"}`}>
-                  {level.label}
-                </p>
-                <p className="text-[10px] text-muted-foreground leading-tight truncate">{level.desc}</p>
-              </div>
+              <span className={`text-sm font-medium ${isActive ? level.textColor : "text-foreground/80"}`}>
+                {level.label}
+              </span>
             </button>
           );
         })}
@@ -193,8 +199,8 @@ export default function RecordingDetail() {
            </h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        <div className={`grid grid-cols-1 ${user?.role === 'reviewer' ? 'lg:grid-cols-3' : ''} gap-8`}>
+          <div className={`${user?.role === 'reviewer' ? 'lg:col-span-2' : ''} space-y-6`}>
             <Card className="border-border shadow-md overflow-hidden">
               <div className="h-2 bg-primary w-full"></div>
               <CardContent className="p-8">
@@ -305,63 +311,65 @@ export default function RecordingDetail() {
             </div>
           </div>
 
-          <div className="space-y-6">
-            <Card className="shadow-lg border-t-4 border-t-secondary sticky top-8">
-              <CardHeader>
-                <CardTitle>Add Feedback</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <RatingSelector value={rating} onChange={setRating} />
+          {user?.role === 'reviewer' && (
+            <div className="space-y-6">
+              <Card className="shadow-lg border-t-4 border-t-secondary sticky top-8">
+                <CardHeader>
+                  <CardTitle>Add Feedback</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <RatingSelector value={rating} onChange={setRating} />
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Detailed Comments</label>
-                  <Textarea 
-                    placeholder="Provide specific feedback on tones and pronunciation..."
-                    className="min-h-[150px] resize-none"
-                    value={feedbackText}
-                    onChange={(e) => setFeedbackText(e.target.value)}
-                  />
-                </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Detailed Comments</label>
+                    <Textarea 
+                      placeholder="Provide specific feedback on tones and pronunciation..."
+                      className="min-h-[150px] resize-none"
+                      value={feedbackText}
+                      onChange={(e) => setFeedbackText(e.target.value)}
+                    />
+                  </div>
 
-                <Separator />
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Audio Correction (Optional)</label>
-                  {isRecordingFeedback ? (
-                     <AudioRecorder 
-                       onRecordingComplete={handleFeedbackSubmit}
-                       isUploading={isUploading || createFeedback.isPending}
-                     />
-                  ) : (
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Audio Correction (Optional)</label>
+                    {isRecordingFeedback ? (
+                       <AudioRecorder 
+                         onRecordingComplete={handleFeedbackSubmit}
+                         isUploading={isUploading || createFeedback.isPending}
+                       />
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => setIsRecordingFeedback(true)}
+                      >
+                        <Mic className="w-4 h-4 mr-2" />
+                        Record Audio Response
+                      </Button>
+                    )}
+                  </div>
+
+                  {!isRecordingFeedback && (
                     <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => setIsRecordingFeedback(true)}
+                      className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                      onClick={() => handleFeedbackSubmit()}
+                      disabled={createFeedback.isPending || !feedbackText.trim() || !rating}
                     >
-                      <Mic className="w-4 h-4 mr-2" />
-                      Record Audio Response
+                      {createFeedback.isPending ? "Submitting..." : "Submit Text Feedback"}
                     </Button>
                   )}
-                </div>
-
-                {!isRecordingFeedback && (
-                  <Button 
-                    className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-                    onClick={() => handleFeedbackSubmit()}
-                    disabled={createFeedback.isPending || !feedbackText.trim() || !rating}
-                  >
-                    {createFeedback.isPending ? "Submitting..." : "Submit Text Feedback"}
-                  </Button>
-                )}
-                
-                {isRecordingFeedback && (
-                   <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={() => setIsRecordingFeedback(false)}>
-                     Cancel Recording
-                   </Button>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                  
+                  {isRecordingFeedback && (
+                     <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={() => setIsRecordingFeedback(false)}>
+                       Cancel Recording
+                     </Button>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     </Layout>
