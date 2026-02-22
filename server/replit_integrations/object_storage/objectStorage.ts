@@ -107,8 +107,7 @@ export class ObjectStorageService {
         else if (file.name.endsWith(".webm")) contentType = "audio/webm";
       }
 
-      // Ensure Safari/iOS compatibility by force-setting audio/mp4 for .mp4 files if needed
-      // Added x-m4a and other common mobile audio types for better compatibility
+      // Force correct Content-Type for Safari/iOS compatibility
       if (file.name.endsWith(".mp4") || file.name.endsWith(".m4a")) {
         contentType = "audio/mp4";
       } else if (file.name.endsWith(".webm")) {
@@ -126,10 +125,11 @@ export class ObjectStorageService {
         const end = parts[1] ? parseInt(parts[1], 10) : size - 1;
         
         // Validate range
-        if (start >= size || end >= size) {
+        if (isNaN(start) || start >= size || end >= size) {
           res.writeHead(416, {
             "Content-Range": `bytes */${size}`,
-            "Content-Type": contentType
+            "Content-Type": contentType,
+            "Accept-Ranges": "bytes"
           });
           return res.end();
         }
@@ -141,23 +141,33 @@ export class ObjectStorageService {
           "Accept-Ranges": "bytes",
           "Content-Length": chunksize,
           "Content-Type": contentType,
-          "Cache-Control": "public, max-age=31536000",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
           "Access-Control-Allow-Origin": "*",
           "X-Content-Type-Options": "nosniff",
         });
 
-        file.createReadStream({ start, end }).pipe(res);
+        const stream = file.createReadStream({ start, end });
+        stream.on('error', (err) => {
+          console.error("Stream error:", err);
+          if (!res.headersSent) res.status(500).end();
+        });
+        stream.pipe(res);
       } else {
         res.writeHead(200, {
           "Content-Length": size,
           "Content-Type": contentType,
           "Accept-Ranges": "bytes",
-          "Cache-Control": "public, max-age=31536000",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
           "Access-Control-Allow-Origin": "*",
           "X-Content-Type-Options": "nosniff",
         });
 
-        file.createReadStream().pipe(res);
+        const stream = file.createReadStream();
+        stream.on('error', (err) => {
+          console.error("Stream error:", err);
+          if (!res.headersSent) res.status(500).end();
+        });
+        stream.pipe(res);
       }
     } catch (error) {
       console.error("Error downloading file:", error);

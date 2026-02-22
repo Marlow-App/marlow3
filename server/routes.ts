@@ -38,14 +38,12 @@ async function seedDatabase() {
   await storage.createRecording(learnerId, {
     audioUrl: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg", // Dummy audio
     sentenceText: "Nǐ hǎo (Hello)",
-    status: "pending",
   });
 
   // Create a sample recording (Reviewed)
   const reviewedRec = await storage.createRecording(learnerId, {
     audioUrl: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg",
     sentenceText: "Xièxiè (Thank you)",
-    status: "reviewed",
   });
 
   // Add feedback
@@ -75,17 +73,24 @@ export async function registerRoutes(
 
   // === Recordings ===
 
-  // List my recordings
-  app.get(api.recordings.list.path, isAuthenticated, async (req: any, res: any) => {
+  // List my recordings (for learners) or all recordings (for reviewers)
+  app.get(api.recordings.list.path, isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as any).claims.sub;
-      const recordings = await storage.getRecordingsByUser(userId);
+      const user = (req.user as any);
+      const userId = user.claims.sub;
+      const dbUser = await storage.getUser(userId);
+      
+      let recordings;
+      if (dbUser?.role === 'reviewer') {
+        recordings = await storage.getAllRecordings();
+      } else {
+        recordings = await storage.getRecordingsByUser(userId);
+      }
       
       // Enhance with feedback and user info
       const recordingsEnhanced = await Promise.all(recordings.map(async (r: any) => {
-        const user = await storage.getUser(r.userId);
+        const u = await storage.getUser(r.userId);
         let feedback: any[] = [];
-        // Ensure we check status correctly
         if (r.status === 'reviewed') {
           try {
             feedback = await storage.getFeedbackForRecording(r.id);
@@ -93,7 +98,7 @@ export async function registerRoutes(
             console.error(`Error fetching feedback for recording ${r.id}:`, e);
           }
         }
-        return { ...r, feedback, user };
+        return { ...r, feedback, user: u };
       }));
 
       res.json(recordingsEnhanced);
@@ -104,7 +109,7 @@ export async function registerRoutes(
   });
 
   // List all pending recordings (Control Center)
-  app.get(api.recordings.listPending.path, isAuthenticated, async (req: any, res: any) => {
+  app.get(api.recordings.listPending.path, isAuthenticated, async (req, res) => {
     try {
       const pending = await storage.getAllPendingRecordings();
       const pendingWithUser = await Promise.all(pending.map(async (r: any) => {
@@ -119,7 +124,7 @@ export async function registerRoutes(
   });
 
   // List all recordings (Admin/Reviewer view for completed)
-  app.get("/api/recordings", isAuthenticated, async (req: any, res: any) => {
+  app.get("/api/all-recordings", isAuthenticated, async (req, res) => {
     try {
       const recordings = await storage.getAllRecordings();
       const recordingsEnhanced = await Promise.all(recordings.map(async (r: any) => {
@@ -142,7 +147,7 @@ export async function registerRoutes(
   });
 
   // Get single recording
-  app.get(api.recordings.get.path, isAuthenticated, async (req: any, res: any) => {
+  app.get(api.recordings.get.path, isAuthenticated, async (req, res) => {
     try {
       const recording = await storage.getRecording(Number(req.params.id));
       if (!recording) return res.status(404).json({ message: "Not found" });
@@ -197,7 +202,9 @@ export async function registerRoutes(
       const reviewerId = (req.user as any).claims.sub;
 
       const feedback = await storage.createFeedback({
-        ...input,
+        recordingId,
+        textFeedback: input.textFeedback,
+        audioFeedbackUrl: input.audioFeedbackUrl,
         reviewerId,
       });
       

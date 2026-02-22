@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
-import { usePendingRecordings, useRecordings } from "@/hooks/use-recordings";
+import { usePendingRecordings, useAllRecordings } from "@/hooks/use-recordings";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +11,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function ReviewerPortal() {
   const { data: pendingRecordings, isLoading: loadingPending } = usePendingRecordings();
-  const { data: allRecordings, isLoading: loadingAll } = useRecordings();
+  const { data: allRecordings, isLoading: loadingAll } = useAllRecordings();
 
-  const reviewedRecordings = allRecordings?.filter(r => r.status === 'reviewed' || (r as any).status === 'reviewed') || [];
+  const reviewedRecordings = allRecordings?.filter(r => r.status === 'reviewed') || [];
 
   if (loadingPending || loadingAll) {
     return (

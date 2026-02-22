@@ -6,6 +6,17 @@ import { type InsertRecording, type Recording } from "@shared/schema";
 // In a real app we'd use the Zod schema from api.recordings.list.responses[200]
 // but for now we'll trust the backend response shape based on the manifest.
 
+export function useAllRecordings() {
+  return useQuery({
+    queryKey: ["/api/all-recordings"],
+    queryFn: async () => {
+      const res = await fetch("/api/all-recordings", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch all recordings");
+      return await res.json() as (Recording & { user: any, feedback: any[] })[];
+    },
+  });
+}
+
 export function useRecordings() {
   return useQuery({
     queryKey: [api.recordings.list.path],
