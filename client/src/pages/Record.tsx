@@ -121,6 +121,11 @@ export default function RecordPage() {
                 onRecordingComplete={handleRecordingComplete} 
                 isUploading={isUploading || createRecording.isPending}
               />
+              <div className="p-6 pt-0 text-center border-t border-border/50 bg-muted/5">
+                <p className="text-xs text-muted-foreground italic mt-4">
+                  Trouble recording? Make sure you've granted microphone permissions in your browser settings and try refreshing the page.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
