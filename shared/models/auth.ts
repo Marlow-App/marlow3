@@ -26,6 +26,8 @@ export const users = pgTable("users", {
   city: text("city"),
   teachingExperience: integer("teaching_experience"),
   dialects: text("dialects").array(),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

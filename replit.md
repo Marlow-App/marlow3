@@ -81,6 +81,16 @@ The project uses a monorepo layout with three main directories:
 - `@shared/*` → `shared/*`
 - `@assets` → `attached_assets/`
 
+### Stripe Integration
+
+- **Payments**: Stripe integration via `stripe` and `stripe-replit-sync` packages
+- **Stripe Files**: `server/stripe/stripeClient.ts` (client/sync), `server/stripe/webhookHandlers.ts`, `server/stripe/seedProducts.ts`
+- **Architecture**: Uses `stripe-replit-sync` to auto-sync Stripe data to PostgreSQL `stripe` schema. Products/prices queried from `stripe.*` tables, never inserted manually.
+- **Products**: Pro Starter ($4.99/mo) and Pro Max ($9.99/mo) subscription plans, created via seed script
+- **Webhook**: Registered BEFORE `express.json()` in `server/index.ts` at `/api/stripe/webhook`
+- **Routes**: `/api/stripe/products`, `/api/stripe/checkout`, `/api/stripe/subscription`, `/api/stripe/portal`, `/api/stripe/publishable-key`
+- **User schema**: `stripeCustomerId` and `stripeSubscriptionId` fields added to users table
+
 ## External Dependencies
 
 ### Required Services
@@ -88,9 +98,10 @@ The project uses a monorepo layout with three main directories:
 - **PostgreSQL Database** — Primary data store. Must be provisioned and `DATABASE_URL` environment variable set. Used for user data, sessions, recordings, and feedback.
 - **Replit Object Storage** — File storage for audio recordings and feedback audio. Uses Google Cloud Storage SDK talking to Replit's sidecar at `http://127.0.0.1:1106`. Presigned URL upload flow.
 - **Replit Auth (OpenID Connect)** — Authentication provider. Requires `REPL_ID`, `ISSUER_URL`, and `SESSION_SECRET` environment variables.
+- **Stripe** — Payment processing via Replit Stripe connector. Credentials fetched from Replit connection API.
 
 ### Key NPM Dependencies
 
-- **Backend**: express, drizzle-orm, pg, passport, express-session, connect-pg-simple, @google-cloud/storage, zod
+- **Backend**: express, drizzle-orm, pg, passport, express-session, connect-pg-simple, @google-cloud/storage, zod, stripe, stripe-replit-sync
 - **Frontend**: react, wouter, @tanstack/react-query, @radix-ui/* (shadcn/ui), tailwindcss, @uppy/core, @uppy/aws-s3, date-fns, lucide-react, class-variance-authority
 - **Shared**: drizzle-zod, zod

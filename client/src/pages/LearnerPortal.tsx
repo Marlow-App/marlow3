@@ -1,14 +1,72 @@
 import { Layout } from "@/components/Layout";
 import { useRecordings } from "@/hooks/use-recordings";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight, Crown, Zap, Shield } from "lucide-react";
+import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight, Crown, Zap, Shield, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 
 export default function LearnerPortal() {
   const { data: recordings, isLoading } = useRecordings() as { data: any[], isLoading: boolean };
+  const { toast } = useToast();
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const searchString = useSearch();
+
+  const { data: products } = useQuery<any[]>({
+    queryKey: ['/api/stripe/products'],
+  });
+
+  const { data: subscriptionData } = useQuery<any>({
+    queryKey: ['/api/stripe/subscription'],
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    if (params.get('checkout') === 'success') {
+      toast({ title: "Subscription activated!", description: "Welcome to your new plan." });
+    } else if (params.get('checkout') === 'cancel') {
+      toast({ title: "Checkout cancelled", description: "No charges were made.", variant: "destructive" });
+    }
+  }, [searchString]);
+
+  const handleCheckout = async (priceId: string) => {
+    setCheckoutLoading(priceId);
+    try {
+      const res = await apiRequest("POST", "/api/stripe/checkout", { priceId });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      toast({ title: "Checkout failed", description: "Please try again.", variant: "destructive" });
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      const res = await apiRequest("POST", "/api/stripe/portal", {});
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Unable to open billing portal.", variant: "destructive" });
+    }
+  };
+
+  const hasSubscription = !!subscriptionData?.subscription;
+
+  const getProductPrice = (productName: string) => {
+    const product = products?.find((p: any) => p.name === productName);
+    return product?.prices?.[0];
+  };
 
   if (isLoading) {
     return (
@@ -101,6 +159,32 @@ export default function LearnerPortal() {
             </Card>
           ))}
 
+          {hasSubscription ? (
+          <div className="mt-8">
+            <Card className="border-green-500/30 bg-gradient-to-br from-green-500/5 via-transparent to-transparent">
+              <CardHeader>
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown className="w-5 h-5 text-green-600 fill-green-600" />
+                  <span className="text-green-600 font-bold uppercase tracking-widest text-[10px]">Active</span>
+                </div>
+                <CardTitle className="text-xl font-display">
+                  {subscriptionData?.subscription?.product_name || 'Pro Plan'}
+                </CardTitle>
+                <CardDescription className="text-sm">Your subscription is active.</CardDescription>
+              </CardHeader>
+              <CardFooter>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleManageSubscription}
+                  data-testid="manage-subscription-btn"
+                >
+                  Manage Subscription
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        ) : (
           <div className="grid gap-6 md:grid-cols-2 mt-8">
             <Card className="border-secondary/30 bg-gradient-to-br from-secondary/5 via-transparent to-transparent relative overflow-hidden">
               <CardHeader>
@@ -122,8 +206,20 @@ export default function LearnerPortal() {
                 </div>
               </CardContent>
               <CardFooter>
-                 <Button className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold shadow-sm">
-                   Upgrade $4.99/mo
+                 <Button
+                   className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold shadow-sm"
+                   disabled={!!checkoutLoading}
+                   onClick={() => {
+                     const price = getProductPrice('Pro Starter');
+                     if (price) handleCheckout(price.id);
+                   }}
+                   data-testid="checkout-starter-btn"
+                 >
+                   {checkoutLoading === getProductPrice('Pro Starter')?.id ? (
+                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
+                   ) : (
+                     'Upgrade $4.99/mo'
+                   )}
                  </Button>
               </CardFooter>
             </Card>
@@ -148,12 +244,25 @@ export default function LearnerPortal() {
                 </div>
               </CardContent>
               <CardFooter>
-                 <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm">
-                   Upgrade $9.99/mo
+                 <Button
+                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
+                   disabled={!!checkoutLoading}
+                   onClick={() => {
+                     const price = getProductPrice('Pro Max');
+                     if (price) handleCheckout(price.id);
+                   }}
+                   data-testid="checkout-max-btn"
+                 >
+                   {checkoutLoading === getProductPrice('Pro Max')?.id ? (
+                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
+                   ) : (
+                     'Upgrade $9.99/mo'
+                   )}
                  </Button>
               </CardFooter>
             </Card>
           </div>
+        )}
 
           {(!recordings || recordings.length === 0) && (
             <div className="text-center py-20 bg-muted/10 rounded-2xl border border-dashed border-border mt-8">
