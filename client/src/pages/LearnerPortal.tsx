@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight, ChevronLeft, Crown, Loader2, MapPin, Calendar } from "lucide-react";
-import { format, formatDistanceToNow, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, isSameDay, isToday, isBefore, startOfDay } from "date-fns";
+import { format, formatDistanceToNow, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, isToday, isBefore, startOfDay } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 function JournalCalendar({ recordings }: { recordings: any[] }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -40,6 +41,17 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
     return map;
   }, [recordings]);
 
+  const sentencesByDay = useMemo(() => {
+    const map = new Map<string, string[]>();
+    recordings?.forEach((r: any) => {
+      const key = format(new Date(r.createdAt), "yyyy-MM-dd");
+      const arr = map.get(key) || [];
+      arr.push(r.sentenceText);
+      map.set(key, arr);
+    });
+    return map;
+  }, [recordings]);
+
   const maxCount = useMemo(() => {
     let max = 0;
     countsByDay.forEach((v) => { if (v > max) max = v; });
@@ -58,89 +70,115 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
 
   return (
     <Card className="border-border/60" data-testid="journal-calendar">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2 pt-3 px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-primary" />
-            <CardTitle className="text-base font-display">Practice Journal</CardTitle>
+            <CardTitle className="text-sm font-display">Practice Journal</CardTitle>
+            <span className="text-xs text-muted-foreground">
+              ({recordings?.length || 0} total)
+            </span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-6 w-6"
               disabled={!canGoBack}
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
               data-testid="calendar-prev-month"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </Button>
-            <span className="text-sm font-medium min-w-[120px] text-center" data-testid="calendar-month-label">
-              {format(currentMonth, "MMMM yyyy")}
+            <span className="text-xs font-medium min-w-[100px] text-center" data-testid="calendar-month-label">
+              {format(currentMonth, "MMM yyyy")}
             </span>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-6 w-6"
               disabled={!canGoForward}
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
               data-testid="calendar-next-month"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="grid grid-cols-7 gap-1 mb-1">
+      <CardContent className="pt-0 px-4 pb-3">
+        <div className="grid grid-cols-7 gap-0.5 mb-0.5">
           {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
-            <div key={d} className="text-[10px] text-center font-medium text-muted-foreground py-1">
+            <div key={d} className="text-[11px] text-center font-medium text-muted-foreground py-0.5">
               {d}
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5">
           {Array.from({ length: startDayOfWeek }).map((_, i) => (
-            <div key={`empty-${i}`} className="aspect-square" />
+            <div key={`empty-${i}`} className="h-7" />
           ))}
           {days.map((day) => {
             const key = format(day, "yyyy-MM-dd");
             const count = countsByDay.get(key) || 0;
             const today = isToday(day);
             const future = isBefore(new Date(), startOfDay(day));
+            const sentences = sentencesByDay.get(key) || [];
 
-            return (
+            const dayCell = (
               <div
-                key={key}
-                className={`aspect-square rounded-md flex flex-col items-center justify-center text-xs relative transition-colors ${
+                className={`h-7 rounded flex items-center justify-center text-xs relative transition-colors ${
+                  count > 0 ? "cursor-pointer" : ""
+                } ${
                   future
                     ? "text-muted-foreground/30"
                     : count > 0
                       ? getIntensity(count)
-                      : "bg-muted/30 text-muted-foreground"
-                } ${today ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : ""}`}
-                title={count > 0 ? `${count} recording${count > 1 ? "s" : ""} on ${format(day, "MMM d")}` : format(day, "MMM d")}
+                      : "bg-muted/20 text-muted-foreground"
+                } ${today ? "ring-1.5 ring-primary ring-offset-1 ring-offset-background" : ""}`}
                 data-testid={`calendar-day-${key}`}
               >
-                <span className="text-[11px] font-medium leading-none">{format(day, "d")}</span>
+                <span className="text-xs font-medium leading-none">{format(day, "d")}</span>
                 {count > 0 && (
-                  <span className="text-[9px] leading-none mt-0.5 font-bold">{count}</span>
+                  <span className="absolute -top-0.5 -right-0.5 bg-foreground text-background text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">
+                    {count}
+                  </span>
                 )}
               </div>
             );
+
+            if (count > 0) {
+              return (
+                <Popover key={key}>
+                  <PopoverTrigger asChild>
+                    {dayCell}
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3" side="top" align="center">
+                    <p className="text-xs font-semibold mb-1.5">{format(day, "MMM d, yyyy")}</p>
+                    <p className="text-[11px] text-muted-foreground mb-2">{count} recording{count > 1 ? "s" : ""}</p>
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {sentences.map((s, i) => (
+                        <div key={i} className="text-xs bg-muted/50 rounded px-2 py-1 truncate" title={s}>
+                          {s}
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              );
+            }
+
+            return <div key={key}>{dayCell}</div>;
           })}
         </div>
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
-          <span className="text-xs text-muted-foreground">
-            {recordings?.length || 0} total recordings
-          </span>
+        <div className="flex items-center justify-end mt-2">
           <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
             <span>Less</span>
-            <div className="w-3 h-3 rounded-sm bg-muted/30" />
-            <div className="w-3 h-3 rounded-sm bg-primary/20" />
-            <div className="w-3 h-3 rounded-sm bg-primary/40" />
-            <div className="w-3 h-3 rounded-sm bg-primary/70" />
-            <div className="w-3 h-3 rounded-sm bg-primary" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-muted/30" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-primary/20" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-primary/40" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-primary/70" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-primary" />
             <span>More</span>
           </div>
         </div>
@@ -152,72 +190,70 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
 function RecordingCard({ recording }: { recording: any }) {
   return (
     <Card className="overflow-hidden border-border/50 hover:border-primary/30 transition-colors" data-testid={`recording-card-${recording.id}`}>
-      <CardHeader className="bg-muted/30 pb-3 pt-4 px-5">
-        <div className="flex justify-between items-start">
-          <div className="space-y-0.5 flex-1 min-w-0">
-            <CardTitle className="text-lg truncate">{recording.sentenceText}</CardTitle>
-            <CardDescription className="flex items-center gap-2 text-xs">
+      <CardContent className="p-4 space-y-3">
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm truncate">{recording.sentenceText}</p>
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
               <Clock className="w-3 h-3" />
               {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}
-            </CardDescription>
+            </p>
           </div>
           <Badge
             variant={recording.status === "reviewed" ? "default" : "secondary"}
-            className="rounded-full px-2.5 shrink-0 ml-2"
+            className="rounded-full px-2 shrink-0 text-[10px]"
           >
             {recording.status === "reviewed" ? (
-              <span className="flex items-center gap-1 text-xs"><CheckCircle2 className="w-3 h-3" /> Reviewed</span>
+              <span className="flex items-center gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Reviewed</span>
             ) : (
-              <span className="text-xs">Pending</span>
+              "Pending"
             )}
           </Badge>
         </div>
-      </CardHeader>
-      <CardContent className="p-5 space-y-4">
-        <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
+        <div className="bg-muted/30 px-3 py-2 rounded-lg border border-border/50 max-w-md">
           <audio
             key={recording.audioUrl}
             src={recording.audioUrl}
             controls
-            className="w-full h-10"
+            className="w-full h-8"
             preload="metadata"
           />
         </div>
         {recording.status === "reviewed" && recording.feedback?.[0] ? (
-          <div className="space-y-3">
-            <div className="bg-primary/5 rounded-xl p-4 border border-primary/10">
-              <div className="flex items-start gap-3">
-                <MessageCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+          <div className="space-y-2">
+            <div className="bg-primary/5 rounded-lg p-3 border border-primary/10">
+              <div className="flex items-start gap-2">
+                <MessageCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-primary">
+                    <p className="text-xs font-medium text-primary">
                       {recording.feedback[0].reviewer
                         ? `${recording.feedback[0].reviewer.firstName || ""} ${recording.feedback[0].reviewer.lastName || ""}`.trim() || "Reviewer"
                         : "Native Speaker Feedback"}
                     </p>
                     {recording.feedback[0].reviewer?.city && (
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <MapPin className="w-3 h-3" />
+                      <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                        <MapPin className="w-2.5 h-2.5" />
                         {recording.feedback[0].reviewer.city}
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-foreground/80 mt-1 italic truncate">
+                  <p className="text-xs text-foreground/80 mt-1 italic truncate">
                     &ldquo;{recording.feedback[0].textFeedback}&rdquo;
                   </p>
                 </div>
               </div>
             </div>
             <Link href={`/recordings/${recording.id}`}>
-              <Button variant="outline" size="sm" className="w-full">
-                View Full Details <ChevronRight className="w-4 h-4 ml-1" />
+              <Button variant="outline" size="sm" className="w-full text-xs h-8">
+                View Full Details <ChevronRight className="w-3.5 h-3.5 ml-1" />
               </Button>
             </Link>
           </div>
         ) : (
-          <div className="flex items-center gap-3 py-2 text-center justify-center">
-            <Clock className="w-5 h-5 text-muted-foreground/30" />
-            <p className="text-sm text-muted-foreground italic">
+          <div className="flex items-center gap-2 py-1 justify-center">
+            <Clock className="w-4 h-4 text-muted-foreground/30" />
+            <p className="text-xs text-muted-foreground italic">
               Waiting for review...
             </p>
           </div>
@@ -306,7 +342,7 @@ export default function LearnerPortal() {
 
   return (
     <Layout>
-      <div className="space-y-6 animate-in">
+      <div className="space-y-5 animate-in">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold font-display">My Progress</h1>
@@ -323,7 +359,7 @@ export default function LearnerPortal() {
         <JournalCalendar recordings={recordings || []} />
 
         <Tabs defaultValue="waiting" className="w-full" data-testid="recordings-tabs">
-          <TabsList className="grid w-full grid-cols-2 max-w-sm">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="waiting" className="flex items-center gap-2" data-testid="tab-waiting">
               Waiting Review
               <Badge variant="secondary" className="ml-auto text-xs">
@@ -339,14 +375,14 @@ export default function LearnerPortal() {
           </TabsList>
 
           <TabsContent value="waiting" className="mt-4">
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {pendingRecordings.map((recording: any) => (
                 <RecordingCard key={recording.id} recording={recording} />
               ))}
               {pendingRecordings.length === 0 && (
-                <div className="text-center py-12 bg-muted/10 rounded-2xl border border-dashed border-border">
-                  <CheckCircle2 className="w-10 h-10 text-green-500/40 mx-auto mb-3" />
-                  <h3 className="text-lg font-medium">All caught up!</h3>
+                <div className="text-center py-10 bg-muted/10 rounded-2xl border border-dashed border-border">
+                  <CheckCircle2 className="w-8 h-8 text-green-500/40 mx-auto mb-2" />
+                  <h3 className="text-base font-medium">All caught up!</h3>
                   <p className="text-sm text-muted-foreground mt-1">No recordings waiting for review.</p>
                 </div>
               )}
@@ -354,14 +390,14 @@ export default function LearnerPortal() {
           </TabsContent>
 
           <TabsContent value="completed" className="mt-4">
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {reviewedRecordings.map((recording: any) => (
                 <RecordingCard key={recording.id} recording={recording} />
               ))}
               {reviewedRecordings.length === 0 && (
-                <div className="text-center py-12 bg-muted/10 rounded-2xl border border-dashed border-border">
-                  <MessageCircle className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-                  <h3 className="text-lg font-medium">No feedback yet</h3>
+                <div className="text-center py-10 bg-muted/10 rounded-2xl border border-dashed border-border">
+                  <MessageCircle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                  <h3 className="text-base font-medium">No feedback yet</h3>
                   <p className="text-sm text-muted-foreground mt-1">Your reviewed recordings will appear here.</p>
                 </div>
               )}
@@ -370,10 +406,10 @@ export default function LearnerPortal() {
         </Tabs>
 
         {(!recordings || recordings.length === 0) && (
-          <div className="text-center py-16 bg-muted/10 rounded-2xl border border-dashed border-border">
-            <Mic2 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-            <h3 className="text-xl font-medium">No recordings yet</h3>
-            <p className="text-muted-foreground mt-2 mb-6">Start your journey by recording your first sentence!</p>
+          <div className="text-center py-14 bg-muted/10 rounded-2xl border border-dashed border-border">
+            <Mic2 className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+            <h3 className="text-lg font-medium">No recordings yet</h3>
+            <p className="text-muted-foreground mt-2 mb-5 text-sm">Start your journey by recording your first sentence!</p>
             <Link href="/record">
               <Button data-testid="first-recording-btn">Record Now</Button>
             </Link>
