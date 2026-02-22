@@ -76,6 +76,7 @@ export function registerObjectStorageRoutes(app: Express): void {
       const objectPath = req.params[0];
       
       const fullPath = `/objects/${objectPath}`;
+      console.log(`Serving object: ${fullPath}`);
       
       const objectFile = await objectStorageService.getObjectEntityFile(fullPath);
       

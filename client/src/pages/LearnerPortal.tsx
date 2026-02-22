@@ -61,7 +61,16 @@ export default function LearnerPortal() {
                 </div>
               </CardHeader>
               <CardContent className="p-6">
-                {recording.status === "reviewed" && recording.feedback?.[0] ? (
+                    <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+                      <audio 
+                        key={recording.audioUrl}
+                        src={recording.audioUrl} 
+                        controls 
+                        className="w-full h-10"
+                        preload="metadata"
+                      />
+                    </div>
+                    {recording.status === "reviewed" && recording.feedback?.[0] ? (
                   <div className="space-y-4">
                     <div className="bg-primary/5 rounded-xl p-4 border border-primary/10">
                       <div className="flex items-start gap-3">

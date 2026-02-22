@@ -52,7 +52,13 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
       };
 
       mediaRecorder.onstop = () => {
-        const recordedType = mediaRecorder.mimeType || mimeType || 'audio/webm';
+        let recordedType = mediaRecorder.mimeType || mimeType || 'audio/webm';
+        
+        // Normalize MIME type for Safari/iOS
+        if (recordedType.includes('audio/mp4') || recordedType.includes('audio/x-m4a')) {
+          recordedType = 'audio/mp4';
+        }
+        
         console.log("Recording stopped. MIME type:", recordedType, "Chunks:", chunksRef.current.length);
         if (chunksRef.current.length === 0) {
           console.error("No data chunks captured!");

@@ -120,6 +120,20 @@ export class ObjectStorageService {
         contentType = "audio/wav";
       }
       
+      // Simplify Content-Type to avoid codec issues on different platforms
+      // We also ensure it's just the base MIME type for better cross-browser compatibility
+      if (contentType.includes("audio/mp4")) {
+        contentType = "audio/mp4";
+      } else if (contentType.includes("audio/webm")) {
+        contentType = "audio/webm";
+      } else if (contentType.includes("audio/mpeg")) {
+        contentType = "audio/mpeg";
+      } else if (contentType.includes("audio/ogg")) {
+        contentType = "audio/ogg";
+      } else if (contentType.includes("audio/wav")) {
+        contentType = "audio/wav";
+      }
+
       // Add debug logging
       console.log(`Serving file: ${file.name}, Content-Type: ${contentType}, Size: ${size}, Range: ${range || 'none'}`);
       
