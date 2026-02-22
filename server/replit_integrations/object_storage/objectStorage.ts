@@ -99,6 +99,8 @@ export class ObjectStorageService {
     try {
       // Get file metadata
       const [metadata] = await file.getMetadata();
+      const size = Number(metadata.size);
+      const range = res.req.headers.range;
       
       let contentType = (metadata.contentType as string) || "audio/webm";
       // Basic extension-based fallback if contentType is generic
@@ -118,21 +120,13 @@ export class ObjectStorageService {
         contentType = "audio/wav";
       }
       
-      // Fallback for Safari which sometimes sends audio/mpeg but expects audio/mp4
-      if (contentType === "audio/mpeg" && file.name.endsWith(".mp4")) {
-        contentType = "audio/mp4";
-      }
+      // Add debug logging
+      console.log(`Serving file: ${file.name}, Content-Type: ${contentType}, Size: ${size}, Range: ${range || 'none'}`);
       
-      const size = Number(metadata.size);
-
-      // Support byte-range requests for audio seeking/streaming
-      const range = res.req.headers.range;
-      
-      // Add more specific headers for audio streaming
-      res.setHeader("X-Content-Type-Options", "nosniff");
+      // Basic headers for all responses
       res.setHeader("Accept-Ranges", "bytes");
-      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
       res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("X-Content-Type-Options", "nosniff");
 
       if (range) {
         const parts = range.replace(/bytes=/, "").split("-");
@@ -151,7 +145,7 @@ export class ObjectStorageService {
 
         const chunksize = (end - start) + 1;
         
-        res.writeHead(206, {
+        const headers: Record<string, string | number> = {
           "Content-Range": `bytes ${start}-${end}/${size}`,
           "Accept-Ranges": "bytes",
           "Content-Length": chunksize,
@@ -159,7 +153,9 @@ export class ObjectStorageService {
           "Cache-Control": "no-cache, no-store, must-revalidate",
           "Access-Control-Allow-Origin": "*",
           "X-Content-Type-Options": "nosniff",
-        });
+        };
+        
+        res.writeHead(206, headers);
 
         const stream = file.createReadStream({ start, end });
         stream.on('error', (err) => {
@@ -168,14 +164,16 @@ export class ObjectStorageService {
         });
         stream.pipe(res);
       } else {
-        res.writeHead(200, {
+        const headers: Record<string, string | number> = {
           "Content-Length": size,
           "Content-Type": contentType,
           "Accept-Ranges": "bytes",
           "Cache-Control": "no-cache, no-store, must-revalidate",
           "Access-Control-Allow-Origin": "*",
           "X-Content-Type-Options": "nosniff",
-        });
+        };
+        
+        res.writeHead(200, headers);
 
         const stream = file.createReadStream();
         stream.on('error', (err) => {

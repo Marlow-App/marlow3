@@ -98,6 +98,8 @@ export function useUpload(options: UseUploadOptions = {}) {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Upload failed:", response.status, errorText);
         throw new Error("Failed to upload file to storage");
       }
     },

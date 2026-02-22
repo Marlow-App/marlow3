@@ -47,9 +47,16 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
 
+      mediaRecorder.onerror = (event) => {
+        console.error("MediaRecorder error:", event);
+      };
+
       mediaRecorder.onstop = () => {
         const recordedType = mediaRecorder.mimeType || mimeType || 'audio/webm';
-        console.log("Recording stopped. MIME type:", recordedType);
+        console.log("Recording stopped. MIME type:", recordedType, "Chunks:", chunksRef.current.length);
+        if (chunksRef.current.length === 0) {
+          console.error("No data chunks captured!");
+        }
         const blob = new Blob(chunksRef.current, { type: recordedType });
         const url = URL.createObjectURL(blob);
         setAudioBlob(blob);
@@ -57,7 +64,7 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
         stream.getTracks().forEach(track => track.stop());
       };
 
-      mediaRecorder.start(100); // Request data in 100ms chunks to ensure capture
+      mediaRecorder.start(); // Remove 100ms chunks for now to see if it fixes desktop
       setIsRecording(true);
       setDuration(0);
       
