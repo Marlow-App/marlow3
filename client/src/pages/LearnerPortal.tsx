@@ -419,14 +419,14 @@ export default function LearnerPortal() {
         <JournalCalendar recordings={recordings || []} />
 
         <Tabs defaultValue="waiting" className="w-full" data-testid="recordings-tabs">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="waiting" className="flex items-center gap-2" data-testid="tab-waiting">
+          <TabsList className="grid w-full grid-cols-2 h-auto p-1 rounded-xl">
+            <TabsTrigger value="waiting" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md" data-testid="tab-waiting">
               Waiting Review
               <Badge variant="secondary" className="ml-auto text-xs">
                 {pendingRecordings.length}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="completed" className="flex items-center gap-2" data-testid="tab-completed">
+            <TabsTrigger value="completed" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md" data-testid="tab-completed">
               Completed
               <Badge variant="outline" className="ml-auto text-xs">
                 {reviewedRecordings.length}

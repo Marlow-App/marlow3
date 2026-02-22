@@ -36,16 +36,16 @@ export default function ReviewerPortal() {
         </div>
 
         <Tabs defaultValue="pending" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="pending" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 h-auto p-1 rounded-xl">
+            <TabsTrigger value="pending" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md">
               Pending
-              <Badge variant="secondary" className="ml-auto">
+              <Badge variant="secondary" className="ml-auto text-xs">
                 {pendingRecordings?.length || 0}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="reviewed" className="flex items-center gap-2">
+            <TabsTrigger value="reviewed" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md">
               Completed
-              <Badge variant="outline" className="ml-auto">
+              <Badge variant="outline" className="ml-auto text-xs">
                 {reviewedRecordings.length}
               </Badge>
             </TabsTrigger>
