@@ -1,10 +1,10 @@
 import { Layout } from "@/components/Layout";
 import { useRecordings } from "@/hooks/use-recordings";
 import { Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight } from "lucide-react";
+import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight, Crown, Zap, Shield } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export default function LearnerPortal() {
@@ -101,8 +101,50 @@ export default function LearnerPortal() {
             </Card>
           ))}
 
+          <Card className="border-secondary/30 bg-gradient-to-br from-secondary/5 via-transparent to-transparent relative overflow-hidden mt-8">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+              <Crown className="w-48 h-48 rotate-12 text-secondary" />
+            </div>
+            
+            <CardHeader>
+              <div className="flex items-center gap-2 mb-2">
+                 <Crown className="w-6 h-6 text-secondary fill-secondary" />
+                 <span className="text-secondary font-bold uppercase tracking-widest text-xs">Premium</span>
+              </div>
+              <CardTitle className="text-2xl font-display">Upgrade to SixTone Studio Pro</CardTitle>
+              <CardDescription className="text-base">Accelerate your learning with faster feedback and more practice.</CardDescription>
+            </CardHeader>
+            
+            <CardContent className="grid gap-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-background shadow-sm text-primary">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-semibold">Priority Feedback</h4>
+                  <p className="text-sm text-muted-foreground">Get reviews within 24 hours guaranteed.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-background shadow-sm text-primary">
+                  <Shield className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-semibold">Unlimited Recordings</h4>
+                  <p className="text-sm text-muted-foreground">Practice as much as you want every day.</p>
+                </div>
+              </div>
+            </CardContent>
+            
+            <CardFooter className="pt-4">
+               <Button className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold shadow-lg shadow-secondary/20 h-12">
+                 Upgrade for $5/month
+               </Button>
+            </CardFooter>
+          </Card>
+
           {(!recordings || recordings.length === 0) && (
-            <div className="text-center py-20 bg-muted/10 rounded-2xl border border-dashed border-border">
+            <div className="text-center py-20 bg-muted/10 rounded-2xl border border-dashed border-border mt-8">
               <Mic2 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
               <h3 className="text-xl font-medium">No recordings yet</h3>
               <p className="text-muted-foreground mt-2 mb-6">Start your journey by recording your first sentence!</p>

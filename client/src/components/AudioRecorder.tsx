@@ -63,7 +63,9 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
         if (chunksRef.current.length === 0) {
           console.error("No data chunks captured!");
         }
-        const blob = new Blob(chunksRef.current, { type: recordedType });
+        // Use audio/webm for blobs that are not mp4 to ensure desktop compatibility
+        const finalType = recordedType === 'audio/mp4' ? 'audio/mp4' : 'audio/webm';
+        const blob = new Blob(chunksRef.current, { type: finalType });
         const url = URL.createObjectURL(blob);
         setAudioBlob(blob);
         setAudioUrl(url);

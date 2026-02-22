@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Layout } from "@/components/Layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ import { useUpload } from "@/hooks/use-upload";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, Crown, Zap, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const CHINESE_LEVELS = [
@@ -38,13 +38,14 @@ const DIALECTS = [
   "Pinghua"
 ];
 
-// Simplified list of major Chinese cities for the demo
-// In a real app, this would be a much larger list or an API
+// 1st and 2nd tier cities in China
 const CITIES = [
   "Shanghai", "Beijing", "Guangzhou", "Shenzhen", "Chengdu", "Chongqing", "Tianjin", "Nanjing", "Wuhan", "Xi'an",
   "Hangzhou", "Shenyang", "Harbin", "Suzhou", "Qingdao", "Dalian", "Zhengzhou", "Jinan", "Changsha", "Kunming",
   "Changchun", "Urumqi", "Fuzhou", "Hefei", "Nanchang", "Shijiazhuang", "Lanzhou", "Nanning", "Guiyang", "Taiyuan",
-  "Hohhot", "Haikou", "Xining", "Yinchuan", "Lhasa", "Wuxi", "Foshan", "Ningbo", "Dongguan", "Changzhou"
+  "Hohhot", "Haikou", "Xining", "Yinchuan", "Lhasa", "Wuxi", "Foshan", "Ningbo", "Dongguan", "Changzhou",
+  "Xiamen", "Zhongshan", "Zhuhai", "Wenzhou", "Quanzhou", "Jiaxing", "Jinhua", "Nantong", "Huizhou", "Xuzhou",
+  "Taizhou", "Yantai", "Shaoxing", "Weifang", "Linyi", "Tangshan"
 ];
 
 export default function Profile() {
@@ -129,7 +130,6 @@ export default function Profile() {
                 </Button>
               </>
             )}
-            <Button variant="ghost" className="text-destructive" onClick={() => logout()}>Log Out</Button>
           </div>
         </div>
 
@@ -292,6 +292,50 @@ export default function Profile() {
               )}
             </CardContent>
           </Card>
+
+          {!isReviewer && (
+            <Card className="border-secondary/30 bg-gradient-to-br from-secondary/5 via-transparent to-transparent relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <Crown className="w-48 h-48 rotate-12 text-secondary" />
+              </div>
+              
+              <CardHeader>
+                <div className="flex items-center gap-2 mb-2">
+                   <Crown className="w-6 h-6 text-secondary fill-secondary" />
+                   <span className="text-secondary font-bold uppercase tracking-widest text-xs">Premium</span>
+                </div>
+                <CardTitle className="text-2xl font-display">Upgrade to SixTone Studio Pro</CardTitle>
+                <CardDescription className="text-base">Accelerate your learning with faster feedback and more practice.</CardDescription>
+              </CardHeader>
+              
+              <CardContent className="grid gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-background shadow-sm text-primary">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">Priority Feedback</h4>
+                    <p className="text-sm text-muted-foreground">Get reviews within 24 hours guaranteed.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-background shadow-sm text-primary">
+                    <Shield className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">Unlimited Recordings</h4>
+                    <p className="text-sm text-muted-foreground">Practice as much as you want every day.</p>
+                  </div>
+                </div>
+              </CardContent>
+              
+              <CardFooter className="pt-4">
+                 <Button className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold shadow-lg shadow-secondary/20 h-12">
+                   Upgrade for $5/month
+                 </Button>
+              </CardFooter>
+            </Card>
+          )}
         </div>
       </div>
     </Layout>
