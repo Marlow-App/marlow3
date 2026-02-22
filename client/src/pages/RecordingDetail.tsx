@@ -77,9 +77,11 @@ function RatingSelector({ value, onChange }: { value: number | null; onChange: (
             />
           ))}
         </div>
-        {activeLevel && (
-          <span className={`text-sm font-semibold ${activeLevel.textColor}`}>{activeLevel.label}</span>
-        )}
+        <div className="overflow-x-auto min-w-0 flex-1">
+          {activeLevel && (
+            <span className={`text-sm font-semibold ${activeLevel.textColor} whitespace-nowrap`}>{activeLevel.label}</span>
+          )}
+        </div>
       </div>
       <div className="flex flex-col gap-1">
         {levels.map((level) => {
