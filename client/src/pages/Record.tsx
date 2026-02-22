@@ -60,7 +60,7 @@ function CompactPhraseChip({ phrase, onSelect, isSelected }: { phrase: Phrase; o
   return (
     <button
       onClick={() => onSelect(phrase)}
-      className={`shrink-0 text-left px-3 py-2.5 rounded-xl border-2 transition-all duration-200 min-w-[160px] max-w-[220px] ${
+      className={`shrink-0 text-left px-3 py-2.5 rounded-xl border-2 transition-all duration-200 min-w-[160px] max-w-[220px] overflow-hidden ${
         isSelected
           ? "border-primary bg-primary/5 shadow-md"
           : "border-border/60 bg-card hover:border-primary/40 hover:shadow-sm"
@@ -69,7 +69,7 @@ function CompactPhraseChip({ phrase, onSelect, isSelected }: { phrase: Phrase; o
     >
       <div className="flex items-center justify-between gap-1.5">
         <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-end gap-x-0">
+          <div className="flex items-end gap-x-0 whitespace-nowrap overflow-hidden">
             {phrase.characters.map((tc, i) => (
               <ToneCharacter key={i} toneChar={tc} size="sm" />
             ))}
