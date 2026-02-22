@@ -13,6 +13,27 @@ import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
+function RatingBadge({ rating }: { rating: number | null | undefined }) {
+  if (!rating) return null;
+  const config: Record<number, { label: string; dots: string[]; textColor: string }> = {
+    1: { label: "Needs Work", dots: ["bg-gray-400", "bg-muted-foreground/15", "bg-muted-foreground/15"], textColor: "text-gray-500" },
+    2: { label: "Good", dots: ["bg-gray-400", "bg-amber-400", "bg-muted-foreground/15"], textColor: "text-amber-600" },
+    3: { label: "Excellent", dots: ["bg-gray-400", "bg-amber-400", "bg-emerald-400"], textColor: "text-emerald-600" },
+  };
+  const c = config[rating];
+  if (!c) return null;
+  return (
+    <div className="flex items-center gap-1" data-testid={`rating-badge-${rating}`}>
+      <div className="flex items-center gap-0.5">
+        {c.dots.map((dot, i) => (
+          <div key={i} className={`w-2 h-2 rounded-full ${dot}`} />
+        ))}
+      </div>
+      <span className={`text-[10px] font-semibold ${c.textColor}`}>{c.label}</span>
+    </div>
+  );
+}
+
 interface RecordingEntry {
   id: number;
   sentenceText: string;
@@ -298,6 +319,7 @@ function RecordingCard({ recording }: { recording: any }) {
                       </span>
                     )}
                   </div>
+                  <RatingBadge rating={recording.feedback[0].rating} />
                   <p className="text-xs text-foreground/80 mt-1 italic truncate">
                     &ldquo;{recording.feedback[0].textFeedback}&rdquo;
                   </p>

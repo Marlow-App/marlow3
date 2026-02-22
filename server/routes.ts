@@ -265,10 +265,18 @@ export async function registerRoutes(
       });
       const reviewerId = (req.user as any).claims.sub;
 
+      const ratingValue = input.rating;
+      if (ratingValue !== undefined && ratingValue !== null) {
+        if (!Number.isInteger(ratingValue) || ratingValue < 1 || ratingValue > 3) {
+          return res.status(400).json({ message: "Rating must be 1, 2, or 3" });
+        }
+      }
+
       const feedback = await storage.createFeedback({
         recordingId,
         textFeedback: input.textFeedback,
         audioFeedbackUrl: input.audioFeedbackUrl,
+        rating: ratingValue ?? null,
         reviewerId,
       } as any);
       

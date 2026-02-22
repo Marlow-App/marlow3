@@ -10,11 +10,92 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, User, MessageSquare, Play, Mic, GraduationCap, MapPin } from "lucide-react";
+import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { type User as SharedUser } from "@shared/schema";
+
+function RatingDisplay({ rating }: { rating: number | null | undefined }) {
+  if (!rating) return null;
+
+  const levels = [
+    { value: 1, label: "Needs Work", color: "bg-gray-400", activeGlow: "shadow-gray-400/40", textColor: "text-gray-600" },
+    { value: 2, label: "Good", color: "bg-amber-400", activeGlow: "shadow-amber-400/40", textColor: "text-amber-600" },
+    { value: 3, label: "Excellent", color: "bg-emerald-400", activeGlow: "shadow-emerald-400/40", textColor: "text-emerald-600" },
+  ];
+
+  const active = levels.find((l) => l.value === rating);
+
+  return (
+    <div className="flex items-center gap-1.5" data-testid={`rating-display-${rating}`}>
+      <div className="flex items-center gap-1 bg-muted/40 rounded-full px-2 py-1">
+        {levels.map((level) => (
+          <div
+            key={level.value}
+            className={`w-3 h-3 rounded-full transition-all ${
+              level.value <= rating
+                ? `${level.color} ${level.value === rating ? `shadow-md ${level.activeGlow}` : ""}`
+                : "bg-muted-foreground/15"
+            }`}
+          />
+        ))}
+      </div>
+      {active && (
+        <span className={`text-[11px] font-semibold ${active.textColor}`}>{active.label}</span>
+      )}
+    </div>
+  );
+}
+
+function RatingSelector({ value, onChange }: { value: number | null; onChange: (v: number) => void }) {
+  const levels = [
+    { value: 1, label: "Needs Improvement", color: "bg-gray-400", ring: "ring-gray-400/50", hoverBg: "hover:bg-gray-50 dark:hover:bg-gray-900", textColor: "text-gray-600 dark:text-gray-400", desc: "Tones need more practice" },
+    { value: 2, label: "Good", color: "bg-amber-400", ring: "ring-amber-400/50", hoverBg: "hover:bg-amber-50 dark:hover:bg-amber-950", textColor: "text-amber-600 dark:text-amber-400", desc: "On the right track" },
+    { value: 3, label: "Excellent", color: "bg-emerald-400", ring: "ring-emerald-400/50", hoverBg: "hover:bg-emerald-50 dark:hover:bg-emerald-950", textColor: "text-emerald-600 dark:text-emerald-400", desc: "Nearly native-like" },
+  ];
+
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium">Rating</label>
+      <div className="flex gap-2">
+        {levels.map((level) => {
+          const isActive = value === level.value;
+          return (
+            <button
+              key={level.value}
+              type="button"
+              onClick={() => onChange(level.value)}
+              className={`flex-1 flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 transition-all duration-200 ${
+                isActive
+                  ? `border-current ${level.textColor} bg-current/5 ring-2 ${level.ring}`
+                  : `border-border/60 ${level.hoverBg}`
+              }`}
+              data-testid={`rating-btn-${level.value}`}
+            >
+              <div className="flex items-center gap-1">
+                {levels.map((dot) => (
+                  <div
+                    key={dot.value}
+                    className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                      dot.value <= level.value ? dot.color : "bg-muted-foreground/15"
+                    }`}
+                  />
+                ))}
+              </div>
+              <div className="text-left min-w-0">
+                <p className={`text-xs font-semibold leading-tight ${isActive ? level.textColor : "text-foreground"}`}>
+                  {level.label}
+                </p>
+                <p className="text-[10px] text-muted-foreground leading-tight truncate">{level.desc}</p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function RecordingDetail() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +107,7 @@ export default function RecordingDetail() {
   const { toast } = useToast();
   
   const [feedbackText, setFeedbackText] = useState("");
+  const [rating, setRating] = useState<number | null>(null);
   const [isRecordingFeedback, setIsRecordingFeedback] = useState(false);
 
   const isLoading = loadingRecording || loadingUser;
@@ -36,6 +118,15 @@ export default function RecordingDetail() {
       toast({
         title: "Empty Feedback",
         description: "Please provide either text or audio feedback.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!rating) {
+      toast({
+        title: "Rating Required",
+        description: "Please select a rating before submitting.",
         variant: "destructive",
       });
       return;
@@ -55,6 +146,7 @@ export default function RecordingDetail() {
         recordingId,
         textFeedback: feedbackText,
         audioFeedbackUrl: audioUrl,
+        rating,
       });
 
       toast({
@@ -63,6 +155,7 @@ export default function RecordingDetail() {
       });
       
       setFeedbackText("");
+      setRating(null);
       setIsRecordingFeedback(false);
       
     } catch (err) {
@@ -101,7 +194,6 @@ export default function RecordingDetail() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content: Audio & Transcript */}
           <div className="lg:col-span-2 space-y-6">
             <Card className="border-border shadow-md overflow-hidden">
               <div className="h-2 bg-primary w-full"></div>
@@ -134,24 +226,12 @@ export default function RecordingDetail() {
                       className="w-full"
                       preload="auto"
                       playsInline
-                      onCanPlay={() => console.log("Audio can play")}
-                      onPlay={() => console.log("Audio playing")}
-                      onWaiting={() => console.log("Audio waiting")}
-                      onStalled={() => console.warn("Audio stalled")}
-                      onSuspend={() => console.warn("Audio suspended")}
-                      onAbort={() => console.warn("Audio aborted")}
-                      onEmptied={() => console.warn("Audio emptied")}
-                      onEncrypted={() => console.warn("Audio encrypted")}
                       onError={(e: React.SyntheticEvent<HTMLAudioElement, Event>) => {
                         const target = e.currentTarget;
                         const error = target.error;
-                        console.error("Audio playback error details:", {
+                        console.error("Audio playback error:", {
                           code: error?.code,
                           message: error?.message,
-                          networkState: target.networkState,
-                          readyState: target.readyState,
-                          src: target.src,
-                          currentSrc: target.currentSrc
                         });
                       }}
                     >
@@ -162,7 +242,6 @@ export default function RecordingDetail() {
               </CardContent>
             </Card>
 
-            {/* Existing Feedback */}
             <div className="space-y-4">
               <h3 className="text-xl font-bold flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-primary" />
@@ -178,17 +257,20 @@ export default function RecordingDetail() {
                           {item.reviewer?.firstName?.[0] || "R"}
                         </div>
                         <div className="flex-1">
-                          <div className="flex justify-between items-baseline mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-foreground" data-testid={`reviewer-name-${item.id}`}>
-                                {item.reviewer ? `${item.reviewer.firstName || ''} ${item.reviewer.lastName || ''}`.trim() || 'Reviewer' : 'Reviewer'}
-                              </span>
-                              {item.reviewer?.city && (
-                                <span className="flex items-center gap-1 text-xs text-muted-foreground" data-testid={`reviewer-city-${item.id}`}>
-                                  <MapPin className="w-3 h-3" />
-                                  {item.reviewer.city}
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-foreground" data-testid={`reviewer-name-${item.id}`}>
+                                  {item.reviewer ? `${item.reviewer.firstName || ''} ${item.reviewer.lastName || ''}`.trim() || 'Reviewer' : 'Reviewer'}
                                 </span>
-                              )}
+                                {item.reviewer?.city && (
+                                  <span className="flex items-center gap-1 text-xs text-muted-foreground" data-testid={`reviewer-city-${item.id}`}>
+                                    <MapPin className="w-3 h-3" />
+                                    {item.reviewer.city}
+                                  </span>
+                                )}
+                              </div>
+                              <RatingDisplay rating={item.rating} />
                             </div>
                             <span className="text-xs text-muted-foreground">{format(new Date(item.createdAt), 'MMM d, HH:mm')}</span>
                           </div>
@@ -223,13 +305,14 @@ export default function RecordingDetail() {
             </div>
           </div>
 
-          {/* Sidebar: Feedback Form (Only visible if not reviewed or for experts) */}
           <div className="space-y-6">
             <Card className="shadow-lg border-t-4 border-t-secondary sticky top-8">
               <CardHeader>
                 <CardTitle>Add Feedback</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <RatingSelector value={rating} onChange={setRating} />
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Detailed Comments</label>
                   <Textarea 
@@ -265,7 +348,7 @@ export default function RecordingDetail() {
                   <Button 
                     className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                     onClick={() => handleFeedbackSubmit()}
-                    disabled={createFeedback.isPending || !feedbackText.trim()}
+                    disabled={createFeedback.isPending || !feedbackText.trim() || !rating}
                   >
                     {createFeedback.isPending ? "Submitting..." : "Submit Text Feedback"}
                   </Button>

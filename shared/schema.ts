@@ -21,6 +21,7 @@ export const feedback = pgTable("feedback", {
   reviewerId: varchar("reviewer_id").notNull().references(() => users.id),
   textFeedback: text("text_feedback").notNull(),
   audioFeedbackUrl: text("audio_feedback_url"),
+  rating: integer("rating"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

@@ -9,6 +9,27 @@ import { Mic, PlayCircle, ArrowRight, User as UserIcon, GraduationCap } from "lu
 import { formatDistanceToNow } from "date-fns";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
+function RatingBadge({ rating }: { rating: number | null | undefined }) {
+  if (!rating) return null;
+  const config: Record<number, { label: string; dots: string[]; textColor: string }> = {
+    1: { label: "Needs Work", dots: ["bg-gray-400", "bg-muted-foreground/15", "bg-muted-foreground/15"], textColor: "text-gray-500" },
+    2: { label: "Good", dots: ["bg-gray-400", "bg-amber-400", "bg-muted-foreground/15"], textColor: "text-amber-600" },
+    3: { label: "Excellent", dots: ["bg-gray-400", "bg-amber-400", "bg-emerald-400"], textColor: "text-emerald-600" },
+  };
+  const c = config[rating];
+  if (!c) return null;
+  return (
+    <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
+        {c.dots.map((dot, i) => (
+          <div key={i} className={`w-2 h-2 rounded-full ${dot}`} />
+        ))}
+      </div>
+      <span className={`text-[10px] font-semibold ${c.textColor}`}>{c.label}</span>
+    </div>
+  );
+}
+
 export default function ReviewerPortal() {
   const { data: pendingRecordings, isLoading: loadingPending } = usePendingRecordings();
   const { data: allRecordings, isLoading: loadingAll } = useAllRecordings();
@@ -132,6 +153,9 @@ export default function ReviewerPortal() {
                                </div>
                              )}
                              <span>Reviewed {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}</span>
+                             {(recording as any).feedback?.[0]?.rating && (
+                               <RatingBadge rating={(recording as any).feedback[0].rating} />
+                             )}
                              <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200">Reviewed</Badge>
                           </div>
                         </div>
