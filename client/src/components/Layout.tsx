@@ -26,7 +26,7 @@ export function Layout({ children }: LayoutProps) {
 
   const reviewerItems = [
     { href: "/", label: "Home", icon: LayoutDashboard },
-    { href: "/reviewer-portal", label: "Reviewer Hub", icon: FileAudio },
+    { href: "/reviewer-hub", label: "Reviewer Hub", icon: FileAudio },
     { href: "/profile", label: "Profile", icon: UserCircle },
   ];
 
@@ -83,10 +83,10 @@ export function Layout({ children }: LayoutProps) {
         <div className="p-4 border-t border-border/50 bg-muted/10">
           <div className="flex items-center gap-3 mb-4 px-2">
             <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold">
-              {user?.firstName?.[0] || user?.username?.[0] || "U"}
+              {user?.firstName?.[0] || (user as any)?.username?.[0] || "U"}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.firstName || user?.username || "Learner"}</p>
+              <p className="text-sm font-medium truncate">{user?.firstName || (user as any)?.username || "Learner"}</p>
               <p className="text-xs text-muted-foreground truncate">Free Plan</p>
             </div>
           </div>
