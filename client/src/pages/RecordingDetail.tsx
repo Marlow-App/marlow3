@@ -124,6 +124,8 @@ export default function RecordingDetail() {
                     src={recording.audioUrl} 
                     controls 
                     className="w-full"
+                    preload="auto"
+                    playsInline
                     onCanPlay={() => console.log("Audio can play")}
                     onPlay={() => console.log("Audio playing")}
                     onWaiting={() => console.log("Audio waiting")}

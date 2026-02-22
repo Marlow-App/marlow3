@@ -106,6 +106,11 @@ export class ObjectStorageService {
         if (file.name.endsWith(".mp4") || file.name.endsWith(".m4a")) contentType = "audio/mp4";
         else if (file.name.endsWith(".webm")) contentType = "audio/webm";
       }
+
+      // Ensure Safari/iOS compatibility by force-setting audio/mp4 for .mp4 files if needed
+      if (file.name.endsWith(".mp4") && !contentType.includes("video")) {
+        contentType = "audio/mp4";
+      }
       
       const size = Number(metadata.size);
 
