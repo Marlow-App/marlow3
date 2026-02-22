@@ -63,13 +63,17 @@ function RatingSelector({ value, onChange }: { value: number | null; onChange: (
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5 bg-muted/40 rounded-full px-3 py-2">
           {levels.map((level) => (
-            <div
+            <button
               key={level.value}
-              className={`w-4 h-4 rounded-full transition-all duration-200 ${
+              type="button"
+              onClick={() => onChange(level.value)}
+              className={`w-4 h-4 rounded-full transition-all duration-200 cursor-pointer hover:scale-125 ${
                 value === level.value
                   ? `${level.color} ${level.shadow} scale-110`
-                  : "bg-muted-foreground/15"
+                  : "bg-muted-foreground/15 hover:bg-muted-foreground/30"
               }`}
+              data-testid={`rating-dot-${level.value}`}
+              aria-label={level.label}
             />
           ))}
         </div>
