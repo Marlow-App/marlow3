@@ -470,112 +470,138 @@ export default function LearnerPortal() {
           </div>
         )}
 
-        {hasSubscription ? (
-          <Card className="border-green-500/30 bg-gradient-to-br from-green-500/5 via-transparent to-transparent">
-            <CardHeader>
-              <div className="flex items-center gap-2 mb-2">
-                <Crown className="w-5 h-5 text-green-600 fill-green-600" />
-                <span className="text-green-600 font-bold uppercase tracking-widest text-[10px]">Active</span>
-              </div>
-              <CardTitle className="text-xl font-display">
-                {subscriptionData?.subscription?.product_name || "Pro Plan"}
-              </CardTitle>
-              <CardDescription className="text-sm">Your subscription is active.</CardDescription>
-            </CardHeader>
-            <CardFooter>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleManageSubscription}
-                data-testid="manage-subscription-btn"
-              >
-                Manage Subscription
-              </Button>
-            </CardFooter>
-          </Card>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card className="border-secondary/30 bg-gradient-to-br from-secondary/5 via-transparent to-transparent relative overflow-hidden">
-              <CardHeader>
-                <div className="flex items-center gap-2 mb-2">
-                  <Crown className="w-5 h-5 text-secondary fill-secondary" />
-                  <span className="text-secondary font-bold uppercase tracking-widest text-[10px]">Starter</span>
-                </div>
-                <CardTitle className="text-xl font-display">Pro Starter</CardTitle>
-                <CardDescription className="text-sm">Perfect for consistent daily practice.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-3">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
-                  <p className="text-sm">Up to 5 recordings / day</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
-                  <p className="text-sm">24h feedback guarantee</p>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold shadow-sm"
-                  disabled={!!checkoutLoading}
-                  onClick={() => {
-                    const price = getProductPrice("Pro Starter");
-                    if (price) handleCheckout(price.id);
-                  }}
-                  data-testid="checkout-starter-btn"
-                >
-                  {checkoutLoading === getProductPrice("Pro Starter")?.id ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...
-                    </>
-                  ) : (
-                    "Upgrade $4.99/mo"
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
+        <div className="mt-10 relative rounded-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-secondary/6 to-transparent" />
+          <div
+            className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full opacity-[0.07]"
+            style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
+          />
+          <div
+            className="absolute -top-20 -left-20 w-56 h-56 rounded-full opacity-[0.05]"
+            style={{ background: "radial-gradient(circle, hsl(var(--secondary)) 0%, transparent 70%)" }}
+          />
+          <div className="relative p-6 space-y-5">
+            <div className="text-center">
+              <p className="text-xs font-bold uppercase tracking-widest text-primary/70 mb-1">Level Up Your Practice</p>
+              <h2 className="text-xl font-display font-bold">Go Pro</h2>
+            </div>
 
-            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent relative overflow-hidden ring-2 ring-primary/20">
-              <CardHeader>
-                <div className="flex items-center gap-2 mb-2">
-                  <Crown className="w-5 h-5 text-primary fill-primary" />
-                  <span className="text-primary font-bold uppercase tracking-widest text-[10px]">Advanced</span>
-                </div>
-                <CardTitle className="text-xl font-display">Pro Max</CardTitle>
-                <CardDescription className="text-sm">For serious learners seeking immersion.</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-3">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
-                  <p className="text-sm">Up to 15 recordings / day</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
-                  <p className="text-sm">Priority 24h feedback</p>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
-                  disabled={!!checkoutLoading}
-                  onClick={() => {
-                    const price = getProductPrice("Pro Max");
-                    if (price) handleCheckout(price.id);
-                  }}
-                  data-testid="checkout-max-btn"
-                >
-                  {checkoutLoading === getProductPrice("Pro Max")?.id ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...
-                    </>
-                  ) : (
-                    "Upgrade $9.99/mo"
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
+            {hasSubscription ? (
+              <Card className="border-green-500/30 bg-background/80 backdrop-blur-sm shadow-lg">
+                <CardHeader>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Crown className="w-5 h-5 text-green-600 fill-green-600" />
+                    <span className="text-green-600 font-bold uppercase tracking-widest text-[10px]">Active</span>
+                  </div>
+                  <CardTitle className="text-xl font-display">
+                    {subscriptionData?.subscription?.product_name || "Pro Plan"}
+                  </CardTitle>
+                  <CardDescription className="text-sm">Your subscription is active.</CardDescription>
+                </CardHeader>
+                <CardFooter>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleManageSubscription}
+                    data-testid="manage-subscription-btn"
+                  >
+                    Manage Subscription
+                  </Button>
+                </CardFooter>
+              </Card>
+            ) : (
+              <div className="grid gap-5 md:grid-cols-2">
+                <Card className="border-secondary/30 bg-background/80 backdrop-blur-sm shadow-lg relative overflow-hidden">
+                  <div
+                    className="absolute -bottom-16 -right-16 w-40 h-40 rounded-full opacity-10"
+                    style={{ background: "radial-gradient(circle, hsl(var(--secondary)) 0%, transparent 70%)" }}
+                  />
+                  <CardHeader className="relative">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Crown className="w-5 h-5 text-secondary fill-secondary" />
+                      <span className="text-secondary font-bold uppercase tracking-widest text-[10px]">Starter</span>
+                    </div>
+                    <CardTitle className="text-xl font-display">Pro Starter</CardTitle>
+                    <CardDescription className="text-sm">Perfect for consistent daily practice.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-3 relative">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
+                      <p className="text-sm">Up to 5 recordings / day</p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
+                      <p className="text-sm">24h feedback guarantee</p>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="relative">
+                    <Button
+                      className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold shadow-sm"
+                      disabled={!!checkoutLoading}
+                      onClick={() => {
+                        const price = getProductPrice("Pro Starter");
+                        if (price) handleCheckout(price.id);
+                      }}
+                      data-testid="checkout-starter-btn"
+                    >
+                      {checkoutLoading === getProductPrice("Pro Starter")?.id ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...
+                        </>
+                      ) : (
+                        "Upgrade $4.99/mo"
+                      )}
+                    </Button>
+                  </CardFooter>
+                </Card>
+
+                <Card className="border-primary/30 bg-background/80 backdrop-blur-sm shadow-lg relative overflow-hidden ring-2 ring-primary/20">
+                  <div
+                    className="absolute -bottom-16 -right-16 w-40 h-40 rounded-full opacity-10"
+                    style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
+                  />
+                  <CardHeader className="relative">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Crown className="w-5 h-5 text-primary fill-primary" />
+                      <span className="text-primary font-bold uppercase tracking-widest text-[10px]">Advanced</span>
+                    </div>
+                    <CardTitle className="text-xl font-display">Pro Max</CardTitle>
+                    <CardDescription className="text-sm">For serious learners seeking immersion.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-3 relative">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
+                      <p className="text-sm">Up to 15 recordings / day</p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
+                      <p className="text-sm">Priority 24h feedback</p>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="relative">
+                    <Button
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
+                      disabled={!!checkoutLoading}
+                      onClick={() => {
+                        const price = getProductPrice("Pro Max");
+                        if (price) handleCheckout(price.id);
+                      }}
+                      data-testid="checkout-max-btn"
+                    >
+                      {checkoutLoading === getProductPrice("Pro Max")?.id ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...
+                        </>
+                      ) : (
+                        "Upgrade $9.99/mo"
+                      )}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </Layout>
   );
