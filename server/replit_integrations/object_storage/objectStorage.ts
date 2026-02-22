@@ -119,6 +119,12 @@ export class ObjectStorageService {
       // Support byte-range requests for audio seeking/streaming
       const range = res.req.headers.range;
       
+      // Add more specific headers for audio streaming
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("Accept-Ranges", "bytes");
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+
       if (range) {
         const parts = range.replace(/bytes=/, "").split("-");
         const start = parseInt(parts[0], 10);
