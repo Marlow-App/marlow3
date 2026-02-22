@@ -180,7 +180,13 @@ export default function RecordingDetail() {
                           {item.audioFeedbackUrl && (
                             <div className="mt-4 pt-4 border-t border-border/50">
                               <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Audio Correction</p>
-                              <audio src={item.audioFeedbackUrl} controls className="w-full h-10" />
+                              <audio 
+                                src={item.audioFeedbackUrl} 
+                                controls 
+                                className="w-full h-10"
+                                preload="auto"
+                                playsInline
+                              />
                             </div>
                           )}
                         </div>
