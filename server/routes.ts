@@ -220,7 +220,7 @@ export async function registerRoutes(
         textFeedback: input.textFeedback,
         audioFeedbackUrl: input.audioFeedbackUrl,
         reviewerId,
-      });
+      } as any);
       
       res.status(201).json(feedback);
     } catch (err) {

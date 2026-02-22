@@ -13,7 +13,7 @@ export default function ReviewerPortal() {
   const { data: pendingRecordings, isLoading: loadingPending } = usePendingRecordings();
   const { data: allRecordings, isLoading: loadingAll } = useAllRecordings();
 
-  const reviewedRecordings = allRecordings?.filter(r => r.status === 'reviewed') || [];
+  const reviewedRecordings = allRecordings?.filter((r: any) => r.status === 'reviewed') || [];
 
   if (loadingPending || loadingAll) {
     return (
