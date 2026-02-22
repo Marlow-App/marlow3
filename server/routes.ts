@@ -183,19 +183,56 @@ export async function registerRoutes(
     try {
       const input = api.recordings.create.input.parse(req.body);
       const userId = (req.user as any).claims.sub;
-      
-      // Basic rate limiting check (1 per day)
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const dailyLimit = 50;
-      const userRecordings = await storage.getRecordingsByUser(userId);
-      const todaysRecordings = userRecordings.filter(r => new Date(r.createdAt) >= today);
-      
-      if (todaysRecordings.length >= dailyLimit) {
-         return res.status(403).json({ message: "Daily limit reached. Upgrade to Premium for more." });
+      const userEmail = (req.user as any).claims.email;
+
+      const UNLIMITED_EMAIL = "jujusees@gmail.com";
+      const isUnlimited = userEmail === UNLIMITED_EMAIL;
+
+      let dailyLimit = 1;
+
+      if (!isUnlimited) {
+        const user = await storage.getUser(userId);
+        if (user?.stripeCustomerId) {
+          const subResult = await db.execute(
+            sql`SELECT s.status, p.metadata as product_metadata
+              FROM stripe.subscriptions s
+              LEFT JOIN stripe.prices pr ON s.items->0->'price'->>'id' = pr.id
+              LEFT JOIN stripe.products p ON pr.product = p.id
+              WHERE s.customer = ${user.stripeCustomerId}
+              AND s.status IN ('active', 'trialing')
+              LIMIT 1`
+          );
+          const sub = subResult.rows[0] as any;
+          if (sub) {
+            const tier = typeof sub.product_metadata === 'string'
+              ? JSON.parse(sub.product_metadata)?.tier
+              : sub.product_metadata?.tier;
+            if (tier === 'max') {
+              dailyLimit = 15;
+            } else if (tier === 'starter') {
+              dailyLimit = 5;
+            }
+          }
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const userRecordings = await storage.getRecordingsByUser(userId);
+        const todaysRecordings = userRecordings.filter(r => new Date(r.createdAt) >= today);
+
+        if (todaysRecordings.length >= dailyLimit) {
+          const tierName = dailyLimit === 1 ? 'free' : dailyLimit === 5 ? 'Pro Starter' : 'Pro Max';
+          const upgradeMsg = dailyLimit < 15
+            ? ' Upgrade your plan for more recordings!'
+            : '';
+          return res.status(403).json({
+            message: `Daily limit of ${dailyLimit} recording${dailyLimit > 1 ? 's' : ''} reached (${tierName}).${upgradeMsg}`,
+            dailyLimit,
+            used: todaysRecordings.length,
+          });
+        }
       }
-      
+
       const recording = await storage.createRecording(userId, input);
       res.status(201).json(recording);
     } catch (err) {
