@@ -122,25 +122,26 @@ export class ObjectStorageService {
       
       // Simplify Content-Type to avoid codec issues on different platforms
       // We also ensure it's just the base MIME type for better cross-browser compatibility
-      if (contentType.includes("audio/mp4")) {
+      if (contentType.includes("audio/mp4") || file.name.endsWith(".mp4") || file.name.endsWith(".m4a")) {
         contentType = "audio/mp4";
-      } else if (contentType.includes("audio/webm")) {
+      } else if (contentType.includes("audio/webm") || file.name.endsWith(".webm")) {
         contentType = "audio/webm";
-      } else if (contentType.includes("audio/mpeg")) {
+      } else if (contentType.includes("audio/mpeg") || file.name.endsWith(".mp3")) {
         contentType = "audio/mpeg";
-      } else if (contentType.includes("audio/ogg")) {
+      } else if (contentType.includes("audio/ogg") || file.name.endsWith(".ogg")) {
         contentType = "audio/ogg";
-      } else if (contentType.includes("audio/wav")) {
+      } else if (contentType.includes("audio/wav") || file.name.endsWith(".wav")) {
         contentType = "audio/wav";
       }
 
       // Add debug logging
       console.log(`Serving file: ${file.name}, Content-Type: ${contentType}, Size: ${size}, Range: ${range || 'none'}`);
       
-      // Basic headers for all responses
+      // Essential headers for audio streaming
       res.setHeader("Accept-Ranges", "bytes");
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("Content-Type", contentType);
 
       if (range) {
         const parts = range.replace(/bytes=/, "").split("-");

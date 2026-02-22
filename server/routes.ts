@@ -232,5 +232,23 @@ export async function registerRoutes(
     }
   });
 
+  // === User Profile ===
+  app.patch("/api/auth/user", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const updates = req.body;
+      
+      const updatedUser = await authStorage.upsertUser({
+        id: userId,
+        ...updates,
+      });
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
   return httpServer;
 }
