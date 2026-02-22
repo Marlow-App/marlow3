@@ -101,47 +101,59 @@ export default function LearnerPortal() {
             </Card>
           ))}
 
-          <Card className="border-secondary/30 bg-gradient-to-br from-secondary/5 via-transparent to-transparent relative overflow-hidden mt-8">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Crown className="w-48 h-48 rotate-12 text-secondary" />
-            </div>
-            
-            <CardHeader>
-              <div className="flex items-center gap-2 mb-2">
-                 <Crown className="w-6 h-6 text-secondary fill-secondary" />
-                 <span className="text-secondary font-bold uppercase tracking-widest text-xs">Premium</span>
-              </div>
-              <CardTitle className="text-2xl font-display">Upgrade to SixTone Studio Pro</CardTitle>
-              <CardDescription className="text-base">Accelerate your learning with faster feedback and more practice.</CardDescription>
-            </CardHeader>
-            
-            <CardContent className="grid gap-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-background shadow-sm text-primary">
-                  <Zap className="w-5 h-5" />
+          <div className="grid gap-6 md:grid-cols-2 mt-8">
+            <Card className="border-secondary/30 bg-gradient-to-br from-secondary/5 via-transparent to-transparent relative overflow-hidden">
+              <CardHeader>
+                <div className="flex items-center gap-2 mb-2">
+                   <Crown className="w-5 h-5 text-secondary fill-secondary" />
+                   <span className="text-secondary font-bold uppercase tracking-widest text-[10px]">Starter</span>
                 </div>
-                <div>
-                  <h4 className="font-semibold">Priority Feedback</h4>
-                  <p className="text-sm text-muted-foreground">Get reviews within 24 hours guaranteed.</p>
+                <CardTitle className="text-xl font-display">Pro Starter</CardTitle>
+                <CardDescription className="text-sm">Perfect for consistent daily practice.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-3">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
+                  <p className="text-sm">Up to 5 recordings / day</p>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-background shadow-sm text-primary">
-                  <Shield className="w-5 h-5" />
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
+                  <p className="text-sm">24h feedback guarantee</p>
                 </div>
-                <div>
-                  <h4 className="font-semibold">Unlimited Recordings</h4>
-                  <p className="text-sm text-muted-foreground">Practice as much as you want every day.</p>
+              </CardContent>
+              <CardFooter>
+                 <Button className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold shadow-sm">
+                   Upgrade $4.99/mo
+                 </Button>
+              </CardFooter>
+            </Card>
+
+            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent relative overflow-hidden ring-2 ring-primary/20">
+              <CardHeader>
+                <div className="flex items-center gap-2 mb-2">
+                   <Crown className="w-5 h-5 text-primary fill-primary" />
+                   <span className="text-primary font-bold uppercase tracking-widest text-[10px]">Advanced</span>
                 </div>
-              </div>
-            </CardContent>
-            
-            <CardFooter className="pt-4">
-               <Button className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold shadow-lg shadow-secondary/20 h-12">
-                 Upgrade for $5/month
-               </Button>
-            </CardFooter>
-          </Card>
+                <CardTitle className="text-xl font-display">Pro Max</CardTitle>
+                <CardDescription className="text-sm">For serious learners seeking immersion.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-3">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
+                  <p className="text-sm">Up to 15 recordings / day</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
+                  <p className="text-sm">Priority 24h feedback</p>
+                </div>
+              </CardContent>
+              <CardFooter>
+                 <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm">
+                   Upgrade $9.99/mo
+                 </Button>
+              </CardFooter>
+            </Card>
+          </div>
 
           {(!recordings || recordings.length === 0) && (
             <div className="text-center py-20 bg-muted/10 rounded-2xl border border-dashed border-border mt-8">

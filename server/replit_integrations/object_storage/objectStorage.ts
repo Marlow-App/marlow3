@@ -103,28 +103,15 @@ export class ObjectStorageService {
       const range = res.req.headers.range;
       
       let contentType = (metadata.contentType as string) || "audio/webm";
-      // Basic extension-based fallback if contentType is generic
-      if (contentType === "application/octet-stream" || !contentType) {
-        if (file.name.endsWith(".mp4") || file.name.endsWith(".m4a")) contentType = "audio/mp4";
-        else if (file.name.endsWith(".webm")) contentType = "audio/webm";
-      }
-
-      // Force correct Content-Type for Safari/iOS compatibility
+      
+      // Simplify Content-Type to avoid codec issues on different platforms
       if (file.name.endsWith(".mp4") || file.name.endsWith(".m4a")) {
         contentType = "audio/mp4";
       } else if (file.name.endsWith(".webm")) {
         contentType = "audio/webm";
-      } else if (file.name.endsWith(".ogg")) {
-        contentType = "audio/ogg";
-      } else if (file.name.endsWith(".wav")) {
-        contentType = "audio/wav";
-      }
-      
-      // Simplify Content-Type to avoid codec issues on different platforms
-      // We also ensure it's just the base MIME type for better cross-browser compatibility
-      if (contentType.includes("audio/mp4") || file.name.endsWith(".mp4") || file.name.endsWith(".m4a")) {
+      } else if (contentType.includes("audio/mp4")) {
         contentType = "audio/mp4";
-      } else if (contentType.includes("audio/webm") || file.name.endsWith(".webm")) {
+      } else if (contentType.includes("audio/webm")) {
         contentType = "audio/webm";
       } else if (contentType.includes("audio/mpeg") || file.name.endsWith(".mp3")) {
         contentType = "audio/mpeg";
