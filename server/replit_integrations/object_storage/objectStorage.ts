@@ -128,7 +128,8 @@ export class ObjectStorageService {
         // Validate range
         if (start >= size || end >= size) {
           res.writeHead(416, {
-            "Content-Range": `bytes */${size}`
+            "Content-Range": `bytes */${size}`,
+            "Content-Type": contentType
           });
           return res.end();
         }

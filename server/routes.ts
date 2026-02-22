@@ -85,6 +85,7 @@ export async function registerRoutes(
       const recordingsEnhanced = await Promise.all(recordings.map(async (r: any) => {
         const user = await storage.getUser(r.userId);
         let feedback: any[] = [];
+        // Ensure we check status correctly
         if (r.status === 'reviewed') {
           try {
             feedback = await storage.getFeedbackForRecording(r.id);
@@ -113,6 +114,29 @@ export async function registerRoutes(
       res.json(pendingWithUser);
     } catch (error) {
       console.error("Error listing pending recordings:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // List all recordings (Admin/Reviewer view for completed)
+  app.get("/api/recordings", isAuthenticated, async (req: any, res: any) => {
+    try {
+      const recordings = await storage.getAllRecordings();
+      const recordingsEnhanced = await Promise.all(recordings.map(async (r: any) => {
+        const user = await storage.getUser(r.userId);
+        let feedback: any[] = [];
+        if (r.status === 'reviewed') {
+          try {
+            feedback = await storage.getFeedbackForRecording(r.id);
+          } catch (e) {
+            console.error(`Error fetching feedback for recording ${r.id}:`, e);
+          }
+        }
+        return { ...r, feedback, user };
+      }));
+      res.json(recordingsEnhanced);
+    } catch (error) {
+      console.error("Error listing all recordings:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

@@ -123,7 +123,6 @@ export default function RecordingDetail() {
                 <div className="bg-muted/30 p-6 rounded-2xl border border-border/50">
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Learner Audio</h3>
                   <audio 
-                    src={recording.audioUrl} 
                     controls 
                     className="w-full"
                     preload="auto"
@@ -148,6 +147,7 @@ export default function RecordingDetail() {
                       });
                     }}
                   >
+                    <source src={recording.audioUrl} type={recording.audioUrl.endsWith('.mp4') ? 'audio/mp4' : 'audio/webm'} />
                     Your browser does not support the audio element.
                   </audio>
                 </div>
@@ -183,12 +183,13 @@ export default function RecordingDetail() {
                             <div className="mt-4 pt-4 border-t border-border/50">
                               <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Audio Correction</p>
                               <audio 
-                                src={item.audioFeedbackUrl} 
                                 controls 
                                 className="w-full h-10"
                                 preload="auto"
                                 playsInline
-                              />
+                              >
+                                <source src={item.audioFeedbackUrl} type={item.audioFeedbackUrl.endsWith('.mp4') ? 'audio/mp4' : 'audio/webm'} />
+                              </audio>
                             </div>
                           )}
                         </div>
