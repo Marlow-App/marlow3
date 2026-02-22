@@ -77,10 +77,11 @@ function RatingSelector({ value, onChange }: { value: number | null; onChange: (
             />
           ))}
         </div>
-        <div className="overflow-x-auto min-w-0 flex-1">
+        <div className="overflow-hidden min-w-0 flex-1 relative">
           {activeLevel && (
-            <span className={`text-sm font-semibold ${activeLevel.textColor} whitespace-nowrap`}>{activeLevel.label}</span>
+            <span className={`text-sm font-semibold ${activeLevel.textColor} whitespace-nowrap block`}>{activeLevel.label}</span>
           )}
+          <div className="absolute top-0 right-0 bottom-0 w-6 bg-gradient-to-l from-card to-transparent pointer-events-none" />
         </div>
       </div>
       <div className="flex flex-col gap-1">
