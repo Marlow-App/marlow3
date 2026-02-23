@@ -8,8 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { ChevronLeft, Info, Volume2, X } from "lucide-react";
+import { ChevronLeft, Info, Volume2, X, Loader2 } from "lucide-react";
 import { getDailyPhrases, phraseToText, type Phrase, type ToneChar } from "@/data/phrases";
+import { apiRequest } from "@/lib/queryClient";
 
 const TONE_COLORS: Record<number, string> = {
   1: "text-red-600 dark:text-red-400",
@@ -46,21 +47,61 @@ function ToneCharacter({ toneChar, size = "lg" }: { toneChar: ToneChar; size?: "
   );
 }
 
-function CompactPhraseChip({ phrase, onSelect, isSelected }: { phrase: Phrase; onSelect: (phrase: Phrase) => void; isSelected: boolean }) {
-  const speakPhrase = useCallback((e: React.MouseEvent) => {
+function usePhraseAudio() {
+  const [loadingPhrase, setLoadingPhrase] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioCache = useRef<Map<string, string>>(new Map());
+
+  const playPhrase = useCallback(async (text: string) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    const cached = audioCache.current.get(text);
+    if (cached) {
+      const audio = new Audio(cached);
+      audioRef.current = audio;
+      audio.play().catch(console.error);
+      return;
+    }
+
+    setLoadingPhrase(text);
+    try {
+      const res = await apiRequest("POST", "/api/phrase-audio/generate", { text });
+      const data = await res.json();
+      audioCache.current.set(text, data.audioUrl);
+      const audio = new Audio(data.audioUrl);
+      audioRef.current = audio;
+      audio.play().catch(console.error);
+    } catch (err) {
+      console.error("Failed to generate phrase audio:", err);
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "zh-CN";
+      utterance.rate = 0.8;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    } finally {
+      setLoadingPhrase(null);
+    }
+  }, []);
+
+  return { playPhrase, loadingPhrase };
+}
+
+function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoading }: { phrase: Phrase; onSelect: (phrase: Phrase) => void; isSelected: boolean; onPlay: (text: string) => void; isLoading: boolean }) {
+  const handlePlay = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    const text = phraseToText(phrase);
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "zh-CN";
-    utterance.rate = 0.8;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }, [phrase]);
+    onPlay(phraseToText(phrase));
+  }, [phrase, onPlay]);
 
   return (
-    <button
+    <div
       onClick={() => onSelect(phrase)}
-      className={`shrink-0 text-left px-3 py-2.5 rounded-xl border-2 transition-all duration-200 min-w-[160px] ${
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onSelect(phrase); }}
+      className={`shrink-0 text-left px-3 py-2.5 rounded-xl border-2 transition-all duration-200 min-w-[160px] cursor-pointer ${
         isSelected
           ? "border-primary bg-primary/5 shadow-md"
           : "border-border/60 bg-card hover:border-primary/40 hover:shadow-sm"
@@ -77,15 +118,16 @@ function CompactPhraseChip({ phrase, onSelect, isSelected }: { phrase: Phrase; o
           <p className="text-[11px] text-muted-foreground mt-0.5 whitespace-nowrap overflow-x-auto scrollbar-none">{phrase.english}</p>
         </div>
         <button
-          onClick={speakPhrase}
+          onClick={handlePlay}
           className="shrink-0 p-1 rounded-full hover:bg-primary/10 text-primary/60 hover:text-primary transition-colors"
-          title="Listen"
+          title="Listen (ElevenLabs)"
           data-testid="phrase-speak-btn"
+          disabled={isLoading}
         >
-          <Volume2 className="w-3.5 h-3.5" />
+          {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Volume2 className="w-3.5 h-3.5" />}
         </button>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -110,6 +152,7 @@ export default function RecordPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [selectedPhrase, setSelectedPhrase] = useState<Phrase | null>(null);
+  const { playPhrase, loadingPhrase } = usePhraseAudio();
 
   const dailyPhrases = getDailyPhrases(10);
 
@@ -200,6 +243,8 @@ export default function RecordPage() {
                       phrase={phrase}
                       onSelect={handleSelectPhrase}
                       isSelected={selectedPhrase === phrase}
+                      onPlay={playPhrase}
+                      isLoading={loadingPhrase === phraseToText(phrase)}
                     />
                   ))}
                 </ScrollRow>
@@ -254,18 +299,16 @@ export default function RecordPage() {
                   <div className="flex items-center gap-1">
                     {selectedPhrase && (
                       <button
-                        onClick={() => {
-                          const t = phraseToText(selectedPhrase);
-                          const utterance = new SpeechSynthesisUtterance(t);
-                          utterance.lang = "zh-CN";
-                          utterance.rate = 0.8;
-                          window.speechSynthesis.cancel();
-                          window.speechSynthesis.speak(utterance);
-                        }}
+                        onClick={() => playPhrase(phraseToText(selectedPhrase))}
                         className="p-2 rounded-full hover:bg-primary/10 text-primary transition-colors"
                         data-testid="active-phrase-speak-btn"
+                        disabled={loadingPhrase === phraseToText(selectedPhrase)}
                       >
-                        <Volume2 className="w-5 h-5" />
+                        {loadingPhrase === phraseToText(selectedPhrase) ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Volume2 className="w-5 h-5" />
+                        )}
                       </button>
                     )}
                     <button

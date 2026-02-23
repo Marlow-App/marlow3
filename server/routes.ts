@@ -9,6 +9,7 @@ import { authStorage } from "./replit_integrations/auth/storage";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripe/stripeClient";
 import { sql } from "drizzle-orm";
 import { db } from "./db";
+import { generatePhraseAudio, getPhraseAudioFile } from "./elevenlabs";
 
 async function seedDatabase() {
   // Check if we have any recordings
@@ -436,6 +437,47 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error getting subscription:", error);
       res.json({ subscription: null });
+    }
+  });
+
+  app.post("/api/phrase-audio/generate", isAuthenticated, async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text || typeof text !== "string" || text.length > 100) {
+        return res.status(400).json({ message: "Invalid text" });
+      }
+      const audioUrl = await generatePhraseAudio(text);
+      res.json({ audioUrl });
+    } catch (error: any) {
+      console.error("Error generating phrase audio:", error);
+      res.status(500).json({ message: error.message || "Failed to generate audio" });
+    }
+  });
+
+  app.get("/api/phrase-audio/:hash", async (req, res) => {
+    try {
+      const { hash } = req.params;
+      if (!/^[a-f0-9]{12}$/.test(hash)) {
+        return res.status(400).json({ message: "Invalid hash" });
+      }
+      const file = await getPhraseAudioFile(hash);
+      if (!file) {
+        return res.status(404).json({ message: "Audio not found" });
+      }
+      const [metadata] = await file.getMetadata();
+      const size = Number(metadata.size);
+      res.writeHead(200, {
+        "Content-Type": "audio/mpeg",
+        "Content-Length": size,
+        "Cache-Control": "public, max-age=31536000, immutable",
+        "Accept-Ranges": "bytes",
+      });
+      file.createReadStream().pipe(res);
+    } catch (error) {
+      console.error("Error serving phrase audio:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ message: "Failed to serve audio" });
+      }
     }
   });
 
