@@ -402,8 +402,8 @@ export async function registerRoutes(
         payment_method_types: ['card'],
         line_items: [{ price: priceId, quantity: 1 }],
         mode: 'subscription',
-        success_url: `${baseUrl}/learner?checkout=success`,
-        cancel_url: `${baseUrl}/learner?checkout=cancel`,
+        success_url: `${baseUrl}/checkout/success`,
+        cancel_url: `${baseUrl}/profile`,
       });
 
       res.json({ url: session.url });

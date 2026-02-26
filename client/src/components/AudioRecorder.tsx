@@ -8,6 +8,8 @@ interface AudioRecorderProps {
   isUploading?: boolean;
 }
 
+const MAX_DURATION = 10;
+
 export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -23,6 +25,12 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [audioUrl]);
+
+  useEffect(() => {
+    if (isRecording && duration >= MAX_DURATION) {
+      stopRecording();
+    }
+  }, [duration, isRecording]);
 
   const startRecording = async () => {
     try {
@@ -127,7 +135,10 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
           isRecording ? "bg-red-50 text-primary scale-110 shadow-lg shadow-red-500/10" : "bg-muted text-muted-foreground"
         )}>
           {isRecording ? (
-            <span className="font-mono font-bold text-xl">{formatTime(duration)}</span>
+            <div className="flex flex-col items-center">
+              <span className="font-mono font-bold text-xl">{formatTime(duration)}</span>
+              <span className="text-[10px] text-muted-foreground mt-0.5">{MAX_DURATION - duration}s left</span>
+            </div>
           ) : (
             <Mic className="w-10 h-10" />
           )}
@@ -184,7 +195,7 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
       </div>
       
       <p className="text-sm text-muted-foreground max-w-xs text-center">
-        {isRecording ? "Speak clearly into your microphone..." : audioBlob ? "Listen to your recording or submit it for review." : "Press start when you are ready."}
+        {isRecording ? `Speak clearly — recording stops at ${MAX_DURATION} seconds.` : audioBlob ? "Listen to your recording or submit it for review." : `Press start when you are ready. Max ${MAX_DURATION} seconds.`}
       </p>
     </div>
   );

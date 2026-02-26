@@ -12,6 +12,7 @@ import ReviewerPortal from "@/pages/ReviewerPortal";
 import LearnerPortal from "@/pages/LearnerPortal";
 import RecordingDetail from "@/pages/RecordingDetail";
 import Profile from "@/pages/Profile";
+import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/reviewer-hub" component={ReviewerPortal} />
       <Route path="/recordings/:id" component={RecordingDetail} />
       <Route path="/profile" component={Profile} />
+      <Route path="/checkout/success" component={CheckoutSuccess} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -34,6 +34,7 @@ The project uses a monorepo layout with three main directories:
   - `LearnerPortal` — view your recordings and their feedback
   - `ReviewerPortal` — view all pending recordings awaiting review
   - `RecordingDetail` — view a specific recording with ability to leave feedback
+  - `CheckoutSuccess` — post-payment confirmation page shown after Stripe checkout
   - `Profile` — user profile and account management
 
 ### Backend Architecture
@@ -98,7 +99,7 @@ The project uses a monorepo layout with three main directories:
 - **PostgreSQL Database** — Primary data store. Must be provisioned and `DATABASE_URL` environment variable set. Used for user data, sessions, recordings, and feedback.
 - **Replit Object Storage** — File storage for audio recordings and feedback audio. Uses Google Cloud Storage SDK talking to Replit's sidecar at `http://127.0.0.1:1106`. Presigned URL upload flow.
 - **Replit Auth (OpenID Connect)** — Authentication provider. Requires `REPL_ID`, `ISSUER_URL`, and `SESSION_SECRET` environment variables.
-- **Stripe** — Payment processing via Replit Stripe connector. Credentials fetched from Replit connection API.
+- **Stripe** — Payment processing via Replit Stripe connector. Credentials fetched from Replit connection API. Client falls back to development connection when production connection is unavailable.
 
 ### Key NPM Dependencies
 
