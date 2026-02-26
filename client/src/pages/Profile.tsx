@@ -388,7 +388,8 @@ export default function Profile() {
                        disabled={!!checkoutLoading}
                        onClick={() => {
                          const price = getProductPrice('Pro Starter');
-                         if (price) handleCheckout(price.id);
+                         if (price) { handleCheckout(price.id); }
+                         else { toast({ title: "Loading pricing", description: "Please wait a moment and try again.", variant: "destructive" }); }
                        }}
                        data-testid="profile-checkout-starter-btn"
                      >
@@ -426,7 +427,8 @@ export default function Profile() {
                        disabled={!!checkoutLoading}
                        onClick={() => {
                          const price = getProductPrice('Pro Max');
-                         if (price) handleCheckout(price.id);
+                         if (price) { handleCheckout(price.id); }
+                         else { toast({ title: "Loading pricing", description: "Please wait a moment and try again.", variant: "destructive" }); }
                        }}
                        data-testid="profile-checkout-max-btn"
                      >

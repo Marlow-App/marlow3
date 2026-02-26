@@ -360,7 +360,45 @@ export async function registerRoutes(
         }
       }
 
-      res.json(Array.from(productsMap.values()));
+      const dbProducts = Array.from(productsMap.values());
+      if (dbProducts.length > 0) {
+        return res.json(dbProducts);
+      }
+
+      console.log("No products in database, fetching from Stripe API...");
+      const stripe = await getUncachableStripeClient();
+      const [stripeProducts, stripePrices] = await Promise.all([
+        stripe.products.list({ active: true, limit: 100 }),
+        stripe.prices.list({ active: true, limit: 100 }),
+      ]);
+
+      const apiProductsMap = new Map();
+      for (const product of stripeProducts.data) {
+        apiProductsMap.set(product.id, {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          metadata: product.metadata,
+          prices: [],
+        });
+      }
+      for (const price of stripePrices.data) {
+        const productId = typeof price.product === 'string' ? price.product : price.product?.toString();
+        if (apiProductsMap.has(productId)) {
+          apiProductsMap.get(productId).prices.push({
+            id: price.id,
+            unit_amount: price.unit_amount,
+            currency: price.currency,
+            recurring: price.recurring,
+          });
+        }
+      }
+
+      const apiProducts = Array.from(apiProductsMap.values())
+        .filter((p: any) => p.prices.length > 0)
+        .sort((a: any, b: any) => (a.prices[0]?.unit_amount || 0) - (b.prices[0]?.unit_amount || 0));
+
+      res.json(apiProducts);
     } catch (error) {
       console.error("Error listing products:", error);
       res.json([]);
