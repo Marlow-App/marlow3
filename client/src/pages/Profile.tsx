@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ const CITIES = [
 
 export default function Profile() {
   const { user, logout } = useAuth();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const { uploadFile, isUploading } = useUpload();
   
@@ -99,16 +101,8 @@ export default function Profile() {
     }
   };
 
-  const handleManageSubscription = async () => {
-    try {
-      const res = await apiRequest("POST", "/api/stripe/portal", {});
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (err) {
-      toast({ title: "Error", description: "Unable to open billing portal.", variant: "destructive" });
-    }
+  const handleManageSubscription = () => {
+    navigate('/manage-subscription');
   };
 
   useEffect(() => {

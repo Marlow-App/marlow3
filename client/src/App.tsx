@@ -13,6 +13,7 @@ import LearnerPortal from "@/pages/LearnerPortal";
 import RecordingDetail from "@/pages/RecordingDetail";
 import Profile from "@/pages/Profile";
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
+import ManageSubscription from "@/pages/ManageSubscription";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -41,6 +42,7 @@ function Router() {
       <Route path="/recordings/:id" component={RecordingDetail} />
       <Route path="/profile" component={Profile} />
       <Route path="/checkout/success" component={CheckoutSuccess} />
+      <Route path="/manage-subscription" component={ManageSubscription} />
       <Route component={NotFound} />
     </Switch>
   );

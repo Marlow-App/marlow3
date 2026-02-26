@@ -35,6 +35,7 @@ The project uses a monorepo layout with three main directories:
   - `ReviewerPortal` — view all pending recordings awaiting review
   - `RecordingDetail` — view a specific recording with ability to leave feedback
   - `CheckoutSuccess` — post-payment confirmation page shown after Stripe checkout
+  - `ManageSubscription` — internal subscription management (switch plan, cancel, reactivate)
   - `Profile` — user profile and account management
 
 ### Backend Architecture
@@ -89,7 +90,7 @@ The project uses a monorepo layout with three main directories:
 - **Architecture**: Uses `stripe-replit-sync` to auto-sync Stripe data to PostgreSQL `stripe` schema. Products/prices queried from `stripe.*` tables, never inserted manually.
 - **Products**: Pro Starter ($4.99/mo) and Pro Max ($9.99/mo) subscription plans, created via seed script
 - **Webhook**: Registered BEFORE `express.json()` in `server/index.ts` at `/api/stripe/webhook`
-- **Routes**: `/api/stripe/products`, `/api/stripe/checkout`, `/api/stripe/subscription`, `/api/stripe/portal`, `/api/stripe/publishable-key`
+- **Routes**: `/api/stripe/products`, `/api/stripe/checkout`, `/api/stripe/subscription`, `/api/stripe/portal`, `/api/stripe/publishable-key`, `/api/stripe/switch-plan`, `/api/stripe/cancel`, `/api/stripe/reactivate`
 - **User schema**: `stripeCustomerId` and `stripeSubscriptionId` fields added to users table
 
 ## External Dependencies
