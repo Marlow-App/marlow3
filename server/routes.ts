@@ -461,27 +461,44 @@ export async function registerRoutes(
       }
 
       const stripe = await getUncachableStripeClient();
+
+      let sub: any = null;
+
       const subscriptions = await stripe.subscriptions.list({
         customer: user.stripeCustomerId,
         status: 'active',
-        expand: ['data.items.data.price.product'],
         limit: 1,
       });
 
-      if (subscriptions.data.length === 0) {
-        const cancellingSubscriptions = await stripe.subscriptions.list({
+      if (subscriptions.data.length > 0) {
+        sub = subscriptions.data[0];
+      } else {
+        const allSubscriptions = await stripe.subscriptions.list({
           customer: user.stripeCustomerId,
           status: 'all',
-          expand: ['data.items.data.price.product'],
           limit: 5,
         });
-        const activeSub = cancellingSubscriptions.data.find(
+        sub = allSubscriptions.data.find(
           s => s.status === 'active' || s.status === 'trialing'
-        );
-        return res.json({ subscription: activeSub || null });
+        ) || null;
       }
 
-      res.json({ subscription: subscriptions.data[0] });
+      if (sub) {
+        const priceItem = sub.items?.data?.[0]?.price;
+        if (priceItem?.product && typeof priceItem.product === 'string') {
+          const product = await stripe.products.retrieve(priceItem.product);
+          priceItem.product = product;
+        }
+
+        if (!user.stripeSubscriptionId) {
+          await authStorage.upsertUser({
+            id: userId,
+            stripeSubscriptionId: sub.id,
+          });
+        }
+      }
+
+      res.json({ subscription: sub });
     } catch (error) {
       console.error("Error getting subscription:", error);
       res.json({ subscription: null });
