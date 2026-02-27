@@ -460,18 +460,28 @@ export async function registerRoutes(
         return res.json({ subscription: null });
       }
 
-      const result = await db.execute(
-        sql`SELECT s.*, pr.unit_amount, pr.currency, pr.recurring,
-            p.name as product_name, p.metadata as product_metadata
-          FROM stripe.subscriptions s
-          LEFT JOIN stripe.prices pr ON s.items->0->'price'->>'id' = pr.id
-          LEFT JOIN stripe.products p ON pr.product = p.id
-          WHERE s.customer = ${user.stripeCustomerId}
-          AND s.status IN ('active', 'trialing')
-          LIMIT 1`
-      );
+      const stripe = await getUncachableStripeClient();
+      const subscriptions = await stripe.subscriptions.list({
+        customer: user.stripeCustomerId,
+        status: 'active',
+        expand: ['data.items.data.price.product'],
+        limit: 1,
+      });
 
-      res.json({ subscription: result.rows[0] || null });
+      if (subscriptions.data.length === 0) {
+        const cancellingSubscriptions = await stripe.subscriptions.list({
+          customer: user.stripeCustomerId,
+          status: 'all',
+          expand: ['data.items.data.price.product'],
+          limit: 5,
+        });
+        const activeSub = cancellingSubscriptions.data.find(
+          s => s.status === 'active' || s.status === 'trialing'
+        );
+        return res.json({ subscription: activeSub || null });
+      }
+
+      res.json({ subscription: subscriptions.data[0] });
     } catch (error) {
       console.error("Error getting subscription:", error);
       res.json({ subscription: null });
@@ -532,7 +542,7 @@ export async function registerRoutes(
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       const session = await stripe.billingPortal.sessions.create({
         customer: user.stripeCustomerId,
-        return_url: `${baseUrl}/learner`,
+        return_url: `${baseUrl}/learner-portal`,
       });
 
       res.json({ url: session.url });

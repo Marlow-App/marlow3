@@ -333,16 +333,22 @@ export default function Profile() {
 
           {!isReviewer && (
             hasSubscription ? (
-              <Card className="border-green-500/30 bg-gradient-to-br from-green-500/5 via-transparent to-transparent">
+              <Card className={`border-green-500/30 bg-gradient-to-br from-green-500/5 via-transparent to-transparent ${subscriptionData?.subscription?.cancel_at_period_end ? 'border-yellow-500/30' : ''}`}>
                 <CardHeader>
                   <div className="flex items-center gap-2 mb-2">
-                    <Crown className="w-5 h-5 text-green-600 fill-green-600" />
-                    <span className="text-green-600 font-bold uppercase tracking-widest text-[10px]">Active</span>
+                    <Crown className={`w-5 h-5 ${subscriptionData?.subscription?.cancel_at_period_end ? 'text-yellow-600 fill-yellow-600' : 'text-green-600 fill-green-600'}`} />
+                    <span className={`${subscriptionData?.subscription?.cancel_at_period_end ? 'text-yellow-600' : 'text-green-600'} font-bold uppercase tracking-widest text-[10px]`}>
+                      {subscriptionData?.subscription?.cancel_at_period_end ? 'Cancelling' : 'Active'}
+                    </span>
                   </div>
                   <CardTitle className="text-xl font-display">
-                    {subscriptionData?.subscription?.product_name || 'Pro Plan'}
+                    {subscriptionData?.subscription?.items?.data?.[0]?.price?.product?.name || subscriptionData?.subscription?.product_name || 'Pro Plan'}
                   </CardTitle>
-                  <CardDescription className="text-sm">Your subscription is active.</CardDescription>
+                  <CardDescription className="text-sm">
+                    {subscriptionData?.subscription?.cancel_at_period_end
+                      ? 'Cancelled — you still have access until the end of your billing period.'
+                      : 'Your subscription is active.'}
+                  </CardDescription>
                 </CardHeader>
                 <CardFooter>
                   <Button

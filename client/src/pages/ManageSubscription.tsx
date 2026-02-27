@@ -25,14 +25,15 @@ export default function ManageSubscription() {
   });
 
   const sub = subscriptionData?.subscription;
-  const currentPriceId = sub?.items?.data?.[0]?.price?.id;
-  const currentProductId = sub?.items?.data?.[0]?.price?.product;
+  const subPrice = sub?.items?.data?.[0]?.price;
+  const subProductObj = subPrice?.product;
+  const currentProductId = typeof subProductObj === 'string' ? subProductObj : subProductObj?.id;
   const cancelAtPeriodEnd = sub?.cancel_at_period_end;
 
   const currentProduct = products?.find((p: any) => p.id === currentProductId);
-  const currentTier = currentProduct?.metadata?.tier;
-  const currentName = currentProduct?.name || sub?.product_name || 'Pro Plan';
-  const currentPrice = currentProduct?.prices?.[0]?.unit_amount;
+  const currentTier = currentProduct?.metadata?.tier || subProductObj?.metadata?.tier;
+  const currentName = currentProduct?.name || subProductObj?.name || sub?.product_name || 'Pro Plan';
+  const currentPrice = subPrice?.unit_amount || currentProduct?.prices?.[0]?.unit_amount;
 
   const otherProduct = products?.find((p: any) => p.id !== currentProductId);
   const otherName = otherProduct?.name;
