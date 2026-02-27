@@ -3,6 +3,7 @@ import {
   recordings,
   feedback,
   users,
+  userConsents,
   type InsertRecording,
   type InsertFeedback,
   type Recording,
@@ -10,22 +11,19 @@ import {
   type User
 } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
-import { authStorage } from "./replit_integrations/auth/storage"; // Reuse auth storage for user lookups if needed
+import { authStorage } from "./replit_integrations/auth/storage";
 
 export interface IStorage {
-  // Recordings
   createRecording(userId: string, recording: InsertRecording): Promise<Recording>;
   getRecording(id: number): Promise<Recording | undefined>;
   getRecordingsByUser(userId: string): Promise<Recording[]>;
   getAllPendingRecordings(): Promise<(Recording & { user: User | null })[]>;
   getAllRecordings(): Promise<(Recording & { user: User | null })[]>;
-  
-  // Feedback
   createFeedback(feedbackData: InsertFeedback): Promise<Feedback>;
   getFeedbackForRecording(recordingId: number): Promise<Feedback[]>;
-  
-  // Users (helper)
   getUser(id: string): Promise<User | undefined>;
+  saveConsents(userId: string, consentTypes: string[], policyVersion: string, ipAddress: string): Promise<void>;
+  hasUserConsented(userId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -111,6 +109,22 @@ export class DatabaseStorage implements IStorage {
       .from(feedback)
       .where(eq(feedback.recordingId, recordingId))
       .orderBy(desc(feedback.createdAt));
+  }
+
+  async saveConsents(userId: string, consentTypes: string[], policyVersion: string, ipAddress: string): Promise<void> {
+    const values = consentTypes.map(type => ({
+      userId,
+      consentType: type,
+      policyVersion,
+      ipAddress,
+    }));
+    await db.insert(userConsents).values(values);
+    await authStorage.upsertUser({ id: userId, consentGiven: true });
+  }
+
+  async hasUserConsented(userId: string): Promise<boolean> {
+    const user = await this.getUser(userId);
+    return !!user?.consentGiven;
   }
 }
 

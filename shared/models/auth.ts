@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, jsonb, pgTable, timestamp, varchar, text, integer } from "drizzle-orm/pg-core";
+import { index, jsonb, pgTable, timestamp, varchar, text, integer, boolean, serial } from "drizzle-orm/pg-core";
 
 // Session storage table.
 // (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
@@ -28,9 +28,20 @@ export const users = pgTable("users", {
   dialects: text("dialects").array(),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  consentGiven: boolean("consent_given").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const userConsents = pgTable("user_consents", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  consentType: text("consent_type").notNull(),
+  policyVersion: text("policy_version").notNull(),
+  ipAddress: text("ip_address"),
+  consentedAt: timestamp("consented_at").defaultNow().notNull(),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type UserConsent = typeof userConsents.$inferSelect;

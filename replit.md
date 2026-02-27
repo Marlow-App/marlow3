@@ -36,6 +36,9 @@ The project uses a monorepo layout with three main directories:
   - `RecordingDetail` — view a specific recording with ability to leave feedback
   - `CheckoutSuccess` — post-payment confirmation page shown after Stripe checkout
   - `ManageSubscription` — internal subscription management (switch plan, cancel, reactivate)
+  - `PrivacyPolicy` — privacy policy page (accessible to all users)
+  - `TermsOfService` — terms of service page (accessible to all users)
+  - `ConsentGate` — consent screen shown to new users after login (age, terms, privacy, voice data)
   - `Profile` — user profile and account management
 
 ### Backend Architecture
@@ -57,7 +60,8 @@ The project uses a monorepo layout with three main directories:
   - `sessions` — session storage (required for Replit Auth)
   - `recordings` — audio recordings submitted by learners (fields: audioUrl, sentenceText, status pending/reviewed)
   - `feedback` — reviewer feedback on recordings (fields: textFeedback, audioFeedbackUrl, reviewerId)
-- **Relations**: recordings belong to users, feedback belongs to recordings and reviewers
+  - `userConsents` — consent records (consentType, policyVersion, ipAddress, consentedAt)
+- **Relations**: recordings belong to users, feedback belongs to recordings and reviewers, userConsents belong to users
 - **Schema Push**: Use `npm run db:push` (runs `drizzle-kit push`) to sync schema to database
 
 ### Authentication

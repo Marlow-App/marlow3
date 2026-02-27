@@ -89,6 +89,44 @@ export async function registerRoutes(
   // Seed Data
   seedDatabase().catch(console.error);
 
+  // === Consent ===
+
+  app.get("/api/consent", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const hasConsented = await storage.hasUserConsented(userId);
+      res.json({ consented: hasConsented });
+    } catch (error) {
+      console.error("Error checking consent:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  const consentSchema = z.object({
+    consentTypes: z.array(
+      z.enum(["age_verification", "terms_of_service", "privacy_policy", "voice_data_processing"])
+    ).length(4),
+  });
+
+  app.post("/api/consent", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const parsed = consentSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "All four consent types must be provided" });
+      }
+
+      const ipAddress = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "unknown";
+      const policyVersion = "2026-02-28";
+
+      await storage.saveConsents(userId, parsed.data.consentTypes, policyVersion, ipAddress);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error saving consent:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // === Recordings ===
 
   // List my recordings (for learners) or all recordings (for reviewers)

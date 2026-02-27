@@ -142,7 +142,11 @@ export default function Landing() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-lg">6</div>
             <span className="font-display font-bold text-xl">SixTone Studio</span>
           </div>
-          <p className="text-sm text-muted-foreground">© 2025 SixTone Studio. All rights reserved.</p>
+          <div className="flex items-center gap-6">
+            <Link href="/privacy-policy" className="text-sm text-muted-foreground hover:text-primary transition-colors" data-testid="link-footer-privacy">Privacy Policy</Link>
+            <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors" data-testid="link-footer-terms">Terms of Service</Link>
+          </div>
+          <p className="text-sm text-muted-foreground">&copy; 2026 SixTone Studio. All rights reserved.</p>
         </div>
       </footer>
     </div>
