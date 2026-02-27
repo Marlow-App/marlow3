@@ -1,6 +1,6 @@
 import { Layout } from "@/components/Layout";
 import { useRecordings } from "@/hooks/use-recordings";
-import { Link, useSearch } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -347,6 +347,7 @@ function RecordingCard({ recording }: { recording: any }) {
 
 export default function LearnerPortal() {
   const { data: recordings, isLoading } = useRecordings() as { data: any[]; isLoading: boolean };
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const searchString = useSearch();
@@ -383,16 +384,8 @@ export default function LearnerPortal() {
     }
   };
 
-  const handleManageSubscription = async () => {
-    try {
-      const res = await apiRequest("POST", "/api/stripe/portal", {});
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (err) {
-      toast({ title: "Error", description: "Unable to open billing portal.", variant: "destructive" });
-    }
+  const handleManageSubscription = () => {
+    navigate('/manage-subscription');
   };
 
   const hasSubscription = !!subscriptionData?.subscription;
