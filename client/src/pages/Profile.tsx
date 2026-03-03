@@ -332,98 +332,118 @@ export default function Profile() {
           </Card>
 
           {!isReviewer && (
-            hasSubscription ? (
-              <Card className={`border-green-500/30 bg-gradient-to-br from-green-500/5 via-transparent to-transparent ${subscriptionData?.subscription?.cancel_at_period_end ? 'border-yellow-500/30' : ''}`}>
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card
+                className={`relative overflow-hidden ${
+                  !hasSubscription
+                    ? 'border-green-500/30 bg-gradient-to-br from-green-500/5 via-transparent to-transparent ring-2 ring-green-500/20'
+                    : 'border-border bg-muted/10'
+                }`}
+                data-testid="free-plan-card"
+              >
                 <CardHeader>
                   <div className="flex items-center gap-2 mb-2">
-                    <Crown className={`w-5 h-5 ${subscriptionData?.subscription?.cancel_at_period_end ? 'text-yellow-600 fill-yellow-600' : 'text-green-600 fill-green-600'}`} />
-                    <span className={`${subscriptionData?.subscription?.cancel_at_period_end ? 'text-yellow-600' : 'text-green-600'} font-bold uppercase tracking-widest text-[10px]`}>
-                      {subscriptionData?.subscription?.cancel_at_period_end ? 'Cancelled' : 'Active'}
+                    <Shield className={`w-5 h-5 ${!hasSubscription ? 'text-green-600' : 'text-muted-foreground'}`} />
+                    <span className={`${!hasSubscription ? 'text-green-600' : 'text-muted-foreground'} font-bold uppercase tracking-widest text-[10px]`}>
+                      {!hasSubscription ? 'Current Plan' : 'Free Tier'}
                     </span>
                   </div>
-                  <CardTitle className="text-xl font-display">
-                    Pro Plan
-                  </CardTitle>
+                  <CardTitle className="text-xl font-display">Free</CardTitle>
+                  <CardDescription className="text-sm">Get started with basic practice.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-3">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className={`w-4 h-4 mt-1 ${!hasSubscription ? 'text-green-600' : 'text-muted-foreground'}`} />
+                    <p className="text-sm">1 recording / day</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className={`w-4 h-4 mt-1 ${!hasSubscription ? 'text-green-600' : 'text-muted-foreground'}`} />
+                    <p className="text-sm">Standard feedback</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`relative overflow-hidden ${
+                  hasSubscription
+                    ? subscriptionData?.subscription?.cancel_at_period_end
+                      ? 'border-yellow-500/30 bg-gradient-to-br from-yellow-500/5 via-transparent to-transparent ring-2 ring-yellow-500/20'
+                      : 'border-green-500/30 bg-gradient-to-br from-green-500/5 via-transparent to-transparent ring-2 ring-green-500/20'
+                    : 'border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent'
+                }`}
+                data-testid="pro-plan-card"
+              >
+                <CardHeader>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Crown className={`w-5 h-5 ${
+                      hasSubscription
+                        ? subscriptionData?.subscription?.cancel_at_period_end
+                          ? 'text-yellow-600 fill-yellow-600'
+                          : 'text-green-600 fill-green-600'
+                        : 'text-primary fill-primary'
+                    }`} />
+                    <span className={`${
+                      hasSubscription
+                        ? subscriptionData?.subscription?.cancel_at_period_end
+                          ? 'text-yellow-600'
+                          : 'text-green-600'
+                        : 'text-primary'
+                    } font-bold uppercase tracking-widest text-[10px]`}>
+                      {hasSubscription
+                        ? subscriptionData?.subscription?.cancel_at_period_end ? 'Cancelled' : 'Active'
+                        : 'Upgrade'}
+                    </span>
+                  </div>
+                  <CardTitle className="text-xl font-display">Pro Plan</CardTitle>
                   <CardDescription className="text-sm">
-                    {subscriptionData?.subscription?.cancel_at_period_end
-                      ? 'Cancelled — you still have access until the end of your billing period.'
-                      : 'Your subscription is active.'}
+                    {hasSubscription
+                      ? subscriptionData?.subscription?.cancel_at_period_end
+                        ? 'Cancelled — you still have access until the end of your billing period.'
+                        : 'Your subscription is active.'
+                      : 'For serious learners who want faster progress.'}
                   </CardDescription>
                 </CardHeader>
+                <CardContent className="grid gap-3">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className={`w-4 h-4 mt-1 ${hasSubscription ? 'text-green-600' : 'text-green-600'}`} />
+                    <p className="text-sm">3 recordings / day</p>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className={`w-4 h-4 mt-1 ${hasSubscription ? 'text-green-600' : 'text-green-600'}`} />
+                    <p className="text-sm">Priority feedback</p>
+                  </div>
+                </CardContent>
                 <CardFooter>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleManageSubscription}
-                    data-testid="profile-manage-subscription-btn"
-                  >
-                    Manage Subscription
-                  </Button>
+                  {hasSubscription ? (
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleManageSubscription}
+                      data-testid="profile-manage-subscription-btn"
+                    >
+                      Manage Subscription
+                    </Button>
+                  ) : (
+                    <Button
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
+                      disabled={!!checkoutLoading}
+                      onClick={() => {
+                        const price = getProductPrice('Pro Plan') || getProductPrice('Pro Starter');
+                        if (price) { handleCheckout(price.id); }
+                        else { toast({ title: "Loading pricing", description: "Please wait a moment and try again.", variant: "destructive" }); }
+                      }}
+                      data-testid="profile-checkout-pro-btn"
+                    >
+                      {checkoutLoading ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
+                      ) : (
+                        'Upgrade $7.99/mo'
+                      )}
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2">
-                <Card className="border-border bg-muted/10 relative overflow-hidden" data-testid="free-plan-card">
-                  <CardHeader>
-                    <div className="flex items-center gap-2 mb-2">
-                       <Shield className="w-5 h-5 text-muted-foreground" />
-                       <span className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Current Plan</span>
-                    </div>
-                    <CardTitle className="text-xl font-display">Free</CardTitle>
-                    <CardDescription className="text-sm">Get started with basic practice.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-3">
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-muted-foreground mt-1" />
-                      <p className="text-sm">1 recording / day</p>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-muted-foreground mt-1" />
-                      <p className="text-sm">Standard feedback</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent relative overflow-hidden ring-2 ring-primary/20" data-testid="pro-plan-card">
-                  <CardHeader>
-                    <div className="flex items-center gap-2 mb-2">
-                       <Crown className="w-5 h-5 text-primary fill-primary" />
-                       <span className="text-primary font-bold uppercase tracking-widest text-[10px]">Upgrade</span>
-                    </div>
-                    <CardTitle className="text-xl font-display">Pro Plan</CardTitle>
-                    <CardDescription className="text-sm">For serious learners who want faster progress.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-3">
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
-                      <p className="text-sm">3 recordings / day</p>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
-                      <p className="text-sm">Priority feedback</p>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                     <Button
-                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
-                       disabled={!!checkoutLoading}
-                       onClick={() => {
-                         const price = getProductPrice('Pro Plan') || getProductPrice('Pro Starter');
-                         if (price) { handleCheckout(price.id); }
-                         else { toast({ title: "Loading pricing", description: "Please wait a moment and try again.", variant: "destructive" }); }
-                       }}
-                       data-testid="profile-checkout-pro-btn"
-                     >
-                       {checkoutLoading ? (
-                         <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
-                       ) : (
-                         'Upgrade $7.99/mo'
-                       )}
-                     </Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            )
+            </div>
           )}
         </div>
       </div>
