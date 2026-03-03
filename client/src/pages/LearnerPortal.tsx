@@ -270,7 +270,8 @@ function GroupedRecordingsList({ recordings }: { recordings: any[] }) {
 
 function RecordingCard({ recording }: { recording: any }) {
   return (
-    <Card className="overflow-hidden border-border/50 hover:border-primary/30 transition-colors" data-testid={`recording-card-${recording.id}`}>
+    <Link href={`/recordings/${recording.id}`}>
+    <Card className="overflow-hidden border-border/50 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer" data-testid={`recording-card-${recording.id}`}>
       <CardContent className="p-4 space-y-2.5">
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1 min-w-0">
@@ -291,7 +292,7 @@ function RecordingCard({ recording }: { recording: any }) {
             )}
           </Badge>
         </div>
-        <div className="bg-muted/30 px-2.5 py-1.5 rounded-lg border border-border/50">
+        <div className="bg-muted/30 px-2.5 py-1.5 rounded-lg border border-border/50" onClick={(e) => e.stopPropagation()}>
           <audio
             key={recording.audioUrl}
             src={recording.audioUrl}
@@ -301,36 +302,29 @@ function RecordingCard({ recording }: { recording: any }) {
           />
         </div>
         {recording.status === "reviewed" && recording.feedback?.[0] ? (
-          <div className="space-y-2">
-            <div className="bg-primary/5 rounded-lg p-2.5 border border-primary/10">
-              <div className="flex items-start gap-2">
-                <MessageCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs font-medium text-primary">
-                      {recording.feedback[0].reviewer
-                        ? `${recording.feedback[0].reviewer.firstName || ""} ${recording.feedback[0].reviewer.lastName || ""}`.trim() || "Reviewer"
-                        : "Native Speaker Feedback"}
-                    </p>
-                    {recording.feedback[0].reviewer?.city && (
-                      <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                        <MapPin className="w-2.5 h-2.5" />
-                        {recording.feedback[0].reviewer.city}
-                      </span>
-                    )}
-                  </div>
-                  <RatingBadge rating={recording.feedback[0].rating} />
-                  <p className="text-xs text-foreground/80 mt-1 italic truncate">
-                    &ldquo;{recording.feedback[0].textFeedback}&rdquo;
+          <div className="bg-primary/5 rounded-lg p-2.5 border border-primary/10">
+            <div className="flex items-start gap-2">
+              <MessageCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-medium text-primary">
+                    {recording.feedback[0].reviewer
+                      ? `${recording.feedback[0].reviewer.firstName || ""} ${recording.feedback[0].reviewer.lastName || ""}`.trim() || "Reviewer"
+                      : "Native Speaker Feedback"}
                   </p>
+                  {recording.feedback[0].reviewer?.city && (
+                    <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                      <MapPin className="w-2.5 h-2.5" />
+                      {recording.feedback[0].reviewer.city}
+                    </span>
+                  )}
                 </div>
+                <RatingBadge rating={recording.feedback[0].rating} />
+                <p className="text-xs text-foreground/80 mt-1 italic truncate">
+                  &ldquo;{recording.feedback[0].textFeedback}&rdquo;
+                </p>
               </div>
             </div>
-            <Link href={`/recordings/${recording.id}`}>
-              <Button variant="outline" size="sm" className="w-full text-xs h-7">
-                View Details <ChevronRight className="w-3.5 h-3.5 ml-1" />
-              </Button>
-            </Link>
           </div>
         ) : (
           <div className="flex items-center gap-2 py-1 justify-center">
@@ -342,6 +336,7 @@ function RecordingCard({ recording }: { recording: any }) {
         )}
       </CardContent>
     </Card>
+    </Link>
   );
 }
 
