@@ -20,11 +20,9 @@ export default function CheckoutSuccess() {
   }, []);
 
   const sub = subscriptionData?.subscription;
-  const tier = sub?.product_metadata?.tier || (typeof sub?.product_metadata === 'string' ? JSON.parse(sub.product_metadata)?.tier : null);
-  const isMax = tier === 'max';
-  const planName = isMax ? 'Pro Max' : 'Pro Starter';
-  const dailyLimit = isMax ? 15 : 5;
-  const price = isMax ? '$9.99' : '$4.99';
+  const planName = 'Pro Plan';
+  const dailyLimit = 3;
+  const price = '$7.99';
 
   return (
     <Layout>
@@ -55,7 +53,7 @@ export default function CheckoutSuccess() {
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <p className="text-sm">{isMax ? 'Priority' : ''} 24-hour feedback guarantee</p>
+                  <p className="text-sm">Priority feedback</p>
                 </div>
               </div>
             </CardContent>
