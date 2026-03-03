@@ -504,7 +504,7 @@ export default function LearnerPortal() {
 
             <div className="grid gap-5 md:grid-cols-2">
               <Card
-                className={`relative overflow-hidden backdrop-blur-sm shadow-lg ${
+                className={`relative overflow-hidden backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow ${
                   !hasSubscription
                     ? 'border-green-500/30 bg-gradient-to-br from-green-500/5 via-background/80 to-background/80 ring-2 ring-green-500/20'
                     : 'border-border bg-background/80'
@@ -533,7 +533,7 @@ export default function LearnerPortal() {
               </Card>
 
               <Card
-                className={`relative overflow-hidden backdrop-blur-sm shadow-lg ${
+                className={`relative overflow-hidden backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow ${
                   hasSubscription
                     ? subscriptionData?.subscription?.cancel_at_period_end
                       ? 'border-yellow-500/30 bg-gradient-to-br from-yellow-500/5 via-background/80 to-background/80 ring-2 ring-yellow-500/20'

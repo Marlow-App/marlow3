@@ -334,7 +334,7 @@ export default function Profile() {
           {!isReviewer && (
             <div className="grid gap-6 md:grid-cols-2">
               <Card
-                className={`relative overflow-hidden ${
+                className={`relative overflow-hidden hover:shadow-xl transition-shadow ${
                   !hasSubscription
                     ? 'border-green-500/30 bg-gradient-to-br from-green-500/5 via-transparent to-transparent ring-2 ring-green-500/20'
                     : 'border-border bg-muted/10'
@@ -364,7 +364,7 @@ export default function Profile() {
               </Card>
 
               <Card
-                className={`relative overflow-hidden ${
+                className={`relative overflow-hidden hover:shadow-xl transition-shadow ${
                   hasSubscription
                     ? subscriptionData?.subscription?.cancel_at_period_end
                       ? 'border-yellow-500/30 bg-gradient-to-br from-yellow-500/5 via-transparent to-transparent ring-2 ring-yellow-500/20'
