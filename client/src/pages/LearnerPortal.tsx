@@ -352,6 +352,12 @@ export default function LearnerPortal() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const searchString = useSearch();
 
+  const initialTab = useMemo(() => {
+    const params = new URLSearchParams(searchString);
+    const tab = params.get("tab");
+    return tab === "completed" ? "completed" : "waiting";
+  }, []);
+
   const { data: products } = useQuery<any[]>({
     queryKey: ["/api/stripe/products"],
   });
@@ -433,7 +439,7 @@ export default function LearnerPortal() {
 
         <JournalCalendar recordings={recordings || []} />
 
-        <Tabs defaultValue="waiting" className="w-full" data-testid="recordings-tabs">
+        <Tabs defaultValue={initialTab} className="w-full" data-testid="recordings-tabs">
           <TabsList className="grid w-full grid-cols-2 h-auto p-1 rounded-xl">
             <TabsTrigger value="waiting" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md" data-testid="tab-waiting">
               Waiting Review

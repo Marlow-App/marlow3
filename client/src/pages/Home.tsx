@@ -112,34 +112,40 @@ export default function Home() {
         <section>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold font-display">Your Progress</h2>
-            <Link href="/profile" className="text-sm text-primary font-medium hover:underline">View Stats</Link>
+            <Link href="/learner-portal" className="text-sm text-primary font-medium hover:underline">My Recordings</Link>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/10">
-              <CardContent className="pt-6">
-                <div className="text-4xl font-bold text-primary mb-1">
-                  {recordings?.filter(r => r.status === 'reviewed').length || 0}
-                </div>
-                <div className="text-muted-foreground font-medium">Reviewed Recordings</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-4xl font-bold text-foreground mb-1">
-                  {recordings?.filter(r => r.status === 'pending').length || 0}
-                </div>
-                <div className="text-muted-foreground font-medium">Pending Review</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-4xl font-bold text-foreground mb-1">
-                  {recordings?.length || 0}
-                </div>
-                <div className="text-muted-foreground font-medium">Total Recordings</div>
-              </CardContent>
-            </Card>
+            <Link href="/learner-portal?tab=completed">
+              <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/10 cursor-pointer hover:shadow-md transition-shadow" data-testid="stat-reviewed">
+                <CardContent className="pt-6">
+                  <div className="text-4xl font-bold text-primary mb-1">
+                    {recordings?.filter(r => r.status === 'reviewed').length || 0}
+                  </div>
+                  <div className="text-muted-foreground font-medium">Reviewed Recordings</div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/learner-portal?tab=waiting">
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" data-testid="stat-pending">
+                <CardContent className="pt-6">
+                  <div className="text-4xl font-bold text-foreground mb-1">
+                    {recordings?.filter(r => r.status === 'pending').length || 0}
+                  </div>
+                  <div className="text-muted-foreground font-medium">Pending Review</div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/learner-portal?tab=waiting">
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" data-testid="stat-total">
+                <CardContent className="pt-6">
+                  <div className="text-4xl font-bold text-foreground mb-1">
+                    {recordings?.length || 0}
+                  </div>
+                  <div className="text-muted-foreground font-medium">Total Recordings</div>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </section>
 
