@@ -102,7 +102,7 @@ export default function ManageSubscription() {
             <div className="flex items-center gap-2 mb-1">
               <Crown className="w-5 h-5 text-green-600 fill-green-600" />
               <span className="text-green-600 font-bold uppercase tracking-widest text-[10px]">
-                {cancelAtPeriodEnd ? 'Cancelling' : 'Current Plan'}
+                {cancelAtPeriodEnd ? 'Cancelled' : 'Current Plan'}
               </span>
             </div>
             <CardTitle className="text-xl font-display" data-testid="current-plan-name">{currentName}</CardTitle>
@@ -143,10 +143,6 @@ export default function ManageSubscription() {
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">1 recording per day</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">30-second recording limit</p>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-muted-foreground" />

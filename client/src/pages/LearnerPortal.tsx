@@ -502,16 +502,22 @@ export default function LearnerPortal() {
             </div>
 
             {hasSubscription ? (
-              <Card className="border-green-500/30 bg-background/80 backdrop-blur-sm shadow-lg">
+              <Card className={`border-green-500/30 bg-background/80 backdrop-blur-sm shadow-lg ${subscriptionData?.subscription?.cancel_at_period_end ? 'border-yellow-500/30' : ''}`}>
                 <CardHeader>
                   <div className="flex items-center gap-2 mb-2">
-                    <Crown className="w-5 h-5 text-green-600 fill-green-600" />
-                    <span className="text-green-600 font-bold uppercase tracking-widest text-[10px]">Active</span>
+                    <Crown className={`w-5 h-5 ${subscriptionData?.subscription?.cancel_at_period_end ? 'text-yellow-600 fill-yellow-600' : 'text-green-600 fill-green-600'}`} />
+                    <span className={`${subscriptionData?.subscription?.cancel_at_period_end ? 'text-yellow-600' : 'text-green-600'} font-bold uppercase tracking-widest text-[10px]`}>
+                      {subscriptionData?.subscription?.cancel_at_period_end ? 'Cancelled' : 'Active'}
+                    </span>
                   </div>
                   <CardTitle className="text-xl font-display">
                     Pro Plan
                   </CardTitle>
-                  <CardDescription className="text-sm">Your subscription is active.</CardDescription>
+                  <CardDescription className="text-sm">
+                    {subscriptionData?.subscription?.cancel_at_period_end
+                      ? 'Cancelled — you still have access until the end of your billing period.'
+                      : 'Your subscription is active.'}
+                  </CardDescription>
                 </CardHeader>
                 <CardFooter>
                   <Button
@@ -538,10 +544,6 @@ export default function LearnerPortal() {
                     <div className="flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 text-muted-foreground mt-1" />
                       <p className="text-sm">1 recording / day</p>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-muted-foreground mt-1" />
-                      <p className="text-sm">30-second recording limit</p>
                     </div>
                     <div className="flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 text-muted-foreground mt-1" />
