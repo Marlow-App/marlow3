@@ -30,12 +30,12 @@ The project uses a monorepo layout with three main directories:
 - **Key Pages**:
   - `Landing` — unauthenticated landing page
   - `Home` — dashboard with greeting and recent recordings
-  - `Record` — record audio with sentence text input
+  - `Record` — record audio with sentence text input; shows "X recordings left today" + tier badge
   - `LearnerPortal` — view your recordings and their feedback
-  - `ReviewerPortal` — view all pending recordings awaiting review
+  - `ReviewerPortal` — view pending recordings with Pro Waiting/Waiting/Completed tabs + sort toggle
   - `RecordingDetail` — view a specific recording with ability to leave feedback
   - `CheckoutSuccess` — post-payment confirmation page shown after Stripe checkout
-  - `ManageSubscription` — internal subscription management (switch plan, cancel, reactivate)
+  - `ManageSubscription` — internal subscription management (cancel, reactivate)
   - `PrivacyPolicy` — privacy policy page (accessible to all users)
   - `TermsOfService` — terms of service page (accessible to all users)
   - `ConsentGate` — consent screen shown to new users after login (age, terms, privacy, voice data)
@@ -92,9 +92,9 @@ The project uses a monorepo layout with three main directories:
 - **Payments**: Stripe integration via `stripe` and `stripe-replit-sync` packages
 - **Stripe Files**: `server/stripe/stripeClient.ts` (client/sync), `server/stripe/webhookHandlers.ts`, `server/stripe/seedProducts.ts`
 - **Architecture**: Uses `stripe-replit-sync` to auto-sync Stripe data to PostgreSQL `stripe` schema. Products/prices queried from `stripe.*` tables, never inserted manually.
-- **Products**: Pro Starter ($4.99/mo) and Pro Max ($9.99/mo) subscription plans, created via seed script
+- **Products**: Single "Pro Plan" tier ($7.99/mo, 3 recordings/day, priority feedback). Legacy Stripe products (Pro Starter, Pro Max) are treated as Pro tier. Free tier: 1 recording/day, 30-sec limit, standard feedback.
 - **Webhook**: Registered BEFORE `express.json()` in `server/index.ts` at `/api/stripe/webhook`
-- **Routes**: `/api/stripe/products`, `/api/stripe/checkout`, `/api/stripe/subscription`, `/api/stripe/portal`, `/api/stripe/publishable-key`, `/api/stripe/switch-plan`, `/api/stripe/cancel`, `/api/stripe/reactivate`
+- **Routes**: `/api/stripe/products`, `/api/stripe/checkout`, `/api/stripe/subscription`, `/api/stripe/portal`, `/api/stripe/publishable-key`, `/api/stripe/switch-plan`, `/api/stripe/cancel`, `/api/stripe/reactivate`, `/api/recordings/remaining` (daily limit info)
 - **User schema**: `stripeCustomerId` and `stripeSubscriptionId` fields added to users table
 
 ## External Dependencies

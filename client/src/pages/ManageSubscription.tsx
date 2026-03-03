@@ -11,7 +11,6 @@ import { Layout } from "@/components/Layout";
 export default function ManageSubscription() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [switching, setSwitching] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [reactivating, setReactivating] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -34,26 +33,6 @@ export default function ManageSubscription() {
   const currentTier = currentProduct?.metadata?.tier || subProductObj?.metadata?.tier;
   const currentName = currentProduct?.name || subProductObj?.name || sub?.product_name || 'Pro Plan';
   const currentPrice = subPrice?.unit_amount || currentProduct?.prices?.[0]?.unit_amount;
-
-  const otherProduct = products?.find((p: any) => p.id !== currentProductId);
-  const otherName = otherProduct?.name;
-  const otherPrice = otherProduct?.prices?.[0];
-  const otherTier = otherProduct?.metadata?.tier;
-  const isUpgrade = otherTier === 'max';
-
-  const handleSwitchPlan = async () => {
-    if (!otherPrice) return;
-    setSwitching(true);
-    try {
-      await apiRequest("POST", "/api/stripe/switch-plan", { newPriceId: otherPrice.id });
-      await queryClient.invalidateQueries({ queryKey: ['/api/stripe/subscription'] });
-      toast({ title: "Plan updated!", description: `You've switched to ${otherName}.` });
-    } catch (err) {
-      toast({ title: "Failed to switch plan", description: "Please try again.", variant: "destructive" });
-    } finally {
-      setSwitching(false);
-    }
-  };
 
   const handleCancel = async () => {
     setCancelling(true);
@@ -135,11 +114,11 @@ export default function ManageSubscription() {
           <CardContent className="space-y-2">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <p className="text-sm">Up to {currentTier === 'max' ? '15' : '5'} recordings per day</p>
+              <p className="text-sm">3 recordings per day</p>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <p className="text-sm">{currentTier === 'max' ? 'Priority' : ''} 24-hour feedback guarantee</p>
+              <p className="text-sm">Priority feedback</p>
             </div>
           </CardContent>
           {cancelAtPeriodEnd && (
@@ -156,46 +135,25 @@ export default function ManageSubscription() {
           )}
         </Card>
 
-        {otherProduct && !cancelAtPeriodEnd && (
-          <Card className={`border-${isUpgrade ? 'primary' : 'secondary'}/30 bg-gradient-to-br from-${isUpgrade ? 'primary' : 'secondary'}/5 via-transparent to-transparent`} data-testid="other-plan-card">
-            <CardHeader>
-              <div className="flex items-center gap-2 mb-1">
-                <Crown className={`w-5 h-5 ${isUpgrade ? 'text-primary fill-primary' : 'text-secondary fill-secondary'}`} />
-                <span className={`${isUpgrade ? 'text-primary' : 'text-secondary'} font-bold uppercase tracking-widest text-[10px]`}>
-                  {isUpgrade ? 'Upgrade' : 'Downgrade'}
-                </span>
-              </div>
-              <CardTitle className="text-xl font-display" data-testid="other-plan-name">{otherName}</CardTitle>
-              <CardDescription className="text-sm">
-                {otherPrice ? `${formatPrice(otherPrice.unit_amount)}/month` : ''}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
-                <p className="text-sm">Up to {otherTier === 'max' ? '15' : '5'} recordings per day</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
-                <p className="text-sm">{otherTier === 'max' ? 'Priority' : ''} 24-hour feedback guarantee</p>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button
-                className={`w-full ${isUpgrade ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'bg-secondary hover:bg-secondary/90 text-secondary-foreground'} font-bold shadow-sm`}
-                onClick={handleSwitchPlan}
-                disabled={switching}
-                data-testid="switch-plan-btn"
-              >
-                {switching ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Switching...</>
-                ) : (
-                  `${isUpgrade ? 'Upgrade' : 'Switch'} to ${otherName}`
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-        )}
+        <Card className="border-border bg-muted/10" data-testid="free-plan-info-card">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium text-muted-foreground">If cancelled, you'll revert to:</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">1 recording per day</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">30-second recording limit</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Standard feedback</p>
+            </div>
+          </CardContent>
+        </Card>
 
         {!cancelAtPeriodEnd && (
           <div className="pt-4 border-t border-border/50">

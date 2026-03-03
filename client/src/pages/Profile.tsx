@@ -342,7 +342,7 @@ export default function Profile() {
                     </span>
                   </div>
                   <CardTitle className="text-xl font-display">
-                    {subscriptionData?.subscription?.items?.data?.[0]?.price?.product?.name || subscriptionData?.subscription?.product_name || 'Pro Plan'}
+                    Pro Plan
                   </CardTitle>
                   <CardDescription className="text-sm">
                     {subscriptionData?.subscription?.cancel_at_period_end
@@ -363,62 +363,48 @@ export default function Profile() {
               </Card>
             ) : (
               <div className="grid gap-6 md:grid-cols-2">
-                <Card className="border-secondary/30 bg-gradient-to-br from-secondary/5 via-transparent to-transparent relative overflow-hidden">
+                <Card className="border-border bg-muted/10 relative overflow-hidden" data-testid="free-plan-card">
                   <CardHeader>
                     <div className="flex items-center gap-2 mb-2">
-                       <Crown className="w-5 h-5 text-secondary fill-secondary" />
-                       <span className="text-secondary font-bold uppercase tracking-widest text-[10px]">Starter</span>
+                       <Shield className="w-5 h-5 text-muted-foreground" />
+                       <span className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Current Plan</span>
                     </div>
-                    <CardTitle className="text-xl font-display">Pro Starter</CardTitle>
-                    <CardDescription className="text-sm">Perfect for consistent daily practice.</CardDescription>
+                    <CardTitle className="text-xl font-display">Free</CardTitle>
+                    <CardDescription className="text-sm">Get started with basic practice.</CardDescription>
                   </CardHeader>
                   <CardContent className="grid gap-3">
                     <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
-                      <p className="text-sm">Up to 5 recordings / day</p>
+                      <CheckCircle2 className="w-4 h-4 text-muted-foreground mt-1" />
+                      <p className="text-sm">1 recording / day</p>
                     </div>
                     <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
-                      <p className="text-sm">24h feedback guarantee</p>
+                      <CheckCircle2 className="w-4 h-4 text-muted-foreground mt-1" />
+                      <p className="text-sm">30-second recording limit</p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-muted-foreground mt-1" />
+                      <p className="text-sm">Standard feedback</p>
                     </div>
                   </CardContent>
-                  <CardFooter>
-                     <Button
-                       className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold shadow-sm"
-                       disabled={!!checkoutLoading}
-                       onClick={() => {
-                         const price = getProductPrice('Pro Starter');
-                         if (price) { handleCheckout(price.id); }
-                         else { toast({ title: "Loading pricing", description: "Please wait a moment and try again.", variant: "destructive" }); }
-                       }}
-                       data-testid="profile-checkout-starter-btn"
-                     >
-                       {checkoutLoading === getProductPrice('Pro Starter')?.id ? (
-                         <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
-                       ) : (
-                         'Upgrade $4.99/mo'
-                       )}
-                     </Button>
-                  </CardFooter>
                 </Card>
 
-                <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent relative overflow-hidden ring-2 ring-primary/20">
+                <Card className="border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent relative overflow-hidden ring-2 ring-primary/20" data-testid="pro-plan-card">
                   <CardHeader>
                     <div className="flex items-center gap-2 mb-2">
                        <Crown className="w-5 h-5 text-primary fill-primary" />
-                       <span className="text-primary font-bold uppercase tracking-widest text-[10px]">Advanced</span>
+                       <span className="text-primary font-bold uppercase tracking-widest text-[10px]">Upgrade</span>
                     </div>
-                    <CardTitle className="text-xl font-display">Pro Max</CardTitle>
-                    <CardDescription className="text-sm">For serious learners seeking immersion.</CardDescription>
+                    <CardTitle className="text-xl font-display">Pro Plan</CardTitle>
+                    <CardDescription className="text-sm">For serious learners who want faster progress.</CardDescription>
                   </CardHeader>
                   <CardContent className="grid gap-3">
                     <div className="flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
-                      <p className="text-sm">Up to 15 recordings / day</p>
+                      <p className="text-sm">3 recordings / day</p>
                     </div>
                     <div className="flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
-                      <p className="text-sm">Priority 24h feedback</p>
+                      <p className="text-sm">Priority feedback</p>
                     </div>
                   </CardContent>
                   <CardFooter>
@@ -426,16 +412,16 @@ export default function Profile() {
                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
                        disabled={!!checkoutLoading}
                        onClick={() => {
-                         const price = getProductPrice('Pro Max');
+                         const price = getProductPrice('Pro Plan') || getProductPrice('Pro Starter');
                          if (price) { handleCheckout(price.id); }
                          else { toast({ title: "Loading pricing", description: "Please wait a moment and try again.", variant: "destructive" }); }
                        }}
-                       data-testid="profile-checkout-max-btn"
+                       data-testid="profile-checkout-pro-btn"
                      >
-                       {checkoutLoading === getProductPrice('Pro Max')?.id ? (
+                       {checkoutLoading ? (
                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
                        ) : (
-                         'Upgrade $9.99/mo'
+                         'Upgrade $7.99/mo'
                        )}
                      </Button>
                   </CardFooter>

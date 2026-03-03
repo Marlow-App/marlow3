@@ -173,7 +173,21 @@ export async function registerRoutes(
       const pending = await storage.getAllPendingRecordings();
       const pendingWithUser = await Promise.all(pending.map(async (r: any) => {
         const user = await storage.getUser(r.userId);
-        return { ...r, user };
+        let isPro = false;
+        if (user?.stripeSubscriptionId) {
+          isPro = true;
+        } else if (user?.stripeCustomerId) {
+          try {
+            const stripe = await getUncachableStripeClient();
+            const subs = await stripe.subscriptions.list({
+              customer: user.stripeCustomerId,
+              status: 'active',
+              limit: 1,
+            });
+            isPro = subs.data.length > 0;
+          } catch (e) {}
+        }
+        return { ...r, user, isPro };
       }));
       res.json(pendingWithUser);
     } catch (error) {
@@ -238,6 +252,7 @@ export async function registerRoutes(
       const isUnlimited = userEmail === UNLIMITED_EMAIL;
 
       let dailyLimit = 1;
+      let tier = 'free';
 
       if (!isUnlimited) {
         const user = await storage.getUser(userId);
@@ -253,13 +268,12 @@ export async function registerRoutes(
           );
           const sub = subResult.rows[0] as any;
           if (sub) {
-            const tier = typeof sub.product_metadata === 'string'
+            const subTier = typeof sub.product_metadata === 'string'
               ? JSON.parse(sub.product_metadata)?.tier
               : sub.product_metadata?.tier;
-            if (tier === 'max') {
-              dailyLimit = 15;
-            } else if (tier === 'starter') {
-              dailyLimit = 5;
+            if (subTier === 'pro' || subTier === 'starter' || subTier === 'max') {
+              dailyLimit = 3;
+              tier = 'pro';
             }
           }
         }
@@ -270,12 +284,11 @@ export async function registerRoutes(
         const todaysRecordings = userRecordings.filter(r => new Date(r.createdAt) >= today);
 
         if (todaysRecordings.length >= dailyLimit) {
-          const tierName = dailyLimit === 1 ? 'free' : dailyLimit === 5 ? 'Pro Starter' : 'Pro Max';
-          const upgradeMsg = dailyLimit < 15
-            ? ' Upgrade your plan for more recordings!'
+          const upgradeMsg = tier === 'free'
+            ? ' Upgrade to the Pro Plan for more recordings!'
             : '';
           return res.status(403).json({
-            message: `Daily limit of ${dailyLimit} recording${dailyLimit > 1 ? 's' : ''} reached (${tierName}).${upgradeMsg}`,
+            message: `Daily limit of ${dailyLimit} recording${dailyLimit > 1 ? 's' : ''} reached (${tier === 'free' ? 'Free' : 'Pro'} plan).${upgradeMsg}`,
             dailyLimit,
             used: todaysRecordings.length,
           });
@@ -289,6 +302,55 @@ export async function registerRoutes(
         res.status(400).json({ message: err.errors[0].message });
         return;
       }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Remaining recordings for today
+  app.get("/api/recordings/remaining", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const userEmail = (req.user as any).claims.email;
+
+      const UNLIMITED_EMAIL = "jujusees@gmail.com";
+      if (userEmail === UNLIMITED_EMAIL) {
+        return res.json({ dailyLimit: 999, used: 0, remaining: 999, tier: 'unlimited' });
+      }
+
+      let dailyLimit = 1;
+      let tier = 'free';
+
+      const user = await storage.getUser(userId);
+      if (user?.stripeCustomerId) {
+        const subResult = await db.execute(
+          sql`SELECT s.status, p.metadata as product_metadata
+            FROM stripe.subscriptions s
+            LEFT JOIN stripe.prices pr ON s.items->0->'price'->>'id' = pr.id
+            LEFT JOIN stripe.products p ON pr.product = p.id
+            WHERE s.customer = ${user.stripeCustomerId}
+            AND s.status IN ('active', 'trialing')
+            LIMIT 1`
+        );
+        const sub = subResult.rows[0] as any;
+        if (sub) {
+          const subTier = typeof sub.product_metadata === 'string'
+            ? JSON.parse(sub.product_metadata)?.tier
+            : sub.product_metadata?.tier;
+          if (subTier === 'pro' || subTier === 'starter' || subTier === 'max') {
+            dailyLimit = 3;
+            tier = 'pro';
+          }
+        }
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const userRecordings = await storage.getRecordingsByUser(userId);
+      const used = userRecordings.filter(r => new Date(r.createdAt) >= today).length;
+
+      res.json({ dailyLimit, used, remaining: Math.max(0, dailyLimit - used), tier });
+    } catch (error) {
+      console.error("Error getting remaining recordings:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

@@ -7,10 +7,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
-import { ChevronLeft, Info, Volume2, X, Loader2 } from "lucide-react";
+import { ChevronLeft, Info, Volume2, X, Loader2, Crown } from "lucide-react";
 import { getDailyPhrases, phraseToText, type Phrase, type ToneChar } from "@/data/phrases";
 import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 
 const TONE_COLORS: Record<number, string> = {
   1: "text-red-600 dark:text-red-400",
@@ -154,6 +157,10 @@ export default function RecordPage() {
   const [selectedPhrase, setSelectedPhrase] = useState<Phrase | null>(null);
   const { playPhrase, loadingPhrase } = usePhraseAudio();
 
+  const { data: remainingData } = useQuery<{ dailyLimit: number; used: number; remaining: number; tier: string }>({
+    queryKey: ['/api/recordings/remaining'],
+  });
+
   const dailyPhrases = getDailyPhrases(10);
 
   const rows = [
@@ -211,12 +218,32 @@ export default function RecordPage() {
   return (
     <Layout>
       <div className="max-w-2xl mx-auto space-y-6 animate-in">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setLocation("/")} data-testid="back-btn">
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Back
-          </Button>
-          <h1 className="text-3xl font-bold font-display">New Recording</h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setLocation("/")} data-testid="back-btn">
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Back
+            </Button>
+            <h1 className="text-3xl font-bold font-display">New Recording</h1>
+          </div>
+
+          {remainingData && remainingData.tier !== 'unlimited' && (
+            <div className="flex items-center gap-2" data-testid="recording-limit-info">
+              <span className="text-sm text-muted-foreground" data-testid="remaining-count">
+                {remainingData.remaining} of {remainingData.dailyLimit} left today
+              </span>
+              <Link href="/profile">
+                <Badge
+                  variant={remainingData.tier === 'pro' ? 'default' : 'outline'}
+                  className={`cursor-pointer ${remainingData.tier === 'pro' ? 'bg-primary text-primary-foreground' : ''}`}
+                  data-testid="tier-badge"
+                >
+                  {remainingData.tier === 'pro' && <Crown className="w-3 h-3 mr-1" />}
+                  {remainingData.tier === 'pro' ? 'Pro' : 'Free'}
+                </Badge>
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="space-y-5">
