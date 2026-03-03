@@ -6,50 +6,35 @@ async function createProducts() {
   const existingProducts = await stripe.products.list({ limit: 100 });
   const existingNames = existingProducts.data.map(p => p.name);
 
-  if (!existingNames.includes('Pro Starter')) {
-    const starterProduct = await stripe.products.create({
-      name: 'Pro Starter',
-      description: 'Up to 5 recordings per day with 24-hour feedback guarantee',
+  if (!existingNames.includes('Pro Plan')) {
+    const proProduct = await stripe.products.create({
+      name: 'Pro Plan',
+      description: '3 recordings per day with priority feedback',
       metadata: {
-        tier: 'starter',
-        daily_limit: '5',
-        feedback_hours: '24',
+        tier: 'pro',
+        daily_limit: '3',
       },
     });
 
-    const starterPrice = await stripe.prices.create({
-      product: starterProduct.id,
-      unit_amount: 499,
+    const proPrice = await stripe.prices.create({
+      product: proProduct.id,
+      unit_amount: 799,
       currency: 'usd',
       recurring: { interval: 'month' },
     });
 
-    console.log(`Created Pro Starter: ${starterProduct.id}, Price: ${starterPrice.id}`);
+    console.log(`Created Pro Plan: ${proProduct.id}, Price: ${proPrice.id}`);
   } else {
-    console.log('Pro Starter already exists, skipping.');
+    console.log('Pro Plan already exists, skipping.');
   }
 
-  if (!existingNames.includes('Pro Max')) {
-    const maxProduct = await stripe.products.create({
-      name: 'Pro Max',
-      description: 'Up to 15 recordings per day with priority 24-hour feedback',
-      metadata: {
-        tier: 'max',
-        daily_limit: '15',
-        feedback_hours: '24',
-      },
-    });
-
-    const maxPrice = await stripe.prices.create({
-      product: maxProduct.id,
-      unit_amount: 999,
-      currency: 'usd',
-      recurring: { interval: 'month' },
-    });
-
-    console.log(`Created Pro Max: ${maxProduct.id}, Price: ${maxPrice.id}`);
-  } else {
-    console.log('Pro Max already exists, skipping.');
+  const legacyNames = ['Pro Starter', 'Pro Max'];
+  for (const name of legacyNames) {
+    const legacy = existingProducts.data.find(p => p.name === name && p.active);
+    if (legacy) {
+      await stripe.products.update(legacy.id, { active: false });
+      console.log(`Archived legacy product: ${name} (${legacy.id})`);
+    }
   }
 
   console.log('Done seeding products!');

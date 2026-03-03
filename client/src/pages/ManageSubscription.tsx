@@ -107,7 +107,7 @@ export default function ManageSubscription() {
             </div>
             <CardTitle className="text-xl font-display" data-testid="current-plan-name">{currentName}</CardTitle>
             <CardDescription className="text-sm">
-              {currentPrice ? `${formatPrice(currentPrice)}/month` : ''}
+              $7.99/month
               {cancelAtPeriodEnd && ' — Access until end of billing period'}
             </CardDescription>
           </CardHeader>
