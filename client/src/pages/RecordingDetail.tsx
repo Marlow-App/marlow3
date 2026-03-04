@@ -52,7 +52,7 @@ function ScoreBadge({ score }: { score: number | null | undefined }) {
   if (score >= 70) color = "text-emerald-600 dark:text-emerald-400";
   else if (score >= 40) color = "text-amber-600 dark:text-amber-400";
   return (
-    <span className={`text-sm font-bold ${color}`} data-testid={`score-badge-${score}`}>
+    <span className={`text-lg font-bold ${color}`} data-testid={`score-badge-${score}`}>
       {score}%
     </span>
   );
@@ -70,16 +70,18 @@ function CharacterRatingDisplay({ ratings }: { ratings: CharacterRating[] }) {
     <div className="space-y-2 mt-2" data-testid="character-ratings-display">
       <div className="grid gap-2">
         {ratings.map((cr, idx) => (
-          <div key={idx} className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2">
-            <span className="text-lg font-bold w-8 text-center" data-testid={`char-display-${idx}`}>{cr.character}</span>
-            <div className="flex gap-2 flex-1 flex-wrap">
+          <div key={idx} className="border border-border/50 rounded-lg p-4 bg-card" data-testid={`char-display-${idx}`}>
+            <div className="text-2xl font-bold text-center mb-3">{cr.character}</div>
+            <div className="space-y-2">
               {DIMENSIONS.map((dim) => {
                 const val = cr[dim.key];
                 const opt = RATING_OPTIONS.find(o => o.value === val);
                 return (
-                  <div key={dim.key} className="flex items-center gap-1">
-                    <span className="text-[10px] text-muted-foreground">{dim.chinese}</span>
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                  <div key={dim.key} className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {dim.chinese} <span className="text-xs">({dim.english})</span>
+                    </span>
+                    <span className={`text-sm font-bold px-3 py-1 rounded-md ${
                       val === 100 ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
                       val === 50 ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
                       "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
