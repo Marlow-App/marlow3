@@ -282,6 +282,7 @@ function GroupedRecordingsList({ recordings }: { recordings: any[] }) {
 
 function RecordingCard({ recording }: { recording: any }) {
   const { toast } = useToast();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const deleteRecording = useMutation({
     mutationFn: async () => {
       await apiRequest("DELETE", `/api/recordings/${recording.id}`);
@@ -296,6 +297,7 @@ function RecordingCard({ recording }: { recording: any }) {
   });
 
   return (
+    <>
     <Link href={`/recordings/${recording.id}`}>
     <Card className="overflow-hidden border-border/50 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer" data-testid={`recording-card-${recording.id}`}>
       <CardContent className="p-4 space-y-2.5">
@@ -318,36 +320,15 @@ function RecordingCard({ recording }: { recording: any }) {
                 "Pending"
               )}
             </Badge>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => e.preventDefault()}
-                  className="h-6 w-6 text-muted-foreground"
-                  data-testid={`delete-recording-${recording.id}`}
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Recording</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete this recording and any associated feedback. This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => deleteRecording.mutate()}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    {deleteRecording.isPending ? "Deleting..." : "Delete"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowDeleteDialog(true); }}
+              className="h-6 w-6 text-muted-foreground"
+              data-testid={`delete-recording-${recording.id}`}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
           </div>
         </div>
         <div className="bg-muted/30 px-2.5 py-1.5 rounded-lg border border-border/50" onClick={(e) => e.stopPropagation()}>
@@ -395,6 +376,26 @@ function RecordingCard({ recording }: { recording: any }) {
       </CardContent>
     </Card>
     </Link>
+    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Recording</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will permanently delete this recording and any associated feedback. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => deleteRecording.mutate()}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {deleteRecording.isPending ? "Deleting..." : "Delete"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
 
