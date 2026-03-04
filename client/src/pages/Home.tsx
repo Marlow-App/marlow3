@@ -156,9 +156,11 @@ export default function Home() {
                 <CardContent className="pt-6">
                   <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                     <div className="space-y-3">
-                      <Badge variant="outline" className="text-xs" data-testid="daily-challenge-level">
-                        {dailyChallenge.level}
-                      </Badge>
+                      <Link href="/profile?highlight=chineseLevel">
+                        <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10 hover:border-primary/40 transition-colors" data-testid="daily-challenge-level">
+                          {dailyChallenge.level} ✎
+                        </Badge>
+                      </Link>
                       <div className="flex flex-wrap items-end gap-x-0.5" data-testid="daily-challenge-characters">
                         {dailyChallenge.characters.map((tc, i) => (
                           <DailyToneChar key={i} toneChar={tc} />

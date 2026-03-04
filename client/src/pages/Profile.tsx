@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useUpload } from "@/hooks/use-upload";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -69,6 +69,20 @@ export default function Profile() {
 
   const [cityOpen, setCityOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const chineseLevelRef = useRef<HTMLDivElement>(null);
+  const [highlightLevel, setHighlightLevel] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("highlight") === "chineseLevel") {
+      setHighlightLevel(true);
+      setIsEditing(true);
+      setTimeout(() => {
+        chineseLevelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
+      setTimeout(() => setHighlightLevel(false), 4000);
+    }
+  }, []);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
   const { data: products } = useQuery<any[]>({
@@ -221,14 +235,17 @@ export default function Profile() {
 
               {!isReviewer ? (
                 <div className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label>Chinese Level</Label>
+                  <div
+                    ref={chineseLevelRef}
+                    className={`space-y-2 rounded-lg p-3 -mx-3 transition-all duration-500 ${highlightLevel ? "bg-primary/10 ring-2 ring-primary/40 animate-pulse" : ""}`}
+                  >
+                    <Label className={highlightLevel ? "text-primary font-bold" : ""}>Chinese Level</Label>
                     <Select 
                       disabled={!isEditing} 
                       value={formData.chineseLevel} 
                       onValueChange={v => setFormData(p => ({ ...p, chineseLevel: v }))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className={highlightLevel ? "border-primary ring-1 ring-primary/30" : ""}>
                         <SelectValue placeholder="Select your level" />
                       </SelectTrigger>
                       <SelectContent>

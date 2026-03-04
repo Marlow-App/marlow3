@@ -34,7 +34,7 @@ const TONE_PINYIN_COLORS: Record<number, string> = {
 function ToneCharacter({ toneChar, size = "lg" }: { toneChar: ToneChar; size?: "sm" | "lg" }) {
   const isPunctuation = !toneChar.pinyin || /[，。！？、；：]/.test(toneChar.char);
   const charSize = size === "lg" ? "text-3xl" : "text-lg";
-  const pinyinSize = size === "lg" ? "text-xs" : "text-[10px]";
+  const pinyinSize = size === "lg" ? "text-base" : "text-sm";
 
   return (
     <span className="inline-flex flex-col items-center mx-[1px]">
