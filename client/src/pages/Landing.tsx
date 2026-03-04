@@ -1,8 +1,15 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Mic2, MessageCircle, TrendingUp, ChevronRight } from "lucide-react";
+import { useRef } from "react";
 
 export default function Landing() {
+  const howItWorksRef = useRef<HTMLElement>(null);
+
+  const scrollToHowItWorks = () => {
+    howItWorksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <div className="min-h-screen flex flex-col font-sans bg-background text-foreground overflow-x-hidden">
       {/* Navigation */}
@@ -41,7 +48,7 @@ export default function Landing() {
                   Start Recording Free
                 </Button>
               </a>
-              <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2">
+              <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2" onClick={scrollToHowItWorks} data-testid="how-it-works-btn">
                 How it works
               </Button>
             </div>
@@ -97,6 +104,208 @@ export default function Landing() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Walkthrough */}
+      <section ref={howItWorksRef} className="py-24 px-6 md:px-12" data-testid="how-it-works-section">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">How It Works</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Every recording gets detailed, character-by-character feedback from a native speaker.
+            </p>
+          </div>
+
+          <div className="space-y-16">
+            {/* Step 1: Record */}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">1</div>
+                  <h3 className="text-2xl font-bold font-display">Record a Phrase</h3>
+                </div>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Pick from a daily challenge matched to your level, choose from our phrase bank, or type your own sentence. Hit record and speak naturally.
+                </p>
+              </div>
+              <div className="bg-card rounded-2xl shadow-lg border border-border/50 p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 pb-4 border-b border-border/30">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <Mic2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Today's phrase</p>
+                      <div className="flex items-end gap-1 mt-1">
+                        <span className="inline-flex flex-col items-center">
+                          <span className="text-xs text-green-500 font-medium">nǐ</span>
+                          <span className="text-2xl font-bold text-green-600">你</span>
+                        </span>
+                        <span className="inline-flex flex-col items-center">
+                          <span className="text-xs text-green-500 font-medium">hǎo</span>
+                          <span className="text-2xl font-bold text-green-600">好</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-center">
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                      <div className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
+                        <Mic2 className="w-7 h-7" />
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-center text-sm text-muted-foreground">Tap to start recording (max 10 seconds)</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2: Get Rated */}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Character Ratings</p>
+                    <span className="text-lg font-bold text-amber-600">72%</span>
+                  </div>
+
+                  <div className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2.5">
+                    <div className="flex flex-col items-center w-10">
+                      <span className="text-sm font-medium text-green-500">nǐ</span>
+                      <span className="text-xl font-bold text-green-600">你</span>
+                    </div>
+                    <div className="flex gap-2 flex-1 flex-wrap">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">Initial</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">Great</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">Final</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-700">OK</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">Tone</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-100 text-red-700">Poor</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2.5">
+                    <div className="flex flex-col items-center w-10">
+                      <span className="text-sm font-medium text-green-500">hǎo</span>
+                      <span className="text-xl font-bold text-green-600">好</span>
+                    </div>
+                    <div className="flex gap-2 flex-1 flex-wrap">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">Initial</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">Great</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">Final</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">Great</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">Tone</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">Great</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="order-1 md:order-2 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">2</div>
+                  <h3 className="text-2xl font-bold font-display">Get Rated Character by Character</h3>
+                </div>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  A native speaker rates every character across three dimensions: <strong>Initial</strong> (how you start the syllable), <strong>Final</strong> (how you end it), and <strong>Tone</strong> (the pitch pattern). Each gets a rating of Poor, OK, or Great, and you see an overall percentage score.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 3: Corrections */}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">3</div>
+                  <h3 className="text-2xl font-bold font-display">Specific Corrections</h3>
+                </div>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  For anything rated less than "Great," the reviewer explains exactly what went wrong and how to fix it. You get targeted advice for each character that needs work.
+                </p>
+              </div>
+              <div className="bg-card rounded-2xl shadow-lg border border-border/50 p-6">
+                <div className="space-y-4">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Corrections</p>
+                  <div className="space-y-3">
+                    <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <span className="text-lg font-bold text-red-600 shrink-0">你</span>
+                        <p className="text-sm text-foreground/80">
+                          <span className="font-semibold text-red-600">Tone:</span> Your third tone starts too high. It should dip low and come back up, like a valley shape.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <span className="text-lg font-bold text-amber-600 shrink-0">好</span>
+                        <p className="text-sm text-foreground/80">
+                          <span className="font-semibold text-amber-600">Tone:</span> Tone should not start so high, since it's a low falling and functions more like a low tone.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 4: Overall Comments */}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6">
+                <div className="space-y-4">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Overall Comments</p>
+                  <div className="bg-muted/30 rounded-xl p-4">
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold text-xs shrink-0">L</div>
+                      <div>
+                        <p className="text-sm font-medium">Native Speaker from Changchun</p>
+                        <p className="text-foreground/80 mt-2 leading-relaxed">
+                          Tones 1 and 4 consistently good, but you tend to mix up Tones 2 and 3. When a third tone comes before another third tone, the first one changes to a second tone. Practice this pattern with "你好" — the "nǐ" actually sounds like "ní" in natural speech.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-2">
+                    <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md">
+                      <span className="font-medium text-xs">Mandarin Speaker</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md">
+                      <span className="font-medium text-xs">10+ years teaching</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="order-1 md:order-2 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">4</div>
+                  <h3 className="text-2xl font-bold font-display">Overall Comments</h3>
+                </div>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Beyond individual characters, your reviewer gives big-picture feedback on patterns they notice — like which tones you consistently nail and which ones trip you up. This helps you focus your practice where it matters most.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mt-16">
+            <a href="/api/login?role=learner">
+              <Button size="lg" className="h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/30" data-testid="cta-start-recording">
+                Start Recording Free
+                <ChevronRight className="ml-2 w-5 h-5" />
+              </Button>
+            </a>
           </div>
         </div>
       </section>
