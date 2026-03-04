@@ -59,7 +59,7 @@ The project uses a monorepo layout with three main directories:
   - `users` — user accounts (required for Replit Auth)
   - `sessions` — session storage (required for Replit Auth)
   - `recordings` — audio recordings submitted by learners (fields: audioUrl, sentenceText, status pending/reviewed)
-  - `feedback` — reviewer feedback on recordings (fields: textFeedback, audioFeedbackUrl, rating (legacy 1-3), characterRatings (JSONB per-character ratings), overallScore (computed percentage 0-100), reviewerId)
+  - `feedback` — reviewer feedback on recordings (fields: textFeedback, corrections, audioFeedbackUrl, rating (legacy 1-3), characterRatings (JSONB per-character ratings), overallScore (computed percentage 0-100), reviewerId)
   - `userConsents` — consent records (consentType, policyVersion, ipAddress, consentedAt)
 - **Relations**: recordings belong to users, feedback belongs to recordings and reviewers, userConsents belong to users
 - **Schema Push**: Use `npm run db:push` (runs `drizzle-kit push`) to sync schema to database

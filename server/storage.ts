@@ -132,6 +132,7 @@ export class DatabaseStorage implements IStorage {
         recordingId: feedbackData.recordingId,
         reviewerId: (feedbackData as any).reviewerId,
         textFeedback: feedbackData.textFeedback,
+        corrections: (feedbackData as any).corrections ?? null,
         audioFeedbackUrl: feedbackData.audioFeedbackUrl,
         rating: (feedbackData as any).rating ?? null,
         characterRatings: (feedbackData as any).characterRatings ?? null,

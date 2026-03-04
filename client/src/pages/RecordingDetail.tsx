@@ -192,6 +192,7 @@ export default function RecordingDetail() {
   const { toast } = useToast();
   
   const [feedbackText, setFeedbackText] = useState("");
+  const [correctionsText, setCorrectionsText] = useState("");
   const [isRecordingFeedback, setIsRecordingFeedback] = useState(false);
 
   const [, navigate] = useLocation();
@@ -232,10 +233,10 @@ export default function RecordingDetail() {
   const allRated = charRatings.length > 0 && charRatings.every(r => r.initial !== -1 && r.final !== -1 && r.tone !== -1);
 
   const handleFeedbackSubmit = async (audioFile?: File) => {
-    if (!feedbackText.trim() && !audioFile) {
+    if (!feedbackText.trim() && !correctionsText.trim() && !audioFile) {
       toast({
         title: "Empty Feedback",
-        description: "Please provide either text or audio feedback.",
+        description: "Please provide corrections, comments, or audio feedback.",
         variant: "destructive",
       });
       return;
@@ -265,6 +266,7 @@ export default function RecordingDetail() {
       await createFeedback.mutateAsync({
         recordingId,
         textFeedback: feedbackText,
+        corrections: correctionsText || undefined,
         audioFeedbackUrl: audioUrl,
         characterRatings: validRatings.length > 0 ? validRatings : undefined,
       } as any);
@@ -275,6 +277,7 @@ export default function RecordingDetail() {
       });
       
       setFeedbackText("");
+      setCorrectionsText("");
       setCharRatings(characters.map(c => ({ character: c, initial: -1 as any, final: -1 as any, tone: -1 as any })));
       setIsRecordingFeedback(false);
       
@@ -433,6 +436,15 @@ export default function RecordingDetail() {
                             <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={user?.role === 'reviewer'} />
                           )}
 
+                          {(item as any).corrections && (
+                            <div className="mt-4 pt-4 border-t border-border/50">
+                              <p className="text-xs font-semibold uppercase text-muted-foreground mb-2" data-testid="corrections-label">Corrections</p>
+                              <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed" data-testid="corrections-text">
+                                {(item as any).corrections}
+                              </p>
+                            </div>
+                          )}
+
                           {item.textFeedback && (
                             <div className="mt-4 pt-4 border-t border-border/50">
                               <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Overall Comments</p>
@@ -482,9 +494,20 @@ export default function RecordingDetail() {
                   />
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Detailed Comments</label>
+                    <label className="text-sm font-medium">Corrections</label>
                     <Textarea 
-                      placeholder="Provide specific feedback on tones and pronunciation..."
+                      placeholder="Write corrections for specific characters or phrases..."
+                      className="min-h-[100px] resize-none"
+                      value={correctionsText}
+                      onChange={(e) => setCorrectionsText(e.target.value)}
+                      data-testid="corrections-text-input"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Overall Comments</label>
+                    <Textarea 
+                      placeholder="Provide overall feedback on tones and pronunciation..."
                       className="min-h-[150px] resize-none"
                       value={feedbackText}
                       onChange={(e) => setFeedbackText(e.target.value)}

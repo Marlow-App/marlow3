@@ -29,6 +29,7 @@ export const feedback = pgTable("feedback", {
   recordingId: integer("recording_id").notNull().references(() => recordings.id),
   reviewerId: varchar("reviewer_id").notNull().references(() => users.id),
   textFeedback: text("text_feedback").notNull(),
+  corrections: text("corrections"),
   audioFeedbackUrl: text("audio_feedback_url"),
   rating: integer("rating"),
   characterRatings: jsonb("character_ratings"),

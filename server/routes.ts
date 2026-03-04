@@ -324,10 +324,10 @@ export async function registerRoutes(
     try {
       const recordingId = Number(req.params.id);
       const reviewerId = (req.user as any).claims.sub;
-      const { textFeedback, audioFeedbackUrl, characterRatings } = req.body;
+      const { textFeedback, corrections, audioFeedbackUrl, characterRatings } = req.body;
 
-      if (!textFeedback && !audioFeedbackUrl) {
-        return res.status(400).json({ message: "Feedback text or audio is required" });
+      if (!textFeedback && !corrections && !audioFeedbackUrl) {
+        return res.status(400).json({ message: "Feedback text, corrections, or audio is required" });
       }
 
       let overallScore: number | null = null;
@@ -346,6 +346,7 @@ export async function registerRoutes(
       const feedback = await storage.createFeedback({
         recordingId,
         textFeedback: textFeedback || "",
+        corrections: corrections || null,
         audioFeedbackUrl: audioFeedbackUrl || null,
         rating: null,
         characterRatings: validatedRatings,
