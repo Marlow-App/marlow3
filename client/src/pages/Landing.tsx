@@ -244,7 +244,7 @@ export default function Landing() {
                       <div className="flex items-start gap-2">
                         <span className="text-lg font-bold text-red-600 shrink-0">你</span>
                         <p className="text-sm text-foreground/80">
-                          <span className="font-semibold text-red-600">Tone:</span> Your third tone starts too high. It should dip low and come back up, like a valley shape.
+                          <span className="font-semibold text-red-600">Tone:</span> When two Tone 3's come together, the first one turns into a Tone 2, but a "half" Tone 2: it's shorter and starts higher.
                         </p>
                       </div>
                     </div>
