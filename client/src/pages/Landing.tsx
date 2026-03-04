@@ -52,15 +52,6 @@ export default function Landing() {
                 How it works
               </Button>
             </div>
-            
-            <div className="flex items-center gap-4 text-sm text-muted-foreground pt-4">
-               <div className="flex -space-x-2">
-                 {[1,2,3,4].map(i => (
-                   <div key={i} className="w-8 h-8 rounded-full border-2 border-background bg-gray-200" />
-                 ))}
-               </div>
-               <p>Joined by 10,000+ learners</p>
-            </div>
           </div>
 
           <div className="relative animate-in" style={{ animationDelay: '0.2s' }}>
