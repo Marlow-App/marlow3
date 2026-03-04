@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean, integer, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, integer, varchar, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -15,6 +15,15 @@ export const recordings = pgTable("recordings", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const characterRatingSchema = z.object({
+  character: z.string(),
+  initial: z.number().refine(v => [0, 50, 100].includes(v)),
+  final: z.number().refine(v => [0, 50, 100].includes(v)),
+  tone: z.number().refine(v => [0, 50, 100].includes(v)),
+});
+
+export type CharacterRating = z.infer<typeof characterRatingSchema>;
+
 export const feedback = pgTable("feedback", {
   id: serial("id").primaryKey(),
   recordingId: integer("recording_id").notNull().references(() => recordings.id),
@@ -22,6 +31,8 @@ export const feedback = pgTable("feedback", {
   textFeedback: text("text_feedback").notNull(),
   audioFeedbackUrl: text("audio_feedback_url"),
   rating: integer("rating"),
+  characterRatings: jsonb("character_ratings"),
+  overallScore: integer("overall_score"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

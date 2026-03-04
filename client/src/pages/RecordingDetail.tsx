@@ -11,10 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { type User as SharedUser } from "@shared/schema";
+import { type User as SharedUser, type CharacterRating } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 import {
@@ -29,95 +29,155 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-function RatingDisplay({ rating }: { rating: number | null | undefined }) {
-  if (!rating) return null;
+function extractChineseChars(text: string): string[] {
+  const matches = text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g);
+  return matches || [];
+}
 
-  const levels = [
-    { value: 1, label: "Needs Improvement", color: "bg-gray-400", activeGlow: "shadow-gray-400/40", textColor: "text-gray-600" },
-    { value: 2, label: "Good", color: "bg-amber-400", activeGlow: "shadow-amber-400/40", textColor: "text-amber-600" },
-    { value: 3, label: "Excellent", color: "bg-emerald-400", activeGlow: "shadow-emerald-400/40", textColor: "text-emerald-600" },
-  ];
+const RATING_OPTIONS = [
+  { value: 0, label: "Poor", shortLabel: "差", color: "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800", activeColor: "bg-red-500 text-white border-red-500" },
+  { value: 50, label: "OK", shortLabel: "可", color: "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800", activeColor: "bg-amber-500 text-white border-amber-500" },
+  { value: 100, label: "Excellent", shortLabel: "优", color: "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800", activeColor: "bg-emerald-500 text-white border-emerald-500" },
+];
 
-  const active = levels.find((l) => l.value === rating);
+const DIMENSIONS = [
+  { key: "initial" as const, chinese: "声母", english: "Initial" },
+  { key: "final" as const, chinese: "韵母", english: "Final" },
+  { key: "tone" as const, chinese: "声调", english: "Tone" },
+];
 
+function ScoreBadge({ score }: { score: number | null | undefined }) {
+  if (score === null || score === undefined) return null;
+  let color = "text-red-600 dark:text-red-400";
+  if (score >= 70) color = "text-emerald-600 dark:text-emerald-400";
+  else if (score >= 40) color = "text-amber-600 dark:text-amber-400";
   return (
-    <div className="flex items-center gap-1.5" data-testid={`rating-display-${rating}`}>
-      <div className="flex items-center gap-1 bg-muted/40 rounded-full px-2 py-1">
-        {levels.map((level) => (
-          <div
-            key={level.value}
-            className={`w-3 h-3 rounded-full transition-all ${
-              level.value <= rating
-                ? `${level.color} ${level.value === rating ? `shadow-md ${level.activeGlow}` : ""}`
-                : "bg-muted-foreground/15"
-            }`}
-          />
+    <span className={`text-sm font-bold ${color}`} data-testid={`score-badge-${score}`}>
+      {score}%
+    </span>
+  );
+}
+
+function OldRatingDisplay({ rating }: { rating: number | null | undefined }) {
+  if (!rating) return null;
+  const labels: Record<number, string> = { 1: "Needs Improvement", 2: "Good", 3: "Excellent" };
+  const colors: Record<number, string> = { 1: "text-gray-600", 2: "text-amber-600", 3: "text-emerald-600" };
+  return <span className={`text-sm font-semibold ${colors[rating] || ""}`}>{labels[rating] || ""}</span>;
+}
+
+function CharacterRatingDisplay({ ratings }: { ratings: CharacterRating[] }) {
+  return (
+    <div className="space-y-2 mt-2" data-testid="character-ratings-display">
+      <div className="grid gap-2">
+        {ratings.map((cr, idx) => (
+          <div key={idx} className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2">
+            <span className="text-lg font-bold w-8 text-center" data-testid={`char-display-${idx}`}>{cr.character}</span>
+            <div className="flex gap-2 flex-1 flex-wrap">
+              {DIMENSIONS.map((dim) => {
+                const val = cr[dim.key];
+                const opt = RATING_OPTIONS.find(o => o.value === val);
+                return (
+                  <div key={dim.key} className="flex items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">{dim.chinese}</span>
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                      val === 100 ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
+                      val === 50 ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
+                      "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
+                    }`} data-testid={`char-rating-${idx}-${dim.key}`}>
+                      {opt?.label || val}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         ))}
       </div>
-      {active && (
-        <span className={`text-[11px] font-semibold ${active.textColor}`}>{active.label}</span>
-      )}
     </div>
   );
 }
 
-function RatingSelector({ value, onChange }: { value: number | null; onChange: (v: number) => void }) {
-  const levels = [
-    { value: 1, label: "Needs Improvement", color: "bg-gray-400", shadow: "shadow-[0_0_8px_rgba(156,163,175,0.6)]", textColor: "text-gray-600 dark:text-gray-400" },
-    { value: 2, label: "Good", color: "bg-amber-400", shadow: "shadow-[0_0_8px_rgba(251,191,36,0.6)]", textColor: "text-amber-600 dark:text-amber-400" },
-    { value: 3, label: "Excellent", color: "bg-emerald-400", shadow: "shadow-[0_0_8px_rgba(52,211,153,0.6)]", textColor: "text-emerald-600 dark:text-emerald-400" },
-  ];
+function CharacterRatingInput({
+  characters,
+  ratings,
+  onChange,
+}: {
+  characters: string[];
+  ratings: CharacterRating[];
+  onChange: (ratings: CharacterRating[]) => void;
+}) {
+  const handleChange = (charIdx: number, dim: "initial" | "final" | "tone", value: number) => {
+    const updated = [...ratings];
+    updated[charIdx] = { ...updated[charIdx], [dim]: value };
+    onChange(updated);
+  };
 
-  const activeLevel = levels.find((l) => l.value === value);
+  const overallScore = useMemo(() => {
+    if (ratings.length === 0) return null;
+    const allSet = ratings.every(r => r.initial !== -1 && r.final !== -1 && r.tone !== -1);
+    if (!allSet) return null;
+    const total = ratings.reduce((sum, r) => sum + r.initial + r.final + r.tone, 0);
+    return Math.round(total / (ratings.length * 3));
+  }, [ratings]);
+
+  if (characters.length === 0) {
+    return (
+      <div className="text-sm text-muted-foreground italic p-3 bg-muted/20 rounded-lg">
+        No Chinese characters found in the sentence text.
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-3">
-      <label className="text-sm font-medium">Rating</label>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1.5 bg-muted/40 rounded-full px-3 py-2">
-          {levels.map((level) => (
-            <button
-              key={level.value}
-              type="button"
-              onClick={() => onChange(level.value)}
-              className={`w-4 h-4 rounded-full transition-all duration-200 cursor-pointer hover:scale-125 ${
-                value === level.value
-                  ? `${level.color} ${level.shadow} scale-110`
-                  : "bg-muted-foreground/15 hover:bg-muted-foreground/30"
-              }`}
-              data-testid={`rating-dot-${level.value}`}
-              aria-label={level.label}
-            />
-          ))}
-        </div>
-        <div className="overflow-hidden min-w-0 flex-1 relative">
-          {activeLevel && (
-            <span className={`text-sm font-semibold ${activeLevel.textColor} whitespace-nowrap block`}>{activeLevel.label}</span>
-          )}
-          <div className="absolute top-0 right-0 bottom-0 w-6 bg-gradient-to-l from-card to-transparent pointer-events-none" />
-        </div>
+    <div className="space-y-3" data-testid="character-rating-input">
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium">Character Ratings</label>
+        {overallScore !== null && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground">Overall:</span>
+            <span className={`text-sm font-bold ${
+              overallScore >= 70 ? "text-emerald-600 dark:text-emerald-400" :
+              overallScore >= 40 ? "text-amber-600 dark:text-amber-400" :
+              "text-red-600 dark:text-red-400"
+            }`} data-testid="overall-score-live">{overallScore}%</span>
+          </div>
+        )}
       </div>
-      <div className="flex flex-col gap-1">
-        {levels.map((level) => {
-          const isActive = value === level.value;
-          return (
-            <button
-              key={level.value}
-              type="button"
-              onClick={() => onChange(level.value)}
-              className={`text-left px-3 py-2 rounded-lg border transition-all duration-150 ${
-                isActive
-                  ? `border-current ${level.textColor} bg-current/5`
-                  : "border-transparent hover:bg-muted/50"
-              }`}
-              data-testid={`rating-btn-${level.value}`}
-            >
-              <span className={`text-sm font-medium ${isActive ? level.textColor : "text-foreground/80"}`}>
-                {level.label}
-              </span>
-            </button>
-          );
-        })}
+
+      <div className="space-y-3">
+        {characters.map((char, charIdx) => (
+          <div key={charIdx} className="border border-border/50 rounded-lg p-3 bg-card" data-testid={`char-input-${charIdx}`}>
+            <div className="text-2xl font-bold text-center mb-2" data-testid={`char-label-${charIdx}`}>{char}</div>
+            <div className="space-y-2">
+              {DIMENSIONS.map((dim) => {
+                const currentVal = ratings[charIdx]?.[dim.key] ?? -1;
+                return (
+                  <div key={dim.key} className="flex items-center gap-2">
+                    <span className="text-xs font-medium w-20 shrink-0">
+                      {dim.chinese}
+                      <span className="text-muted-foreground ml-1">({dim.english})</span>
+                    </span>
+                    <div className="flex gap-1 flex-1">
+                      {RATING_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => handleChange(charIdx, dim.key, opt.value)}
+                          className={`flex-1 text-xs font-medium py-1.5 rounded border transition-all ${
+                            currentVal === opt.value ? opt.activeColor : opt.color
+                          } hover:opacity-80`}
+                          data-testid={`rate-${charIdx}-${dim.key}-${opt.value}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -133,12 +193,24 @@ export default function RecordingDetail() {
   const { toast } = useToast();
   
   const [feedbackText, setFeedbackText] = useState("");
-  const [rating, setRating] = useState<number | null>(null);
   const [isRecordingFeedback, setIsRecordingFeedback] = useState(false);
 
   const [, navigate] = useLocation();
   const isLoading = loadingRecording || loadingUser;
   const backUrl = user?.role === 'reviewer' ? "/reviewer-hub" : "/learner-portal";
+
+  const characters = useMemo(() => {
+    if (!recording) return [];
+    return extractChineseChars(recording.sentenceText);
+  }, [recording]);
+
+  const [charRatings, setCharRatings] = useState<CharacterRating[]>([]);
+
+  useMemo(() => {
+    if (characters.length > 0 && charRatings.length !== characters.length) {
+      setCharRatings(characters.map(c => ({ character: c, initial: -1 as any, final: -1 as any, tone: -1 as any })));
+    }
+  }, [characters]);
 
   const canDelete = user && recording && (
     recording.userId === user.id || user.role === "reviewer"
@@ -158,6 +230,8 @@ export default function RecordingDetail() {
     },
   });
 
+  const allRated = charRatings.length > 0 && charRatings.every(r => r.initial !== -1 && r.final !== -1 && r.tone !== -1);
+
   const handleFeedbackSubmit = async (audioFile?: File) => {
     if (!feedbackText.trim() && !audioFile) {
       toast({
@@ -168,10 +242,10 @@ export default function RecordingDetail() {
       return;
     }
 
-    if (!rating) {
+    if (characters.length > 0 && !allRated) {
       toast({
-        title: "Rating Required",
-        description: "Please select a rating before submitting.",
+        title: "Ratings Incomplete",
+        description: "Please rate all characters before submitting.",
         variant: "destructive",
       });
       return;
@@ -187,12 +261,14 @@ export default function RecordingDetail() {
         }
       }
 
+      const validRatings = charRatings.filter(r => r.initial !== -1 && r.final !== -1 && r.tone !== -1);
+
       await createFeedback.mutateAsync({
         recordingId,
         textFeedback: feedbackText,
         audioFeedbackUrl: audioUrl,
-        rating,
-      });
+        characterRatings: validRatings.length > 0 ? validRatings : undefined,
+      } as any);
 
       toast({
         title: "Feedback Sent",
@@ -200,7 +276,7 @@ export default function RecordingDetail() {
       });
       
       setFeedbackText("");
-      setRating(null);
+      setCharRatings(characters.map(c => ({ character: c, initial: -1 as any, final: -1 as any, tone: -1 as any })));
       setIsRecordingFeedback(false);
       
     } catch (err) {
@@ -345,12 +421,20 @@ export default function RecordingDetail() {
                                   </span>
                                 )}
                               </div>
-                              <RatingDisplay rating={item.rating} />
+                              {item.overallScore !== null && item.overallScore !== undefined ? (
+                                <ScoreBadge score={item.overallScore} />
+                              ) : (
+                                <OldRatingDisplay rating={item.rating} />
+                              )}
                             </div>
                             <span className="text-xs text-muted-foreground">{format(new Date(item.createdAt), 'MMM d, HH:mm')}</span>
                           </div>
                           
-                          <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                          {item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0 && (
+                            <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} />
+                          )}
+
+                          <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed mt-2">
                             {item.textFeedback}
                           </p>
                           
@@ -387,7 +471,11 @@ export default function RecordingDetail() {
                   <CardTitle>Add Feedback</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <RatingSelector value={rating} onChange={setRating} />
+                  <CharacterRatingInput
+                    characters={characters}
+                    ratings={charRatings}
+                    onChange={setCharRatings}
+                  />
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Detailed Comments</label>
@@ -396,6 +484,7 @@ export default function RecordingDetail() {
                       className="min-h-[150px] resize-none"
                       value={feedbackText}
                       onChange={(e) => setFeedbackText(e.target.value)}
+                      data-testid="feedback-text-input"
                     />
                   </div>
 
@@ -413,6 +502,7 @@ export default function RecordingDetail() {
                         variant="outline" 
                         className="w-full"
                         onClick={() => setIsRecordingFeedback(true)}
+                        data-testid="record-audio-btn"
                       >
                         <Mic className="w-4 h-4 mr-2" />
                         Record Audio Response
@@ -424,14 +514,15 @@ export default function RecordingDetail() {
                     <Button 
                       className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                       onClick={() => handleFeedbackSubmit()}
-                      disabled={createFeedback.isPending || !feedbackText.trim() || !rating}
+                      disabled={createFeedback.isPending || !feedbackText.trim() || (characters.length > 0 && !allRated)}
+                      data-testid="submit-feedback-btn"
                     >
                       {createFeedback.isPending ? "Submitting..." : "Submit Text Feedback"}
                     </Button>
                   )}
                   
                   {isRecordingFeedback && (
-                     <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={() => setIsRecordingFeedback(false)}>
+                     <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={() => setIsRecordingFeedback(false)} data-testid="cancel-recording-btn">
                        Cancel Recording
                      </Button>
                   )}

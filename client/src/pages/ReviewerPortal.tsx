@@ -9,22 +9,27 @@ import { Mic, PlayCircle, ArrowRight, User as UserIcon, GraduationCap, Crown, Ar
 import { formatDistanceToNow } from "date-fns";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
-function RatingBadge({ rating }: { rating: number | null | undefined }) {
+function RatingBadge({ rating, overallScore }: { rating?: number | null; overallScore?: number | null }) {
+  if (overallScore !== null && overallScore !== undefined) {
+    let color = "text-red-600 dark:text-red-400";
+    if (overallScore >= 70) color = "text-emerald-600 dark:text-emerald-400";
+    else if (overallScore >= 40) color = "text-amber-600 dark:text-amber-400";
+    return (
+      <div className="flex items-center gap-1" data-testid={`score-badge-${overallScore}`}>
+        <span className={`text-xs font-bold ${color}`}>{overallScore}%</span>
+      </div>
+    );
+  }
   if (!rating) return null;
-  const config: Record<number, { label: string; dots: string[]; textColor: string }> = {
-    1: { label: "Needs Improvement", dots: ["bg-gray-400", "bg-muted-foreground/15", "bg-muted-foreground/15"], textColor: "text-gray-500" },
-    2: { label: "Good", dots: ["bg-gray-400", "bg-amber-400", "bg-muted-foreground/15"], textColor: "text-amber-600" },
-    3: { label: "Excellent", dots: ["bg-gray-400", "bg-amber-400", "bg-emerald-400"], textColor: "text-emerald-600" },
+  const config: Record<number, { label: string; textColor: string }> = {
+    1: { label: "Needs Improvement", textColor: "text-gray-500" },
+    2: { label: "Good", textColor: "text-amber-600" },
+    3: { label: "Excellent", textColor: "text-emerald-600" },
   };
   const c = config[rating];
   if (!c) return null;
   return (
     <div className="flex items-center gap-1">
-      <div className="flex items-center gap-0.5">
-        {c.dots.map((dot, i) => (
-          <div key={i} className={`w-2 h-2 rounded-full ${dot}`} />
-        ))}
-      </div>
       <span className={`text-[10px] font-semibold ${c.textColor}`}>{c.label}</span>
     </div>
   );
@@ -63,8 +68,8 @@ function RecordingCard({ recording, showReviewButton = true }: { recording: any;
                   </div>
                 )}
                 <span>{showReviewButton ? 'Submitted' : 'Reviewed'} {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}</span>
-                {!showReviewButton && recording.feedback?.[0]?.rating && (
-                  <RatingBadge rating={recording.feedback[0].rating} />
+                {!showReviewButton && (recording.feedback?.[0]?.rating || recording.feedback?.[0]?.overallScore) && (
+                  <RatingBadge rating={recording.feedback[0].rating} overallScore={recording.feedback[0].overallScore} />
                 )}
                 {!showReviewButton && (
                   <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200">Reviewed</Badge>

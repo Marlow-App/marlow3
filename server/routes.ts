@@ -323,24 +323,33 @@ export async function registerRoutes(
   app.post(api.feedback.create.path, isAuthenticated, async (req, res) => {
     try {
       const recordingId = Number(req.params.id);
-      const input = api.feedback.create.input.parse({
-        ...req.body,
-        recordingId,
-      });
       const reviewerId = (req.user as any).claims.sub;
+      const { textFeedback, audioFeedbackUrl, characterRatings } = req.body;
 
-      const ratingValue = input.rating;
-      if (ratingValue !== undefined && ratingValue !== null) {
-        if (!Number.isInteger(ratingValue) || ratingValue < 1 || ratingValue > 3) {
-          return res.status(400).json({ message: "Rating must be 1, 2, or 3" });
+      if (!textFeedback && !audioFeedbackUrl) {
+        return res.status(400).json({ message: "Feedback text or audio is required" });
+      }
+
+      let overallScore: number | null = null;
+      let validatedRatings: any = null;
+
+      if (characterRatings && Array.isArray(characterRatings) && characterRatings.length > 0) {
+        const { characterRatingSchema } = await import("@shared/schema");
+        for (const cr of characterRatings) {
+          characterRatingSchema.parse(cr);
         }
+        validatedRatings = characterRatings;
+        const total = characterRatings.reduce((sum: number, cr: any) => sum + cr.initial + cr.final + cr.tone, 0);
+        overallScore = Math.round(total / (characterRatings.length * 3));
       }
 
       const feedback = await storage.createFeedback({
         recordingId,
-        textFeedback: input.textFeedback,
-        audioFeedbackUrl: input.audioFeedbackUrl,
-        rating: ratingValue ?? null,
+        textFeedback: textFeedback || "",
+        audioFeedbackUrl: audioFeedbackUrl || null,
+        rating: null,
+        characterRatings: validatedRatings,
+        overallScore,
         reviewerId,
       } as any);
       
