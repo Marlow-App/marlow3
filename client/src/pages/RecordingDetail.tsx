@@ -434,9 +434,14 @@ export default function RecordingDetail() {
                             <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={user?.role === 'reviewer'} />
                           )}
 
-                          <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed mt-2">
-                            {item.textFeedback}
-                          </p>
+                          {item.textFeedback && (
+                            <div className="mt-4 pt-4 border-t border-border/50">
+                              <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Overall Comments</p>
+                              <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                                {item.textFeedback}
+                              </p>
+                            </div>
+                          )}
                           
                           {item.audioFeedbackUrl && (
                             <div className="mt-4 pt-4 border-t border-border/50">
