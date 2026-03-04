@@ -12,6 +12,7 @@ import {
 } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { authStorage } from "./replit_integrations/auth/storage";
+import { ObjectStorageService, objectStorageClient } from "./replit_integrations/object_storage";
 
 export interface IStorage {
   createRecording(userId: string, recording: InsertRecording): Promise<Recording>;
@@ -19,6 +20,7 @@ export interface IStorage {
   getRecordingsByUser(userId: string): Promise<Recording[]>;
   getAllPendingRecordings(): Promise<(Recording & { user: User | null })[]>;
   getAllRecordings(): Promise<(Recording & { user: User | null })[]>;
+  deleteRecording(id: number): Promise<boolean>;
   createFeedback(feedbackData: InsertFeedback): Promise<Feedback>;
   getFeedbackForRecording(recordingId: number): Promise<Feedback[]>;
   getUser(id: string): Promise<User | undefined>;
@@ -80,6 +82,47 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(recordings.createdAt));
     
     return results.map(r => ({ ...r.recording, user: r.user }));
+  }
+
+  async deleteRecording(id: number): Promise<boolean> {
+    const [recording] = await db
+      .select()
+      .from(recordings)
+      .where(eq(recordings.id, id));
+
+    if (!recording) return false;
+
+    const feedbackRows = await db
+      .select()
+      .from(feedback)
+      .where(eq(feedback.recordingId, id));
+
+    await db.delete(feedback).where(eq(feedback.recordingId, id));
+    await db.delete(recordings).where(eq(recordings.id, id));
+
+    const objService = new ObjectStorageService();
+
+    for (const fb of feedbackRows) {
+      if (fb.audioFeedbackUrl) {
+        try {
+          const file = await objService.getObjectEntityFile(fb.audioFeedbackUrl);
+          await file.delete();
+        } catch (e) {
+          console.error(`Failed to delete feedback audio file ${fb.audioFeedbackUrl}:`, e);
+        }
+      }
+    }
+
+    if (recording.audioUrl) {
+      try {
+        const file = await objService.getObjectEntityFile(recording.audioUrl);
+        await file.delete();
+      } catch (e) {
+        console.error(`Failed to delete recording audio file ${recording.audioUrl}:`, e);
+      }
+    }
+
+    return true;
   }
 
   async createFeedback(feedbackData: InsertFeedback): Promise<Feedback> {

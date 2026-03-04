@@ -1,4 +1,4 @@
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { Layout } from "@/components/Layout";
 import { useRecording } from "@/hooks/use-recordings";
 import { useCreateFeedback } from "@/hooks/use-feedback";
@@ -10,11 +10,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin } from "lucide-react";
+import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { type User as SharedUser } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 function RatingDisplay({ rating }: { rating: number | null | undefined }) {
   if (!rating) return null;
@@ -123,8 +136,27 @@ export default function RecordingDetail() {
   const [rating, setRating] = useState<number | null>(null);
   const [isRecordingFeedback, setIsRecordingFeedback] = useState(false);
 
+  const [, navigate] = useLocation();
   const isLoading = loadingRecording || loadingUser;
   const backUrl = user?.role === 'reviewer' ? "/reviewer-hub" : "/learner-portal";
+
+  const canDelete = user && recording && (
+    recording.userId === user.id || user.role === "reviewer"
+  );
+
+  const deleteRecording = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/recordings/${recordingId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/recordings"] });
+      toast({ title: "Recording deleted", description: "The recording has been removed." });
+      navigate(backUrl);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete the recording.", variant: "destructive" });
+    },
+  });
 
   const handleFeedbackSubmit = async (audioFile?: File) => {
     if (!feedbackText.trim() && !audioFile) {
@@ -194,16 +226,46 @@ export default function RecordingDetail() {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-8 animate-in">
-        <div className="flex items-center gap-2">
-           <Link href={backUrl}>
-             <Button variant="ghost" size="sm">
-               <ChevronLeft className="w-4 h-4 mr-1" />
-               Back
-             </Button>
-           </Link>
-           <h1 className="text-xl font-medium text-muted-foreground">
-             Recording #{id} by {recording.user?.firstName || recording.user?.email || "Unknown User"}
-           </h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+             <Link href={backUrl}>
+               <Button variant="ghost" size="sm">
+                 <ChevronLeft className="w-4 h-4 mr-1" />
+                 Back
+               </Button>
+             </Link>
+             <h1 className="text-xl font-medium text-muted-foreground">
+               Recording #{id} by {recording.user?.firstName || recording.user?.email || "Unknown User"}
+             </h1>
+          </div>
+          {canDelete && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-destructive" data-testid="delete-recording-btn">
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Recording</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete this recording and any associated feedback. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteRecording.mutate()}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    data-testid="confirm-delete-btn"
+                  >
+                    {deleteRecording.isPending ? "Deleting..." : "Delete"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
 
         <div className={`grid grid-cols-1 ${user?.role === 'reviewer' ? 'lg:grid-cols-3' : ''} gap-8`}>

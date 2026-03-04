@@ -241,6 +241,36 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/recordings/:id", isAuthenticated, async (req, res) => {
+    try {
+      const recordingId = Number(req.params.id);
+      const userId = (req.user as any).claims.sub;
+      const user = await storage.getUser(userId);
+      const recording = await storage.getRecording(recordingId);
+
+      if (!recording) {
+        return res.status(404).json({ message: "Recording not found" });
+      }
+
+      const isOwner = recording.userId === userId;
+      const isReviewer = user?.role === "reviewer";
+
+      if (!isOwner && !isReviewer) {
+        return res.status(403).json({ message: "Not authorized to delete this recording" });
+      }
+
+      const deleted = await storage.deleteRecording(recordingId);
+      if (!deleted) {
+        return res.status(500).json({ message: "Failed to delete recording" });
+      }
+
+      res.json({ message: "Recording deleted" });
+    } catch (error) {
+      console.error("Error deleting recording:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Create recording
   app.post(api.recordings.create.path, isAuthenticated, async (req, res) => {
     try {

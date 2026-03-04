@@ -4,14 +4,26 @@ import { Link, useLocation, useSearch } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight, ChevronLeft, Crown, Loader2, MapPin, Calendar } from "lucide-react";
+import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight, ChevronLeft, Crown, Loader2, MapPin, Calendar, Trash2 } from "lucide-react";
 import { format, formatDistanceToNow, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, isToday, isBefore, startOfDay, isThisWeek, isThisMonth, differenceInMonths } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useMutation } from "@tanstack/react-query";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 function RatingBadge({ rating }: { rating: number | null | undefined }) {
   if (!rating) return null;
@@ -269,6 +281,20 @@ function GroupedRecordingsList({ recordings }: { recordings: any[] }) {
 }
 
 function RecordingCard({ recording }: { recording: any }) {
+  const { toast } = useToast();
+  const deleteRecording = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/recordings/${recording.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/recordings"] });
+      toast({ title: "Recording deleted", description: "The recording has been removed." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete the recording.", variant: "destructive" });
+    },
+  });
+
   return (
     <Link href={`/recordings/${recording.id}`}>
     <Card className="overflow-hidden border-border/50 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer" data-testid={`recording-card-${recording.id}`}>
@@ -281,16 +307,48 @@ function RecordingCard({ recording }: { recording: any }) {
               {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}
             </p>
           </div>
-          <Badge
-            variant={recording.status === "reviewed" ? "default" : "secondary"}
-            className="rounded-full px-2 shrink-0 text-[10px]"
-          >
-            {recording.status === "reviewed" ? (
-              <span className="flex items-center gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Reviewed</span>
-            ) : (
-              "Pending"
-            )}
-          </Badge>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Badge
+              variant={recording.status === "reviewed" ? "default" : "secondary"}
+              className="rounded-full px-2 text-[10px]"
+            >
+              {recording.status === "reviewed" ? (
+                <span className="flex items-center gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Reviewed</span>
+              ) : (
+                "Pending"
+              )}
+            </Badge>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => e.preventDefault()}
+                  className="h-6 w-6 text-muted-foreground"
+                  data-testid={`delete-recording-${recording.id}`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Recording</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete this recording and any associated feedback. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteRecording.mutate()}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {deleteRecording.isPending ? "Deleting..." : "Delete"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
         <div className="bg-muted/30 px-2.5 py-1.5 rounded-lg border border-border/50" onClick={(e) => e.stopPropagation()}>
           <audio
