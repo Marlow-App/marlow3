@@ -153,9 +153,8 @@ function CharacterRatingInput({
                 const currentVal = ratings[charIdx]?.[dim.key] ?? -1;
                 return (
                   <div key={dim.key} className="flex items-center gap-2">
-                    <span className="text-xs font-medium w-20 shrink-0">
+                    <span className="text-sm font-medium w-16 shrink-0">
                       {dim.chinese}
-                      <span className="text-muted-foreground ml-1">({dim.english})</span>
                     </span>
                     <div className="flex gap-1 flex-1">
                       {RATING_OPTIONS.map((opt) => (
