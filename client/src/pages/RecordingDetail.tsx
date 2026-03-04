@@ -162,7 +162,7 @@ function CharacterRatingInput({
                           key={opt.value}
                           type="button"
                           onClick={() => handleChange(charIdx, dim.key, opt.value)}
-                          className={`flex-1 text-xs font-medium py-1.5 px-3 rounded border transition-all ${
+                          className={`flex-1 text-xs font-medium py-1.5 px-1 rounded border transition-all ${
                             currentVal === opt.value ? opt.activeColor : opt.color
                           } hover:opacity-80`}
                           data-testid={`rate-${charIdx}-${dim.key}-${opt.value}`}
