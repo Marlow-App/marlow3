@@ -37,7 +37,7 @@ function extractChineseChars(text: string): string[] {
 const RATING_OPTIONS = [
   { value: 0, label: "Poor", shortLabel: "差", color: "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800", activeColor: "bg-red-500 text-white border-red-500" },
   { value: 50, label: "OK", shortLabel: "可", color: "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800", activeColor: "bg-amber-500 text-white border-amber-500" },
-  { value: 100, label: "Excellent", shortLabel: "优", color: "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800", activeColor: "bg-emerald-500 text-white border-emerald-500" },
+  { value: 100, label: "Great", shortLabel: "优", color: "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800", activeColor: "bg-emerald-500 text-white border-emerald-500" },
 ];
 
 const DIMENSIONS = [
