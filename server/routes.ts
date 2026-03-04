@@ -155,6 +155,55 @@ export async function registerRoutes(
     }
   });
 
+  // Remaining recordings for today (must be before :id route)
+  app.get("/api/recordings/remaining", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const userEmail = (req.user as any).claims.email;
+
+      const UNLIMITED_EMAIL = "jujusees@gmail.com";
+      if (userEmail === UNLIMITED_EMAIL) {
+        return res.json({ dailyLimit: 999, used: 0, remaining: 999, tier: 'unlimited' });
+      }
+
+      let dailyLimit = 1;
+      let tier = 'free';
+
+      const user = await storage.getUser(userId);
+      if (user?.stripeCustomerId) {
+        const subResult = await db.execute(
+          sql`SELECT s.status, p.metadata as product_metadata
+            FROM stripe.subscriptions s
+            LEFT JOIN stripe.prices pr ON s.items->0->'price'->>'id' = pr.id
+            LEFT JOIN stripe.products p ON pr.product = p.id
+            WHERE s.customer = ${user.stripeCustomerId}
+            AND s.status IN ('active', 'trialing')
+            LIMIT 1`
+        );
+        const sub = subResult.rows[0] as any;
+        if (sub) {
+          const subTier = typeof sub.product_metadata === 'string'
+            ? JSON.parse(sub.product_metadata)?.tier
+            : sub.product_metadata?.tier;
+          if (subTier === 'pro' || subTier === 'starter' || subTier === 'max') {
+            dailyLimit = 3;
+            tier = 'pro';
+          }
+        }
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const userRecordings = await storage.getRecordingsByUser(userId);
+      const used = userRecordings.filter(r => new Date(r.createdAt) >= today).length;
+
+      res.json({ dailyLimit, used, remaining: Math.max(0, dailyLimit - used), tier });
+    } catch (error) {
+      console.error("Error getting remaining recordings:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Get single recording
   app.get(api.recordings.get.path, isAuthenticated, async (req, res) => {
     try {
@@ -265,55 +314,6 @@ export async function registerRoutes(
         res.status(400).json({ message: err.errors[0].message });
         return;
       }
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Remaining recordings for today
-  app.get("/api/recordings/remaining", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).claims.sub;
-      const userEmail = (req.user as any).claims.email;
-
-      const UNLIMITED_EMAIL = "jujusees@gmail.com";
-      if (userEmail === UNLIMITED_EMAIL) {
-        return res.json({ dailyLimit: 999, used: 0, remaining: 999, tier: 'unlimited' });
-      }
-
-      let dailyLimit = 1;
-      let tier = 'free';
-
-      const user = await storage.getUser(userId);
-      if (user?.stripeCustomerId) {
-        const subResult = await db.execute(
-          sql`SELECT s.status, p.metadata as product_metadata
-            FROM stripe.subscriptions s
-            LEFT JOIN stripe.prices pr ON s.items->0->'price'->>'id' = pr.id
-            LEFT JOIN stripe.products p ON pr.product = p.id
-            WHERE s.customer = ${user.stripeCustomerId}
-            AND s.status IN ('active', 'trialing')
-            LIMIT 1`
-        );
-        const sub = subResult.rows[0] as any;
-        if (sub) {
-          const subTier = typeof sub.product_metadata === 'string'
-            ? JSON.parse(sub.product_metadata)?.tier
-            : sub.product_metadata?.tier;
-          if (subTier === 'pro' || subTier === 'starter' || subTier === 'max') {
-            dailyLimit = 3;
-            tier = 'pro';
-          }
-        }
-      }
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const userRecordings = await storage.getRecordingsByUser(userId);
-      const used = userRecordings.filter(r => new Date(r.createdAt) >= today).length;
-
-      res.json({ dailyLimit, used, remaining: Math.max(0, dailyLimit - used), tier });
-    } catch (error) {
-      console.error("Error getting remaining recordings:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
