@@ -65,7 +65,7 @@ function OldRatingDisplay({ rating }: { rating: number | null | undefined }) {
   return <span className={`text-sm font-semibold ${colors[rating] || ""}`}>{labels[rating] || ""}</span>;
 }
 
-function CharacterRatingDisplay({ ratings }: { ratings: CharacterRating[] }) {
+function CharacterRatingDisplay({ ratings, isReviewer }: { ratings: CharacterRating[]; isReviewer?: boolean }) {
   return (
     <div className="space-y-2 mt-2" data-testid="character-ratings-display">
       <div className="grid gap-2">
@@ -78,7 +78,7 @@ function CharacterRatingDisplay({ ratings }: { ratings: CharacterRating[] }) {
                 const opt = RATING_OPTIONS.find(o => o.value === val);
                 return (
                   <div key={dim.key} className="flex items-center gap-1">
-                    <span className="text-sm text-muted-foreground">{dim.chinese}</span>
+                    <span className="text-sm text-muted-foreground">{isReviewer ? dim.chinese : dim.english}</span>
                     <span className={`text-sm font-semibold px-2 py-0.5 rounded ${
                       val === 100 ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
                       val === 50 ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
@@ -431,7 +431,7 @@ export default function RecordingDetail() {
                           </div>
                           
                           {item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0 && (
-                            <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} />
+                            <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={user?.role === 'reviewer'} />
                           )}
 
                           <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed mt-2">
