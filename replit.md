@@ -26,11 +26,13 @@ The project uses a monorepo layout with three main directories:
 - **UI Components**: shadcn/ui component library built on Radix UI primitives, styled with Tailwind CSS
 - **Styling**: Tailwind CSS with CSS custom properties for theming. The theme uses a warm "Chinese aesthetic" palette with Imperial Red as primary and Gold as secondary. Fonts: DM Sans (body) and Playfair Display (display/headings)
 - **File Uploads**: Uppy library with presigned URL flow (AWS S3-compatible via Replit Object Storage)
-- **Audio Recording**: Browser-native MediaRecorder API via custom `AudioRecorder` component
+- **Audio Recording**: Browser-native MediaRecorder API via custom `AudioRecorder` component with microphone selector dropdown (persisted in localStorage)
+- **Pinyin**: `pinyin-pro` library generates pinyin for learner views on RecordingDetail (sentence header + character rating breakdown); tone-colored display
+- **Daily Challenge**: Level-based daily phrase on Home page; `getDailyChallenge(level)` in `client/src/data/phrases.ts` uses date-seeded selection; defaults to "Beginner" when user has no chineseLevel set
 - **Key Pages**:
   - `Landing` — unauthenticated landing page
-  - `Home` — dashboard with greeting and recent recordings
-  - `Record` — record audio with sentence text input; shows "X recordings left today" + tier badge
+  - `Home` — dashboard with greeting, daily challenge, and recent recordings
+  - `Record` — record audio with sentence text input; supports `?phrase=` URL param for pre-selection; shows "X recordings left today" + tier badge
   - `LearnerPortal` — view your recordings and their feedback
   - `ReviewerPortal` — view pending recordings with Pro Waiting/Waiting/Completed tabs + sort toggle
   - `RecordingDetail` — view a specific recording with ability to leave feedback

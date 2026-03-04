@@ -5,8 +5,41 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
-import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle } from "lucide-react";
+import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { getDailyChallenge, phraseToText, type ToneChar } from "@/data/phrases";
+
+const TONE_COLORS: Record<number, string> = {
+  1: "text-red-600 dark:text-red-400",
+  2: "text-yellow-600 dark:text-yellow-400",
+  3: "text-green-600 dark:text-green-400",
+  4: "text-blue-600 dark:text-blue-400",
+  0: "text-gray-500 dark:text-gray-400",
+};
+
+const TONE_PINYIN_COLORS: Record<number, string> = {
+  1: "text-red-500 dark:text-red-400",
+  2: "text-yellow-500 dark:text-yellow-400",
+  3: "text-green-500 dark:text-green-400",
+  4: "text-blue-500 dark:text-blue-400",
+  0: "text-gray-400 dark:text-gray-500",
+};
+
+function DailyToneChar({ toneChar }: { toneChar: ToneChar }) {
+  const isPunctuation = !toneChar.pinyin || /[，。！？、；：]/.test(toneChar.char);
+  return (
+    <span className="inline-flex flex-col items-center mx-[1px]">
+      {!isPunctuation && (
+        <span className={`text-xs leading-tight font-medium ${TONE_PINYIN_COLORS[toneChar.tone]}`}>
+          {toneChar.pinyin}
+        </span>
+      )}
+      <span className={`text-2xl font-medium leading-tight ${isPunctuation ? "text-foreground/60" : TONE_COLORS[toneChar.tone]}`}>
+        {toneChar.char}
+      </span>
+    </span>
+  );
+}
 
 export default function Home() {
   const { user } = useAuth();
@@ -108,6 +141,45 @@ export default function Home() {
             </Button>
           </Link>
         </header>
+
+        {(() => {
+          const userLevel = user?.chineseLevel || "Beginner";
+          const dailyChallenge = getDailyChallenge(userLevel);
+          const challengeText = phraseToText(dailyChallenge);
+          return (
+            <section data-testid="daily-challenge-section">
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="w-5 h-5 text-primary" />
+                <h2 className="text-2xl font-bold font-display">Daily Challenge</h2>
+              </div>
+              <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20" data-testid="daily-challenge-card">
+                <CardContent className="pt-6">
+                  <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                    <div className="space-y-3">
+                      <Badge variant="outline" className="text-xs" data-testid="daily-challenge-level">
+                        {dailyChallenge.level}
+                      </Badge>
+                      <div className="flex flex-wrap items-end gap-x-0.5" data-testid="daily-challenge-characters">
+                        {dailyChallenge.characters.map((tc, i) => (
+                          <DailyToneChar key={i} toneChar={tc} />
+                        ))}
+                      </div>
+                      <p className="text-sm text-muted-foreground" data-testid="daily-challenge-english">
+                        {dailyChallenge.english}
+                      </p>
+                    </div>
+                    <Link href={`/record?phrase=${encodeURIComponent(challengeText)}`}>
+                      <Button size="lg" className="rounded-full shadow-md" data-testid="daily-challenge-record-btn">
+                        <Mic2 className="mr-2 h-5 w-5" />
+                        Practice
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+          );
+        })()}
 
         <section>
           <div className="flex items-center justify-between mb-6">

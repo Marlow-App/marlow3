@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { AudioRecorder } from "@/components/AudioRecorder";
 import { useUpload } from "@/hooks/use-upload";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { ChevronLeft, Info, Volume2, X, Loader2, Crown } from "lucide-react";
-import { getDailyPhrases, phraseToText, type Phrase, type ToneChar } from "@/data/phrases";
+import { getDailyPhrases, phraseToText, PHRASE_BANK, type Phrase, type ToneChar } from "@/data/phrases";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -156,12 +156,25 @@ export default function RecordPage() {
   const [, setLocation] = useLocation();
   const [selectedPhrase, setSelectedPhrase] = useState<Phrase | null>(null);
   const { playPhrase, loadingPhrase } = usePhraseAudio();
-
   const { data: remainingData } = useQuery<{ dailyLimit: number; used: number; remaining: number; tier: string }>({
     queryKey: ['/api/recordings/remaining'],
   });
 
   const dailyPhrases = getDailyPhrases(10);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const phraseParam = params.get("phrase");
+    if (phraseParam) {
+      const matchedPhrase = PHRASE_BANK.find(p => phraseToText(p) === phraseParam);
+      if (matchedPhrase) {
+        setSelectedPhrase(matchedPhrase);
+        setText(phraseParam);
+      } else {
+        setText(phraseParam);
+      }
+    }
+  }, []);
 
   const rows = [
     dailyPhrases.slice(0, 4),

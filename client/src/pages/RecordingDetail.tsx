@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { type User as SharedUser, type CharacterRating } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { pinyin } from "pinyin-pro";
 
 import {
   AlertDialog,
@@ -32,6 +33,39 @@ import {
 function extractChineseChars(text: string): string[] {
   const matches = text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g);
   return matches || [];
+}
+
+const TONE_COLORS: Record<number, string> = {
+  1: "text-red-600 dark:text-red-400",
+  2: "text-orange-500 dark:text-orange-400",
+  3: "text-green-600 dark:text-green-400",
+  4: "text-blue-500 dark:text-blue-400",
+  0: "text-gray-400 dark:text-gray-500",
+};
+
+interface PinyinChar {
+  char: string;
+  py: string;
+  tone: number;
+}
+
+function getCharPinyin(text: string): PinyinChar[] {
+  const chars = [...text];
+  const pinyinArr = pinyin(text, { toneType: "symbol", type: "array" });
+  const toneArr = pinyin(text, { toneType: "num", type: "array" });
+  const result: PinyinChar[] = [];
+  let pIdx = 0;
+  for (const ch of chars) {
+    if (/[\u4e00-\u9fff\u3400-\u4dbf]/.test(ch)) {
+      const toneStr = toneArr[pIdx] || "";
+      const toneNum = parseInt(toneStr.slice(-1)) || 0;
+      result.push({ char: ch, py: pinyinArr[pIdx] || "", tone: toneNum });
+      pIdx++;
+    } else {
+      result.push({ char: ch, py: "", tone: 0 });
+    }
+  }
+  return result;
 }
 
 const RATING_OPTIONS = [
@@ -65,33 +99,42 @@ function OldRatingDisplay({ rating }: { rating: number | null | undefined }) {
   return <span className={`text-sm font-semibold ${colors[rating] || ""}`}>{labels[rating] || ""}</span>;
 }
 
-function CharacterRatingDisplay({ ratings, isReviewer }: { ratings: CharacterRating[]; isReviewer?: boolean }) {
+function CharacterRatingDisplay({ ratings, isReviewer, pinyinData }: { ratings: CharacterRating[]; isReviewer?: boolean; pinyinData?: PinyinChar[] }) {
+  const chinesePinyinOnly = pinyinData?.filter(p => p.py) || [];
   return (
     <div className="space-y-2 mt-2" data-testid="character-ratings-display">
       <div className="grid gap-2">
-        {ratings.map((cr, idx) => (
-          <div key={idx} className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2">
-            <span className="text-lg font-bold w-8 text-center" data-testid={`char-display-${idx}`}>{cr.character}</span>
-            <div className="flex gap-2 flex-1 flex-wrap">
-              {DIMENSIONS.map((dim) => {
-                const val = cr[dim.key];
-                const opt = RATING_OPTIONS.find(o => o.value === val);
-                return (
-                  <div key={dim.key} className="flex items-center gap-1">
-                    <span className="text-sm text-muted-foreground">{isReviewer ? dim.chinese : dim.english}</span>
-                    <span className={`text-sm font-semibold px-2 py-0.5 rounded ${
-                      val === 100 ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
-                      val === 50 ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
-                      "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
-                    }`} data-testid={`char-rating-${idx}-${dim.key}`}>
-                      {opt?.label || val}
-                    </span>
-                  </div>
-                );
-              })}
+        {ratings.map((cr, idx) => {
+          const charPy = !isReviewer && chinesePinyinOnly[idx] ? chinesePinyinOnly[idx] : null;
+          return (
+            <div key={idx} className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2">
+              <div className="flex flex-col items-center w-10" data-testid={`char-display-${idx}`}>
+                {charPy && (
+                  <span className={`text-sm font-medium leading-tight ${TONE_COLORS[charPy.tone]}`}>{charPy.py}</span>
+                )}
+                <span className="text-lg font-bold">{cr.character}</span>
+              </div>
+              <div className="flex gap-2 flex-1 flex-wrap">
+                {DIMENSIONS.map((dim) => {
+                  const val = cr[dim.key];
+                  const opt = RATING_OPTIONS.find(o => o.value === val);
+                  return (
+                    <div key={dim.key} className="flex items-center gap-1">
+                      <span className="text-sm text-muted-foreground">{isReviewer ? dim.chinese : dim.english}</span>
+                      <span className={`text-sm font-semibold px-2 py-0.5 rounded ${
+                        val === 100 ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
+                        val === 50 ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
+                        "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
+                      }`} data-testid={`char-rating-${idx}-${dim.key}`}>
+                        {opt?.label || val}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -202,6 +245,11 @@ export default function RecordingDetail() {
   const characters = useMemo(() => {
     if (!recording) return [];
     return extractChineseChars(recording.sentenceText);
+  }, [recording]);
+
+  const pinyinData = useMemo(() => {
+    if (!recording) return [];
+    return getCharPinyin(recording.sentenceText);
   }, [recording]);
 
   const [charRatings, setCharRatings] = useState<CharacterRating[]>([]);
@@ -352,9 +400,22 @@ export default function RecordingDetail() {
               <div className="h-2 bg-primary w-full"></div>
               <CardContent className="p-8">
                 <div className="mb-8">
-                  <h2 className="text-3xl font-display font-bold text-foreground mb-4 leading-tight">
-                    {recording.sentenceText}
-                  </h2>
+                  {user?.role !== 'reviewer' && pinyinData.length > 0 ? (
+                    <div className="flex flex-wrap items-end gap-x-1 gap-y-2 mb-4" data-testid="sentence-with-pinyin">
+                      {pinyinData.map((p, i) => (
+                        <span key={i} className="inline-flex flex-col items-center">
+                          {p.py && (
+                            <span className={`text-base font-medium leading-tight ${TONE_COLORS[p.tone]}`}>{p.py}</span>
+                          )}
+                          <span className={`text-3xl font-display font-bold leading-tight ${p.py ? TONE_COLORS[p.tone] : 'text-foreground/60'}`}>{p.char}</span>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <h2 className="text-3xl font-display font-bold text-foreground mb-4 leading-tight">
+                      {recording.sentenceText}
+                    </h2>
+                  )}
                   <div className="flex flex-wrap items-center gap-3">
                     <Badge variant={recording.status === 'reviewed' ? 'default' : 'secondary'} className="px-3 py-1">
                       {recording.status.toUpperCase()}
@@ -433,7 +494,7 @@ export default function RecordingDetail() {
                           </div>
                           
                           {item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0 && (
-                            <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={user?.role === 'reviewer'} />
+                            <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={user?.role === 'reviewer'} pinyinData={pinyinData} />
                           )}
 
                           {(item as any).corrections && (
@@ -541,7 +602,7 @@ export default function RecordingDetail() {
                     <Button 
                       className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                       onClick={() => handleFeedbackSubmit()}
-                      disabled={createFeedback.isPending || !feedbackText.trim() || (characters.length > 0 && !allRated)}
+                      disabled={createFeedback.isPending || (!feedbackText.trim() && !correctionsText.trim()) || (characters.length > 0 && !allRated)}
                       data-testid="submit-feedback-btn"
                     >
                       {createFeedback.isPending ? "Submitting..." : "Submit Text Feedback"}

@@ -1,7 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Play, RotateCcw, UploadCloud } from "lucide-react";
+import { Mic, Square, Play, RotateCcw, UploadCloud, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AudioRecorderProps {
   onRecordingComplete: (file: File) => void;
@@ -9,15 +16,53 @@ interface AudioRecorderProps {
 }
 
 const MAX_DURATION = 10;
+const MIC_STORAGE_KEY = 'tonecoach-selected-mic';
 
 export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
+  const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>(() => {
+    return localStorage.getItem(MIC_STORAGE_KEY) || '';
+  });
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  const enumerateDevices = useCallback(async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const mics = devices.filter(d => d.kind === 'audioinput');
+      setAudioDevices(mics);
+      const saved = localStorage.getItem(MIC_STORAGE_KEY);
+      if (saved && mics.some(d => d.deviceId === saved)) {
+        setSelectedDeviceId(saved);
+      } else if (mics.length > 0 && !selectedDeviceId) {
+        setSelectedDeviceId(mics[0].deviceId);
+      }
+    } catch (err) {
+      console.error('Failed to enumerate devices:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    enumerateDevices();
+    navigator.mediaDevices.addEventListener('devicechange', enumerateDevices);
+    return () => {
+      navigator.mediaDevices.removeEventListener('devicechange', enumerateDevices);
+    };
+  }, [enumerateDevices]);
+
+  const handleDeviceChange = (deviceId: string) => {
+    setSelectedDeviceId(deviceId);
+    localStorage.setItem(MIC_STORAGE_KEY, deviceId);
+  };
+
+  const getDeviceLabel = (device: MediaDeviceInfo, index: number) => {
+    return device.label || `Microphone ${index + 1}`;
+  };
 
   useEffect(() => {
     return () => {
@@ -34,7 +79,11 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioConstraints: MediaStreamConstraints['audio'] = selectedDeviceId
+        ? { deviceId: { exact: selectedDeviceId } }
+        : true;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+      enumerateDevices();
       
       // Check for supported MIME types, prioritizing those that work on mobile
       let mimeType = '';
@@ -194,6 +243,28 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
         )}
       </div>
       
+      {audioDevices.length > 1 && !isRecording && (
+        <div className="w-full max-w-xs" data-testid="select-microphone-container">
+          <Select value={selectedDeviceId} onValueChange={handleDeviceChange}>
+            <SelectTrigger data-testid="select-microphone-trigger" className="text-xs text-muted-foreground">
+              <Mic className="w-3 h-3 mr-1.5 shrink-0" />
+              <SelectValue placeholder="Select microphone" />
+            </SelectTrigger>
+            <SelectContent>
+              {audioDevices.map((device, index) => (
+                <SelectItem
+                  key={device.deviceId}
+                  value={device.deviceId}
+                  data-testid={`select-microphone-option-${index}`}
+                >
+                  {getDeviceLabel(device, index)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <p className="text-sm text-muted-foreground max-w-xs text-center">
         {isRecording ? `Speak clearly — recording stops at ${MAX_DURATION} seconds.` : audioBlob ? "Listen to your recording or submit it for review." : `Press start when you are ready. Max ${MAX_DURATION} seconds.`}
       </p>

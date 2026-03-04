@@ -4,9 +4,12 @@ export interface ToneChar {
   pinyin: string;
 }
 
+export type PhraseLevel = "Absolute Beginner" | "Beginner" | "Intermediate" | "Advanced" | "Near Native";
+
 export interface Phrase {
   characters: ToneChar[];
   english: string;
+  level: PhraseLevel;
 }
 
 export const PHRASE_BANK: Phrase[] = [
@@ -23,6 +26,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "你", tone: 3, pinyin: "nǐ" },
     ],
     english: "Hello, nice to meet you.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -37,6 +41,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "文", tone: 2, pinyin: "wén" },
     ],
     english: "I want to go to Beijing to study Chinese.",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -51,6 +56,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "里", tone: 3, pinyin: "lǐ" },
     ],
     english: "Excuse me, where is the restroom?",
+    level: "Beginner",
   },
   {
     characters: [
@@ -62,6 +68,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "辣", tone: 4, pinyin: "là" },
     ],
     english: "This dish is a bit spicy.",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -73,6 +80,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "好", tone: 3, pinyin: "hǎo" },
     ],
     english: "The weather is very nice today.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -85,6 +93,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "啡", tone: 1, pinyin: "fēi" },
     ],
     english: "I want to drink a cup of coffee.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -96,6 +105,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "助", tone: 4, pinyin: "zhù" },
     ],
     english: "Thank you for your help.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -106,6 +116,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "人", tone: 2, pinyin: "rén" },
     ],
     english: "I am American.",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -117,6 +128,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "吗", tone: 0, pinyin: "ma" },
     ],
     english: "Can you speak English?",
+    level: "Beginner",
   },
   {
     characters: [
@@ -125,6 +137,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "钱", tone: 2, pinyin: "qián" },
     ],
     english: "How much does it cost?",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -135,6 +148,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "白", tone: 2, pinyin: "bái" },
     ],
     english: "I don't quite understand.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -147,6 +161,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "吗", tone: 0, pinyin: "ma" },
     ],
     english: "Can you say that again?",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -159,6 +174,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "菜", tone: 4, pinyin: "cài" },
     ],
     english: "I like eating Chinese food.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -170,6 +186,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "师", tone: 1, pinyin: "shī" },
     ],
     english: "He is my teacher.",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -178,6 +195,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "见", tone: 4, pinyin: "jiàn" },
     ],
     english: "See you tomorrow.",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -191,6 +209,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "了", tone: 0, pinyin: "le" },
     ],
     english: "Sorry, I'm late.",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -201,6 +220,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "么", tone: 0, pinyin: "me" },
     ],
     english: "What are you doing?",
+    level: "Beginner",
   },
   {
     characters: [
@@ -211,6 +231,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "海", tone: 3, pinyin: "hǎi" },
     ],
     english: "I live in Shanghai.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -224,6 +245,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "站", tone: 4, pinyin: "zhàn" },
     ],
     english: "Is there a subway station here?",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -236,6 +258,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "了", tone: 0, pinyin: "le" },
     ],
     english: "My phone is out of battery.",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -246,6 +269,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "吗", tone: 0, pinyin: "ma" },
     ],
     english: "Have you eaten?",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -258,6 +282,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "思", tone: 1, pinyin: "sī" },
     ],
     english: "I think it's very interesting.",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -269,6 +294,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "水", tone: 3, pinyin: "shuǐ" },
     ],
     english: "Please give me a glass of water.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -278,6 +304,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "亮", tone: 0, pinyin: "liang" },
     ],
     english: "She is very beautiful.",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -290,6 +317,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "步", tone: 4, pinyin: "bù" },
     ],
     english: "I go jogging every morning.",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -300,6 +328,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "学", tone: 2, pinyin: "xué" },
     ],
     english: "Chinese is very hard to learn.",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -311,6 +340,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "吗", tone: 0, pinyin: "ma" },
     ],
     english: "Can I try it?",
+    level: "Beginner",
   },
   {
     characters: [
@@ -321,6 +351,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "了", tone: 0, pinyin: "le" },
     ],
     english: "What time is it now?",
+    level: "Beginner",
   },
   {
     characters: [
@@ -331,6 +362,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "个", tone: 0, pinyin: "ge" },
     ],
     english: "I want to buy this.",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -342,6 +374,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "字", tone: 4, pinyin: "zì" },
     ],
     english: "What is your name?",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -353,6 +386,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "看", tone: 4, pinyin: "kàn" },
     ],
     english: "This book is very good.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -362,6 +396,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "道", tone: 4, pinyin: "dào" },
     ],
     english: "I don't know.",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -373,6 +408,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "人", tone: 2, pinyin: "rén" },
     ],
     english: "How many people are in your family?",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -385,6 +421,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "菜", tone: 4, pinyin: "cài" },
     ],
     english: "I'm learning to cook Chinese food.",
+    level: "Advanced",
   },
   {
     characters: [
@@ -396,6 +433,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "吗", tone: 0, pinyin: "ma" },
     ],
     english: "Have you been to the Great Wall?",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -407,6 +445,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "走", tone: 3, pinyin: "zǒu" },
     ],
     english: "How do I get there?",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -418,6 +457,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "饭", tone: 4, pinyin: "fàn" },
     ],
     english: "I'd like to treat you to a meal.",
+    level: "Advanced",
   },
   {
     characters: [
@@ -428,6 +468,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "了", tone: 0, pinyin: "le" },
     ],
     english: "It's raining outside.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -439,6 +480,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "好", tone: 3, pinyin: "hǎo" },
     ],
     english: "My Chinese isn't good.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -450,6 +492,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "吗", tone: 0, pinyin: "ma" },
     ],
     english: "Speak slowly, okay?",
+    level: "Beginner",
   },
   {
     characters: [
@@ -461,6 +504,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "了", tone: 0, pinyin: "le" },
     ],
     english: "I've already eaten.",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -472,6 +516,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "吗", tone: 0, pinyin: "ma" },
     ],
     english: "Are you free this weekend?",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -483,6 +528,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "天", tone: 1, pinyin: "tiān" },
     ],
     english: "I like summer the most.",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -497,6 +543,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "好", tone: 3, pinyin: "hǎo" },
     ],
     english: "Your Mandarin is very good.",
+    level: "Advanced",
   },
   {
     characters: [
@@ -509,6 +556,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "译", tone: 4, pinyin: "yì" },
     ],
     english: "I need a translator.",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -520,6 +568,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "美", tone: 3, pinyin: "měi" },
     ],
     english: "This place is really beautiful.",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -533,6 +582,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "啡", tone: 1, pinyin: "fēi" },
     ],
     english: "Would you like tea or coffee?",
+    level: "Advanced",
   },
   {
     characters: [
@@ -545,6 +595,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "书", tone: 1, pinyin: "shū" },
     ],
     english: "My hobby is reading.",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -557,6 +608,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "题", tone: 2, pinyin: "tí" },
     ],
     english: "Don't worry, no problem.",
+    level: "Advanced",
   },
   {
     characters: [
@@ -566,6 +618,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "乐", tone: 4, pinyin: "lè" },
     ],
     english: "Happy Spring Festival!",
+    level: "Near Native",
   },
   {
     characters: [
@@ -577,6 +630,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "吧", tone: 0, pinyin: "ba" },
     ],
     english: "Let's go together.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -586,6 +640,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "乐", tone: 4, pinyin: "lè" },
     ],
     english: "Happy birthday!",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -597,6 +652,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "题", tone: 2, pinyin: "tí" },
     ],
     english: "I have a question.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -605,6 +661,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "了", tone: 0, pinyin: "le" },
     ],
     english: "That's great!",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -616,6 +673,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "友", tone: 3, pinyin: "yǒu" },
     ],
     english: "We are good friends.",
+    level: "Beginner",
   },
   {
     characters: [
@@ -626,6 +684,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "坐", tone: 4, pinyin: "zuò" },
     ],
     english: "Please sit down.",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -640,6 +699,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "影", tone: 3, pinyin: "yǐng" },
     ],
     english: "I watched a movie yesterday.",
+    level: "Advanced",
   },
   {
     characters: [
@@ -649,6 +709,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "了", tone: 0, pinyin: "le" },
     ],
     english: "How old are you?",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -659,6 +720,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "了", tone: 0, pinyin: "le" },
     ],
     english: "I'm too full.",
+    level: "Near Native",
   },
   {
     characters: [
@@ -669,6 +731,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "吗", tone: 0, pinyin: "ma" },
     ],
     english: "Are you busy with work?",
+    level: "Beginner",
   },
   {
     characters: [
@@ -678,6 +741,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "心", tone: 1, pinyin: "xīn" },
     ],
     english: "Be careful on the road.",
+    level: "Near Native",
   },
   {
     characters: [
@@ -690,6 +754,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "文", tone: 2, pinyin: "wén" },
     ],
     english: "I've studied Chinese for two years.",
+    level: "Advanced",
   },
   {
     characters: [
@@ -702,6 +767,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "色", tone: 4, pinyin: "sè" },
     ],
     english: "What color do you like?",
+    level: "Intermediate",
   },
   {
     characters: [
@@ -715,6 +781,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "步", tone: 4, pinyin: "bù" },
     ],
     english: "They are taking a walk in the park.",
+    level: "Advanced",
   },
   {
     characters: [
@@ -728,6 +795,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "国", tone: 2, pinyin: "guó" },
     ],
     english: "I plan to go to China next year.",
+    level: "Advanced",
   },
   {
     characters: [
@@ -740,6 +808,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "点", tone: 3, pinyin: "diǎn" },
     ],
     english: "Can you make it a bit cheaper?",
+    level: "Near Native",
   },
   {
     characters: [
@@ -748,6 +817,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "好", tone: 3, pinyin: "hǎo" },
     ],
     english: "Good morning.",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -755,6 +825,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "安", tone: 1, pinyin: "ān" },
     ],
     english: "Good night.",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -765,6 +836,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "了", tone: 0, pinyin: "le" },
     ],
     english: "I'm hungry.",
+    level: "Absolute Beginner",
   },
   {
     characters: [
@@ -775,6 +847,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "吗", tone: 0, pinyin: "ma" },
     ],
     english: "Do you have WeChat?",
+    level: "Near Native",
   },
 ];
 
@@ -814,4 +887,28 @@ export function phraseToPinyinText(phrase: Phrase): string {
     .filter(c => c.pinyin)
     .map(c => c.pinyin)
     .join(" ");
+}
+
+export function getDailyChallenge(level: string): Phrase {
+  const validLevels: PhraseLevel[] = ["Absolute Beginner", "Beginner", "Intermediate", "Advanced", "Near Native"];
+  const effectiveLevel: PhraseLevel = validLevels.includes(level as PhraseLevel)
+    ? (level as PhraseLevel)
+    : "Beginner";
+
+  const levelPhrases = PHRASE_BANK.filter(p => p.level === effectiveLevel);
+
+  const today = new Date();
+  const dayOfYear = Math.floor(
+    (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
+  );
+  const seed = dayOfYear + today.getFullYear() * 366;
+
+  let hash = seed;
+  for (let i = 0; i < effectiveLevel.length; i++) {
+    hash = ((hash << 5) - hash + effectiveLevel.charCodeAt(i)) | 0;
+  }
+  hash = Math.abs(hash);
+
+  const index = hash % levelPhrases.length;
+  return levelPhrases[index];
 }
