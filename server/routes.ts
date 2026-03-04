@@ -11,70 +11,6 @@ import { sql } from "drizzle-orm";
 import { db } from "./db";
 import { generatePhraseAudio, getPhraseAudioFile } from "./elevenlabs";
 
-async function seedDatabase() {
-  // Check if we have any recordings
-  const pending = await storage.getAllPendingRecordings();
-  if (pending.length > 0) return;
-
-  console.log("Seeding database...");
-
-  // Create a learner user
-  const learnerId = "learner-1";
-  await authStorage.upsertUser({
-    id: learnerId,
-    email: "learner@example.com",
-    firstName: "Lily",
-    lastName: "Chen",
-    profileImageUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lily",
-  });
-
-  // Create a native speaker user
-  const teacherId = "teacher-1";
-  await authStorage.upsertUser({
-    id: teacherId,
-    email: "teacher@example.com",
-    firstName: "Teacher",
-    lastName: "Wang",
-    profileImageUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Wang",
-  });
-
-  // Create a sample recording (Pending)
-  await storage.createRecording(learnerId, {
-    audioUrl: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg", // Dummy audio
-    sentenceText: "Nǐ hǎo (Hello)",
-  });
-
-  // Create a sample recording (Reviewed)
-  const reviewedRec1 = await storage.createRecording(learnerId, {
-    audioUrl: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg",
-    sentenceText: "Xièxiè (Thank you)",
-  });
-
-  // Add feedback
-  await storage.createFeedback({
-    recordingId: reviewedRec1.id,
-    reviewerId: teacherId,
-    textFeedback: "Great tone on 'xiè', but the second 'xie' should be neutral tone. It sounds like a falling tone here.",
-    audioFeedbackUrl: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg",
-  } as any);
-
-  // Create another sample recording (Reviewed)
-  const reviewedRec2 = await storage.createRecording(learnerId, {
-    audioUrl: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg",
-    sentenceText: "Xièxiè (Thank you)",
-  });
-
-  // Add feedback
-  await storage.createFeedback({
-    recordingId: reviewedRec2.id,
-    reviewerId: teacherId,
-    textFeedback: "Great tone on 'xiè', but the second 'xie' should be neutral tone. It sounds like a falling tone here.",
-    audioFeedbackUrl: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg",
-  } as any);
-
-  console.log("Database seeded!");
-}
-
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -85,9 +21,6 @@ export async function registerRoutes(
 
   // Setup Object Storage
   registerObjectStorageRoutes(app);
-
-  // Seed Data
-  seedDatabase().catch(console.error);
 
   // === Consent ===
 
