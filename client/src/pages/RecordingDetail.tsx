@@ -153,7 +153,7 @@ function CharacterRatingInput({
                 const currentVal = ratings[charIdx]?.[dim.key] ?? -1;
                 return (
                   <div key={dim.key} className="flex items-center gap-2">
-                    <span className="text-sm font-medium w-16 shrink-0">
+                    <span className="text-sm font-medium shrink-0">
                       {dim.chinese}
                     </span>
                     <div className="flex gap-1 flex-1">
@@ -162,7 +162,7 @@ function CharacterRatingInput({
                           key={opt.value}
                           type="button"
                           onClick={() => handleChange(charIdx, dim.key, opt.value)}
-                          className={`flex-1 text-xs font-medium py-1.5 rounded border transition-all ${
+                          className={`flex-1 text-xs font-medium py-1.5 px-3 rounded border transition-all ${
                             currentVal === opt.value ? opt.activeColor : opt.color
                           } hover:opacity-80`}
                           data-testid={`rate-${charIdx}-${dim.key}-${opt.value}`}
