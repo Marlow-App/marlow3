@@ -22,6 +22,9 @@ export interface IStorage {
   getAllRecordings(): Promise<(Recording & { user: User | null })[]>;
   deleteRecording(id: number): Promise<boolean>;
   createFeedback(feedbackData: InsertFeedback): Promise<Feedback>;
+  getFeedback(id: number): Promise<Feedback | undefined>;
+  updateFeedback(id: number, data: Partial<InsertFeedback>): Promise<Feedback | undefined>;
+  deleteFeedback(id: number): Promise<boolean>;
   getFeedbackForRecording(recordingId: number): Promise<Feedback[]>;
   getUser(id: string): Promise<User | undefined>;
   saveConsents(userId: string, consentTypes: string[], policyVersion: string, ipAddress: string): Promise<void>;
@@ -147,6 +150,65 @@ export class DatabaseStorage implements IStorage {
       .where(eq(recordings.id, feedbackData.recordingId));
 
     return newFeedback;
+  }
+
+  async getFeedback(id: number): Promise<Feedback | undefined> {
+    const [fb] = await db
+      .select()
+      .from(feedback)
+      .where(eq(feedback.id, id));
+    return fb;
+  }
+
+  async updateFeedback(id: number, data: Partial<InsertFeedback>): Promise<Feedback | undefined> {
+    const updateData: any = {};
+    if (data.textFeedback !== undefined) updateData.textFeedback = data.textFeedback;
+    if ((data as any).corrections !== undefined) updateData.corrections = (data as any).corrections;
+    if (data.audioFeedbackUrl !== undefined) updateData.audioFeedbackUrl = data.audioFeedbackUrl;
+    if ((data as any).characterRatings !== undefined) updateData.characterRatings = (data as any).characterRatings;
+    if ((data as any).overallScore !== undefined) updateData.overallScore = (data as any).overallScore;
+
+    const [updated] = await db
+      .update(feedback)
+      .set(updateData)
+      .where(eq(feedback.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteFeedback(id: number): Promise<boolean> {
+    const [fb] = await db
+      .select()
+      .from(feedback)
+      .where(eq(feedback.id, id));
+
+    if (!fb) return false;
+
+    if (fb.audioFeedbackUrl) {
+      try {
+        const objService = new ObjectStorageService();
+        const file = await objService.getObjectEntityFile(fb.audioFeedbackUrl);
+        await file.delete();
+      } catch (e) {
+        console.error(`Failed to delete feedback audio file ${fb.audioFeedbackUrl}:`, e);
+      }
+    }
+
+    await db.delete(feedback).where(eq(feedback.id, id));
+
+    const remaining = await db
+      .select()
+      .from(feedback)
+      .where(eq(feedback.recordingId, fb.recordingId));
+
+    if (remaining.length === 0) {
+      await db
+        .update(recordings)
+        .set({ status: "pending" })
+        .where(eq(recordings.id, fb.recordingId));
+    }
+
+    return true;
   }
 
   async getFeedbackForRecording(recordingId: number): Promise<Feedback[]> {

@@ -35,7 +35,7 @@ The project uses a monorepo layout with three main directories:
   - `Record` — record audio with sentence text input; supports `?phrase=` URL param for pre-selection; shows "X recordings left today" + tier badge
   - `LearnerPortal` — view your recordings and their feedback
   - `ReviewerPortal` — view pending recordings with Pro Waiting/Waiting/Completed tabs + sort toggle
-  - `RecordingDetail` — view a specific recording with ability to leave feedback
+  - `RecordingDetail` — view a specific recording with ability to leave feedback; reviewers can edit and delete their own feedback inline
   - `CheckoutSuccess` — post-payment confirmation page shown after Stripe checkout
   - `ManageSubscription` — internal subscription management (cancel, reactivate)
   - `PrivacyPolicy` — privacy policy page (accessible to all users)

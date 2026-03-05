@@ -364,6 +364,76 @@ export async function registerRoutes(
     }
   });
 
+  // Update feedback (reviewer only, own feedback)
+  app.patch("/api/feedback/:id", isAuthenticated, async (req, res) => {
+    try {
+      const feedbackId = Number(req.params.id);
+      const reviewerId = (req.user as any).claims.sub;
+
+      const existing = await storage.getFeedback(feedbackId);
+      if (!existing) return res.status(404).json({ message: "Feedback not found" });
+      if (existing.reviewerId !== reviewerId) return res.status(403).json({ message: "You can only edit your own feedback" });
+
+      const { textFeedback, corrections, audioFeedbackUrl, characterRatings } = req.body;
+
+      let overallScore: number | null = existing.overallScore;
+      let validatedRatings: any = undefined;
+
+      if (characterRatings !== undefined) {
+        if (characterRatings && Array.isArray(characterRatings) && characterRatings.length > 0) {
+          const { characterRatingSchema } = await import("@shared/schema");
+          for (const cr of characterRatings) {
+            characterRatingSchema.parse(cr);
+          }
+          validatedRatings = characterRatings;
+          const total = characterRatings.reduce((sum: number, cr: any) => sum + cr.initial + cr.final + cr.tone, 0);
+          overallScore = Math.round(total / (characterRatings.length * 3));
+        } else {
+          validatedRatings = null;
+          overallScore = null;
+        }
+      }
+
+      const updateData: any = {};
+      if (textFeedback !== undefined) updateData.textFeedback = textFeedback;
+      if (corrections !== undefined) updateData.corrections = corrections || null;
+      if (audioFeedbackUrl !== undefined) updateData.audioFeedbackUrl = audioFeedbackUrl;
+      if (validatedRatings !== undefined) {
+        updateData.characterRatings = validatedRatings;
+        updateData.overallScore = overallScore;
+      }
+
+      const updated = await storage.updateFeedback(feedbackId, updateData);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      console.error("Error updating feedback:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Delete feedback (reviewer only, own feedback)
+  app.delete("/api/feedback/:id", isAuthenticated, async (req, res) => {
+    try {
+      const feedbackId = Number(req.params.id);
+      const reviewerId = (req.user as any).claims.sub;
+
+      const existing = await storage.getFeedback(feedbackId);
+      if (!existing) return res.status(404).json({ message: "Feedback not found" });
+      if (existing.reviewerId !== reviewerId) return res.status(403).json({ message: "You can only delete your own feedback" });
+
+      const deleted = await storage.deleteFeedback(feedbackId);
+      if (!deleted) return res.status(500).json({ message: "Failed to delete feedback" });
+
+      res.json({ message: "Feedback deleted" });
+    } catch (err) {
+      console.error("Error deleting feedback:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // === User Profile ===
   app.patch("/api/auth/user", isAuthenticated, async (req, res) => {
     try {

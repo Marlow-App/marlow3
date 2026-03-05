@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin, Trash2 } from "lucide-react";
+import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil } from "lucide-react";
 import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -222,6 +222,241 @@ function CharacterRatingInput({
         ))}
       </div>
     </div>
+  );
+}
+
+function EditableFeedbackCard({
+  item,
+  isOwner,
+  isReviewer,
+  pinyinData,
+  recordingId,
+  characters,
+}: {
+  item: any;
+  isOwner: boolean;
+  isReviewer: boolean;
+  pinyinData: PinyinChar[];
+  recordingId: number;
+  characters: string[];
+}) {
+  const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editCorrections, setEditCorrections] = useState((item as any).corrections || "");
+  const [editTextFeedback, setEditTextFeedback] = useState(item.textFeedback || "");
+  const [editCharRatings, setEditCharRatings] = useState<CharacterRating[]>(
+    item.characterRatings && Array.isArray(item.characterRatings)
+      ? (item.characterRatings as CharacterRating[])
+      : characters.map(c => ({ character: c, initial: -1 as any, final: -1 as any, tone: -1 as any }))
+  );
+
+  const allRated = editCharRatings.length > 0 && editCharRatings.every(r => r.initial !== -1 && r.final !== -1 && r.tone !== -1);
+
+  const updateFeedback = useMutation({
+    mutationFn: async (data: any) => {
+      await apiRequest("PATCH", `/api/feedback/${item.id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/recordings", recordingId] });
+      toast({ title: "Feedback updated", description: "Your changes have been saved." });
+      setIsEditing(false);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update feedback.", variant: "destructive" });
+    },
+  });
+
+  const deleteFeedback = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/feedback/${item.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/recordings", recordingId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/recordings"] });
+      toast({ title: "Feedback deleted", description: "Your feedback has been removed." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete feedback.", variant: "destructive" });
+    },
+  });
+
+  const handleSaveEdit = () => {
+    if (!editTextFeedback.trim() && !editCorrections.trim()) {
+      toast({ title: "Empty Feedback", description: "Please provide corrections or comments.", variant: "destructive" });
+      return;
+    }
+    if (characters.length > 0 && !allRated) {
+      toast({ title: "Ratings Incomplete", description: "Please rate all characters.", variant: "destructive" });
+      return;
+    }
+    const validRatings = editCharRatings.filter(r => r.initial !== -1 && r.final !== -1 && r.tone !== -1);
+    updateFeedback.mutate({
+      textFeedback: editTextFeedback,
+      corrections: editCorrections || null,
+      characterRatings: validRatings.length > 0 ? validRatings : undefined,
+    });
+  };
+
+  const startEditing = () => {
+    setEditCorrections((item as any).corrections || "");
+    setEditTextFeedback(item.textFeedback || "");
+    setEditCharRatings(
+      item.characterRatings && Array.isArray(item.characterRatings)
+        ? (item.characterRatings as CharacterRating[])
+        : characters.map(c => ({ character: c, initial: -1 as any, final: -1 as any, tone: -1 as any }))
+    );
+    setIsEditing(true);
+  };
+
+  return (
+    <Card className="bg-secondary/5 border-secondary/20">
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold">
+            {item.reviewer?.firstName?.[0] || "R"}
+          </div>
+          <div className="flex-1">
+            <div className="flex justify-between items-start mb-2">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-foreground" data-testid={`reviewer-name-${item.id}`}>
+                    {item.reviewer ? `${item.reviewer.firstName || ''} ${item.reviewer.lastName || ''}`.trim() || 'Reviewer' : 'Reviewer'}
+                  </span>
+                  {item.reviewer?.city && (
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground" data-testid={`reviewer-city-${item.id}`}>
+                      <MapPin className="w-3 h-3" />
+                      {item.reviewer.city}
+                    </span>
+                  )}
+                </div>
+                {!isEditing && (
+                  item.overallScore !== null && item.overallScore !== undefined ? (
+                    <ScoreBadge score={item.overallScore} />
+                  ) : (
+                    <OldRatingDisplay rating={item.rating} />
+                  )
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {isOwner && !isEditing && (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={startEditing} data-testid={`edit-feedback-${item.id}`}>
+                      <Pencil className="w-3.5 h-3.5 mr-1" />
+                      Edit
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-destructive" data-testid={`delete-feedback-${item.id}`}>
+                          <Trash2 className="w-3.5 h-3.5 mr-1" />
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Feedback</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete your feedback. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteFeedback.mutate()}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            data-testid={`confirm-delete-feedback-${item.id}`}
+                          >
+                            {deleteFeedback.isPending ? "Deleting..." : "Delete"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                )}
+                <span className="text-xs text-muted-foreground">{format(new Date(item.createdAt), 'MMM d, HH:mm')}</span>
+              </div>
+            </div>
+
+            {isEditing ? (
+              <div className="space-y-4 mt-2">
+                <CharacterRatingInput
+                  characters={characters}
+                  ratings={editCharRatings}
+                  onChange={setEditCharRatings}
+                />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Corrections</label>
+                  <Textarea
+                    className="min-h-[80px] resize-none"
+                    value={editCorrections}
+                    onChange={(e) => setEditCorrections(e.target.value)}
+                    data-testid={`edit-corrections-${item.id}`}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Overall Comments</label>
+                  <Textarea
+                    className="min-h-[100px] resize-none"
+                    value={editTextFeedback}
+                    onChange={(e) => setEditTextFeedback(e.target.value)}
+                    data-testid={`edit-text-feedback-${item.id}`}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSaveEdit}
+                    disabled={updateFeedback.isPending || (!editTextFeedback.trim() && !editCorrections.trim()) || (characters.length > 0 && !allRated)}
+                    data-testid={`save-feedback-${item.id}`}
+                  >
+                    {updateFeedback.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                  <Button variant="ghost" onClick={() => setIsEditing(false)} data-testid={`cancel-edit-${item.id}`}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0 && (
+                  <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={isReviewer} pinyinData={pinyinData} />
+                )}
+
+                {(item as any).corrections && (
+                  <div className="mt-4 pt-4 border-t border-border/50">
+                    <p className="text-xs font-semibold uppercase text-muted-foreground mb-2" data-testid="corrections-label">Corrections</p>
+                    <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed" data-testid="corrections-text">
+                      {(item as any).corrections}
+                    </p>
+                  </div>
+                )}
+
+                {item.textFeedback && (
+                  <div className="mt-4 pt-4 border-t border-border/50">
+                    <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Overall Comments</p>
+                    <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                      {item.textFeedback}
+                    </p>
+                  </div>
+                )}
+
+                {item.audioFeedbackUrl && (
+                  <div className="mt-4 pt-4 border-t border-border/50">
+                    <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Audio Correction</p>
+                    <audio
+                      controls
+                      className="w-full h-10"
+                      preload="auto"
+                      playsInline
+                    >
+                      <source src={item.audioFeedbackUrl} />
+                    </audio>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -464,74 +699,15 @@ export default function RecordingDetail() {
               
               {recording.feedback && recording.feedback.length > 0 ? (
                 recording.feedback.map((item: any) => (
-                  <Card key={item.id} className="bg-secondary/5 border-secondary/20">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold">
-                          {item.reviewer?.firstName?.[0] || "R"}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-foreground" data-testid={`reviewer-name-${item.id}`}>
-                                  {item.reviewer ? `${item.reviewer.firstName || ''} ${item.reviewer.lastName || ''}`.trim() || 'Reviewer' : 'Reviewer'}
-                                </span>
-                                {item.reviewer?.city && (
-                                  <span className="flex items-center gap-1 text-xs text-muted-foreground" data-testid={`reviewer-city-${item.id}`}>
-                                    <MapPin className="w-3 h-3" />
-                                    {item.reviewer.city}
-                                  </span>
-                                )}
-                              </div>
-                              {item.overallScore !== null && item.overallScore !== undefined ? (
-                                <ScoreBadge score={item.overallScore} />
-                              ) : (
-                                <OldRatingDisplay rating={item.rating} />
-                              )}
-                            </div>
-                            <span className="text-xs text-muted-foreground">{format(new Date(item.createdAt), 'MMM d, HH:mm')}</span>
-                          </div>
-                          
-                          {item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0 && (
-                            <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={user?.role === 'reviewer'} pinyinData={pinyinData} />
-                          )}
-
-                          {(item as any).corrections && (
-                            <div className="mt-4 pt-4 border-t border-border/50">
-                              <p className="text-xs font-semibold uppercase text-muted-foreground mb-2" data-testid="corrections-label">Corrections</p>
-                              <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed" data-testid="corrections-text">
-                                {(item as any).corrections}
-                              </p>
-                            </div>
-                          )}
-
-                          {item.textFeedback && (
-                            <div className="mt-4 pt-4 border-t border-border/50">
-                              <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Overall Comments</p>
-                              <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed">
-                                {item.textFeedback}
-                              </p>
-                            </div>
-                          )}
-                          
-                          {item.audioFeedbackUrl && (
-                            <div className="mt-4 pt-4 border-t border-border/50">
-                              <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Audio Correction</p>
-                              <audio 
-                                controls 
-                                className="w-full h-10"
-                                preload="auto"
-                                playsInline
-                              >
-                                <source src={item.audioFeedbackUrl} type={item.audioFeedbackUrl.endsWith('.mp4') ? 'audio/mp4' : 'audio/webm'} />
-                              </audio>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <EditableFeedbackCard
+                    key={item.id}
+                    item={item}
+                    isOwner={item.reviewerId === user?.id}
+                    isReviewer={user?.role === 'reviewer'}
+                    pinyinData={pinyinData}
+                    recordingId={recordingId}
+                    characters={characters}
+                  />
                 ))
               ) : (
                 <div className="text-center py-8 text-muted-foreground italic bg-muted/20 rounded-xl">
