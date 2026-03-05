@@ -231,34 +231,34 @@ export default function RecordPage() {
   return (
     <Layout>
       <div className="max-w-2xl mx-auto space-y-6 animate-in">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setLocation("/")} data-testid="back-btn">
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Back
-            </Button>
-            <h1 className="text-3xl font-bold font-display">New Recording</h1>
-          </div>
-
-          {remainingData && (
-            <div className="flex items-center gap-2" data-testid="recording-limit-info">
-              <span className="text-sm text-muted-foreground" data-testid="remaining-count">
-                {remainingData.tier === 'unlimited'
-                  ? 'Unlimited recordings'
-                  : `${remainingData.remaining} recording${remainingData.remaining !== 1 ? 's' : ''} remaining today`}
-              </span>
-              <Link href="/profile">
-                <Badge
-                  variant={remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'default' : 'outline'}
-                  className={`cursor-pointer ${remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'bg-primary text-primary-foreground' : ''}`}
-                  data-testid="tier-badge"
-                >
-                  {(remainingData.tier === 'pro' || remainingData.tier === 'unlimited') && <Crown className="w-3 h-3 mr-1" />}
-                  {remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'Pro' : 'Free'}
-                </Badge>
-              </Link>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setLocation("/")} data-testid="back-btn">
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Back
+              </Button>
+              <h1 className="text-3xl font-bold font-display">New Recording</h1>
             </div>
-          )}
+
+            {remainingData && (
+              <div className="flex items-center gap-1.5" data-testid="recording-limit-info">
+                <span className="text-sm text-muted-foreground" data-testid="remaining-count">
+                  {remainingData.tier === 'unlimited' ? 'Unlimited' : `${remainingData.remaining} remaining`}
+                </span>
+                <Link href="/profile">
+                  <Badge
+                    variant={remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'default' : 'outline'}
+                    className={`cursor-pointer ${remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'bg-primary text-primary-foreground' : ''}`}
+                    data-testid="tier-badge"
+                  >
+                    {(remainingData.tier === 'pro' || remainingData.tier === 'unlimited') && <Crown className="w-3 h-3 mr-1" />}
+                    {remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'Pro' : 'Free'}
+                  </Badge>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-5">
