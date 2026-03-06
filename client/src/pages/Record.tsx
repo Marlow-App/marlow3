@@ -230,12 +230,12 @@ export default function RecordPage() {
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto space-y-6 animate-in">
-        <div className="space-y-3">
+      <div className="max-w-2xl mx-auto space-y-3 animate-in">
+        <div className="space-y-4">
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={() => setLocation("/")} data-testid="back-btn">
-              <ChevronLeft className="w-7 h-7" strokeWidth={2.5} />
-            </Button>
+            <button onClick={() => setLocation("/")} className="p-1 -ml-1 rounded-md hover:bg-muted transition-colors" data-testid="back-btn">
+              <ChevronLeft className="w-9 h-9 text-foreground" strokeWidth={3} />
+            </button>
             <h1 className="text-3xl font-bold font-display">New Recording</h1>
           </div>
 
