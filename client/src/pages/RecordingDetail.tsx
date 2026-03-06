@@ -340,15 +340,13 @@ function EditableFeedbackCard({
               <div className="flex items-center gap-2">
                 {isOwner && !isEditing && (
                   <>
-                    <Button variant="ghost" size="sm" onClick={startEditing} data-testid={`edit-feedback-${item.id}`}>
-                      <Pencil className="w-3.5 h-3.5 mr-1" />
-                      Edit
+                    <Button variant="ghost" size="icon" onClick={startEditing} data-testid={`edit-feedback-${item.id}`}>
+                      <Pencil className="w-5 h-5" strokeWidth={2.5} />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-destructive" data-testid={`delete-feedback-${item.id}`}>
-                          <Trash2 className="w-3.5 h-3.5 mr-1" />
-                          Delete
+                        <Button variant="ghost" size="icon" className="text-destructive" data-testid={`delete-feedback-${item.id}`}>
+                          <Trash2 className="w-5 h-5" strokeWidth={2.5} />
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>

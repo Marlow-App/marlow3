@@ -81,15 +81,17 @@ export function Layout({ children }: LayoutProps) {
         </nav>
 
         <div className="p-4 border-t border-border/50 bg-muted/10">
-          <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold">
-              {user?.firstName?.[0] || (user as any)?.username?.[0] || "U"}
+          <Link href="/profile">
+            <div className="flex items-center gap-3 mb-4 px-2 cursor-pointer rounded-lg hover:bg-muted/50 transition-colors py-2 -my-1" data-testid="sidebar-profile-link">
+              <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold">
+                {user?.firstName?.[0] || (user as any)?.username?.[0] || "U"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{user?.firstName || (user as any)?.username || "Learner"}</p>
+                <p className="text-xs text-muted-foreground truncate">Free Plan</p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.firstName || (user as any)?.username || "Learner"}</p>
-              <p className="text-xs text-muted-foreground truncate">Free Plan</p>
-            </div>
-          </div>
+          </Link>
           <Button 
             variant="ghost" 
             className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10"

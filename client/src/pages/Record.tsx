@@ -240,7 +240,7 @@ export default function RecordPage() {
           </div>
 
           {remainingData && (
-            <div className="flex items-center gap-1.5 justify-end" data-testid="recording-limit-info">
+            <div className="flex items-center gap-1.5 sm:justify-end" data-testid="recording-limit-info">
               <span className="text-sm text-muted-foreground" data-testid="remaining-count">
                 {remainingData.tier === 'unlimited' ? 'Unlimited' : `${remainingData.remaining} remaining`}
               </span>
