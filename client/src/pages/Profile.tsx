@@ -70,7 +70,9 @@ export default function Profile() {
   const [cityOpen, setCityOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const chineseLevelRef = useRef<HTMLDivElement>(null);
+  const subscriptionRef = useRef<HTMLDivElement>(null);
   const [highlightLevel, setHighlightLevel] = useState(false);
+  const [highlightSubscription, setHighlightSubscription] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -81,6 +83,12 @@ export default function Profile() {
         chineseLevelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 300);
       setTimeout(() => setHighlightLevel(false), 4000);
+    } else if (params.get("highlight") === "subscription") {
+      setHighlightSubscription(true);
+      setTimeout(() => {
+        subscriptionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
+      setTimeout(() => setHighlightSubscription(false), 4000);
     }
   }, []);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
@@ -381,7 +389,12 @@ export default function Profile() {
               </Card>
 
               <Card
-                className={`relative overflow-hidden hover:shadow-xl transition-shadow ${
+                ref={subscriptionRef}
+                className={`relative overflow-hidden hover:shadow-xl transition-all duration-500 ${
+                  highlightSubscription
+                    ? 'ring-2 ring-primary/60 shadow-lg shadow-primary/10 animate-pulse'
+                    : ''
+                } ${
                   hasSubscription
                     ? subscriptionData?.subscription?.cancel_at_period_end
                       ? 'border-yellow-500/30 bg-gradient-to-br from-yellow-500/5 via-transparent to-transparent ring-2 ring-yellow-500/20'

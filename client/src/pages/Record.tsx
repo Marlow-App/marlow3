@@ -231,49 +231,46 @@ export default function RecordPage() {
   return (
     <Layout>
       <div className="max-w-2xl mx-auto space-y-6 animate-in">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setLocation("/")} data-testid="back-btn">
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Back
-              </Button>
-              <h1 className="text-3xl font-bold font-display">New Recording</h1>
-            </div>
-
-            {remainingData && (
-              <div className="flex items-center gap-1.5" data-testid="recording-limit-info">
-                <span className="text-sm text-muted-foreground" data-testid="remaining-count">
-                  {remainingData.tier === 'unlimited' ? 'Unlimited' : `${remainingData.remaining} remaining`}
-                </span>
-                <Link href="/profile">
-                  <Badge
-                    variant={remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'default' : 'outline'}
-                    className={`cursor-pointer ${remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'bg-primary text-primary-foreground' : ''}`}
-                    data-testid="tier-badge"
-                  >
-                    {(remainingData.tier === 'pro' || remainingData.tier === 'unlimited') && <Crown className="w-3 h-3 mr-1" />}
-                    {remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'Pro' : 'Free'}
-                  </Badge>
-                </Link>
-              </div>
-            )}
+        <div className="space-y-1">
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={() => setLocation("/")} data-testid="back-btn">
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-3xl font-bold font-display">New Recording</h1>
           </div>
+
+          {remainingData && (
+            <div className="flex items-center gap-1.5 justify-end" data-testid="recording-limit-info">
+              <span className="text-sm text-muted-foreground" data-testid="remaining-count">
+                {remainingData.tier === 'unlimited' ? 'Unlimited' : `${remainingData.remaining} remaining`}
+              </span>
+              <Link href={`/profile?highlight=subscription`}>
+                <Badge
+                  variant={remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'default' : 'outline'}
+                  className={`cursor-pointer ${remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'bg-primary text-primary-foreground' : ''}`}
+                  data-testid="tier-badge"
+                >
+                  {(remainingData.tier === 'pro' || remainingData.tier === 'unlimited') && <Crown className="w-3 h-3 mr-1" />}
+                  {remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'Pro' : 'Free'}
+                </Badge>
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="space-y-5">
           <div className="space-y-3">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0 flex-shrink">
+            <div className="space-y-2">
+              <div>
                 <h2 className="text-base font-semibold font-display">Today's Phrases</h2>
                 <p className="text-xs text-muted-foreground">Scroll to browse, tap to select</p>
               </div>
-              <div className="flex gap-2 items-center text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                <span className="font-medium mr-0.5">Tones by Color</span>
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500"></span>1st
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-500"></span>2nd
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500"></span>3rd
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-500"></span>4th
+              <div className="flex gap-3 items-center text-sm text-muted-foreground">
+                <span className="font-medium">Tones by Color</span>
+                <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span>1st
+                <span className="inline-block w-3 h-3 rounded-full bg-yellow-500"></span>2nd
+                <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>3rd
+                <span className="inline-block w-3 h-3 rounded-full bg-blue-500"></span>4th
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground/70 -mt-1">
