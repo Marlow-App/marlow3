@@ -155,8 +155,8 @@ export default function Home() {
       });
 
       setDrawerOpen(false);
-    } catch (error: any) {
-      const errorMsg = error?.message || "Failed to submit recording. Please try again.";
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Failed to submit recording. Please try again.";
       toast({
         title: "Error",
         description: errorMsg,
