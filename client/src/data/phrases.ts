@@ -878,6 +878,36 @@ export function getDailyPhrases(count: number = 10): Phrase[] {
   return shuffled.slice(0, count);
 }
 
+export function getPhrasesForLevel(level: string, count: number = 10): Phrase[] {
+  const validLevels: PhraseLevel[] = ["Absolute Beginner", "Beginner", "Intermediate", "Advanced"];
+  const effectiveLevel: PhraseLevel = validLevels.includes(level as PhraseLevel)
+    ? (level as PhraseLevel)
+    : "Beginner";
+
+  const levelPhrases = PHRASE_BANK.filter(p => p.level === effectiveLevel);
+
+  const today = new Date();
+  const dayOfYear = Math.floor(
+    (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
+  );
+  const seed = dayOfYear + today.getFullYear() * 366;
+
+  let hash = seed;
+  for (let i = 0; i < effectiveLevel.length; i++) {
+    hash = ((hash << 5) - hash + effectiveLevel.charCodeAt(i)) | 0;
+  }
+  hash = Math.abs(hash);
+
+  const rng = mulberry32(hash);
+  const shuffled = [...levelPhrases];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled.slice(0, count);
+}
+
 export function phraseToText(phrase: Phrase): string {
   return phrase.characters.map(c => c.char).join("");
 }

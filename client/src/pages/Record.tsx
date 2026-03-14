@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { ChevronLeft, Info, Volume2, X, Loader2, Crown } from "lucide-react";
-import { getDailyPhrases, phraseToText, PHRASE_BANK, type Phrase, type ToneChar } from "@/data/phrases";
+import { getPhrasesForLevel, phraseToText, PHRASE_BANK, type Phrase, type ToneChar } from "@/data/phrases";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 
 const TONE_COLORS: Record<number, string> = {
   1: "text-red-600 dark:text-red-400",
@@ -156,11 +157,13 @@ export default function RecordPage() {
   const [, setLocation] = useLocation();
   const [selectedPhrase, setSelectedPhrase] = useState<Phrase | null>(null);
   const { playPhrase, loadingPhrase } = usePhraseAudio();
+  const { user } = useAuth();
+  const userLevel = user?.chineseLevel || "Beginner";
   const { data: remainingData } = useQuery<{ dailyLimit: number; used: number; remaining: number; tier: string }>({
     queryKey: ['/api/recordings/remaining'],
   });
 
-  const dailyPhrases = getDailyPhrases(10);
+  const dailyPhrases = getPhrasesForLevel(userLevel, 10);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -218,8 +221,8 @@ export default function RecordPage() {
       });
 
       setLocation("/");
-    } catch (error: any) {
-      const errorMsg = error?.message || "Failed to submit recording. Please try again.";
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Failed to submit recording. Please try again.";
       toast({
         title: "Error",
         description: errorMsg,
@@ -239,30 +242,42 @@ export default function RecordPage() {
             <h1 className="text-3xl font-bold font-display">New Recording</h1>
           </div>
 
-          {remainingData && (
-            <div className="flex items-center gap-1.5 sm:justify-end" data-testid="recording-limit-info">
-              <span className="text-sm text-muted-foreground" data-testid="remaining-count">
-                {remainingData.tier === 'unlimited' ? 'Unlimited' : `${remainingData.remaining} remaining`}
-              </span>
-              <Link href={`/profile?highlight=subscription`}>
-                <Badge
-                  variant={remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'default' : 'outline'}
-                  className={`cursor-pointer ${remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'bg-primary text-primary-foreground' : ''}`}
-                  data-testid="tier-badge"
-                >
-                  {(remainingData.tier === 'pro' || remainingData.tier === 'unlimited') && <Crown className="w-3 h-3 mr-1" />}
-                  {remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'Pro' : 'Free'}
-                </Badge>
-              </Link>
-            </div>
-          )}
+          <div className="flex items-center justify-between gap-2">
+            <Link href="/profile?highlight=chineseLevel">
+              <Button
+                variant="outline"
+                size="lg"
+                className="rounded-full border-primary/30 hover:border-primary/60 hover:bg-primary/5 text-base font-semibold px-5"
+                data-testid="level-btn"
+              >
+                {userLevel} ✎
+              </Button>
+            </Link>
+            {remainingData && (
+              <div className="flex items-center gap-1.5" data-testid="recording-limit-info">
+                <span className="text-sm text-muted-foreground" data-testid="remaining-count">
+                  {remainingData.tier === 'unlimited' ? 'Unlimited' : `${remainingData.remaining} remaining`}
+                </span>
+                <Link href="/profile?highlight=subscription">
+                  <Badge
+                    variant={remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'default' : 'outline'}
+                    className={`cursor-pointer ${remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'bg-primary text-primary-foreground' : ''}`}
+                    data-testid="tier-badge"
+                  >
+                    {(remainingData.tier === 'pro' || remainingData.tier === 'unlimited') && <Crown className="w-3 h-3 mr-1" />}
+                    {remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'Pro' : 'Free'}
+                  </Badge>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-4">
           <div className="space-y-3">
             <div className="space-y-2">
               <div>
-                <h2 className="text-base font-semibold">Today's Phrases</h2>
+                <h2 className="text-base font-semibold">{userLevel} Phrases</h2>
                 <p className="text-sm text-muted-foreground">Scroll to browse, tap to select</p>
               </div>
               <div className="flex gap-3 items-center text-sm text-muted-foreground">
