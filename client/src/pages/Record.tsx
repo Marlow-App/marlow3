@@ -322,7 +322,7 @@ export default function RecordPage() {
           </div>
 
           {(selectedPhrase || text.trim()) && (
-            <Card className="border-primary/30 bg-primary/5 shadow-sm" data-testid="active-phrase-display">
+            <Card className="border-primary/30 bg-primary/5 shadow-sm sticky top-14 z-10" data-testid="active-phrase-display">
               <CardContent className="py-5 px-6">
                 <div className="flex items-start justify-between gap-3">
                   <div>

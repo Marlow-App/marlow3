@@ -11,8 +11,8 @@ export default function PrivacyPolicy() {
         </Link>
 
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-2xl">6</div>
-          <span className="font-display font-bold text-2xl tracking-tight">SixTone Studio</span>
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-2xl">M</div>
+          <span className="font-display font-bold text-2xl tracking-tight">Marlow</span>
         </div>
 
         <h1 className="text-3xl font-bold font-display mb-2" data-testid="text-page-title">Privacy Policy</h1>
@@ -20,7 +20,7 @@ export default function PrivacyPolicy() {
 
         <div className="prose prose-neutral dark:prose-invert max-w-none space-y-6 text-sm leading-relaxed">
           <p>
-            SixToneStudio is operated by 말로교육 주식회사 (Marlow Education Co., Ltd.) ("Company", "we", "us", "our").
+            Marlow is operated by 말로교육 주식회사 (Marlow Education Co., Ltd.) ("Company", "we", "us", "our").
           </p>
           <p>
             If you have questions about this Privacy Policy, contact: <a href="mailto:julesyexplains@gmail.com" className="text-primary hover:underline">julesyexplains@gmail.com</a>

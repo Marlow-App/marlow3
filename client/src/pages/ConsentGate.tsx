@@ -25,7 +25,7 @@ export default function ConsentGate() {
         consentTypes: ["age_verification", "terms_of_service", "privacy_policy", "voice_data_processing"],
       });
       await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      window.location.href = "/";
+      window.location.href = "/profile?highlight=chineseLevel";
     } catch (err) {
       toast({ title: "Error", description: "Failed to save consent. Please try again.", variant: "destructive" });
     } finally {
@@ -38,9 +38,9 @@ export default function ConsentGate() {
       <Card className="max-w-lg w-full" data-testid="consent-gate-card">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-3xl">6</div>
+            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-3xl">M</div>
           </div>
-          <CardTitle className="text-2xl font-display">Welcome to SixTone Studio</CardTitle>
+          <CardTitle className="text-2xl font-display">Welcome to Marlow</CardTitle>
           <CardDescription className="mt-2">
             Before you get started, please review and agree to the following:
           </CardDescription>

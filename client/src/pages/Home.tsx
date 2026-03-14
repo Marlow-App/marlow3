@@ -173,7 +173,7 @@ export default function Home() {
                     <Link href={`/record?phrase=${encodeURIComponent(challengeText)}`}>
                       <Button size="lg" className="rounded-full shadow-md" data-testid="daily-challenge-record-btn">
                         <Mic2 className="mr-2 h-5 w-5" />
-                        Practice
+                        Record This
                       </Button>
                     </Link>
                   </div>

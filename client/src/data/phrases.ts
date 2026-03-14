@@ -4,7 +4,7 @@ export interface ToneChar {
   pinyin: string;
 }
 
-export type PhraseLevel = "Absolute Beginner" | "Beginner" | "Intermediate" | "Advanced" | "Near Native";
+export type PhraseLevel = "Absolute Beginner" | "Beginner" | "Intermediate" | "Advanced";
 
 export interface Phrase {
   characters: ToneChar[];
@@ -618,7 +618,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "乐", tone: 4, pinyin: "lè" },
     ],
     english: "Happy Spring Festival!",
-    level: "Near Native",
+    level: "Advanced",
   },
   {
     characters: [
@@ -720,7 +720,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "了", tone: 0, pinyin: "le" },
     ],
     english: "I'm too full.",
-    level: "Near Native",
+    level: "Advanced",
   },
   {
     characters: [
@@ -741,7 +741,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "心", tone: 1, pinyin: "xīn" },
     ],
     english: "Be careful on the road.",
-    level: "Near Native",
+    level: "Advanced",
   },
   {
     characters: [
@@ -808,7 +808,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "点", tone: 3, pinyin: "diǎn" },
     ],
     english: "Can you make it a bit cheaper?",
-    level: "Near Native",
+    level: "Advanced",
   },
   {
     characters: [
@@ -847,7 +847,7 @@ export const PHRASE_BANK: Phrase[] = [
       { char: "吗", tone: 0, pinyin: "ma" },
     ],
     english: "Do you have WeChat?",
-    level: "Near Native",
+    level: "Advanced",
   },
 ];
 
@@ -890,7 +890,7 @@ export function phraseToPinyinText(phrase: Phrase): string {
 }
 
 export function getDailyChallenge(level: string): Phrase {
-  const validLevels: PhraseLevel[] = ["Absolute Beginner", "Beginner", "Intermediate", "Advanced", "Near Native"];
+  const validLevels: PhraseLevel[] = ["Absolute Beginner", "Beginner", "Intermediate", "Advanced", ];
   const effectiveLevel: PhraseLevel = validLevels.includes(level as PhraseLevel)
     ? (level as PhraseLevel)
     : "Beginner";

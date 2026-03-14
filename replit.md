@@ -1,8 +1,8 @@
-# SixTone Studio
+# Marlow — Mandarin Tone Trainer
 
 ## Overview
 
-SixTone Studio is a web application for learning Chinese tones through voice recording and native speaker feedback. Learners record themselves speaking Chinese sentences, submit recordings for review, and receive text and audio feedback from native speakers/reviewers. The app has two main user roles: **Learners** (who record and receive feedback) and **Reviewers** (who listen to recordings and provide corrections).
+Marlow is a web application for learning Chinese tones through voice recording and native speaker feedback. Learners record themselves speaking Chinese sentences, submit recordings for review, and receive text and audio feedback from native speakers/reviewers. The app has two main user roles: **Learners** (who record and receive feedback) and **Reviewers** (who listen to recordings and provide corrections).
 
 ## User Preferences
 

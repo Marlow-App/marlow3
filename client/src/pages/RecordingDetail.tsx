@@ -629,7 +629,7 @@ export default function RecordingDetail() {
 
         <div className={`grid grid-cols-1 ${user?.role === 'reviewer' ? 'lg:grid-cols-3' : ''} gap-8`}>
           <div className={`${user?.role === 'reviewer' ? 'lg:col-span-2' : ''} space-y-6`}>
-            <Card className="border-border shadow-md overflow-hidden">
+            <Card className="border-border shadow-md overflow-hidden sticky top-14 z-20 bg-card">
               <div className="h-2 bg-primary w-full"></div>
               <CardContent className="p-8">
                 <div className="mb-8">

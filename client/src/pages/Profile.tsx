@@ -23,8 +23,7 @@ const CHINESE_LEVELS = [
   "Absolute Beginner",
   "Beginner",
   "Intermediate",
-  "Advanced",
-  "Near Native"
+  "Advanced"
 ];
 
 const DIALECTS = [
@@ -197,7 +196,7 @@ export default function Profile() {
           <Card>
             <CardHeader>
               <CardTitle>Personal Information</CardTitle>
-              <CardDescription>Manage your public identity on SixTone Studio.</CardDescription>
+              <CardDescription>Manage your public identity on Marlow.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex flex-col md:flex-row items-center gap-6 pb-6 border-b border-border/50">
