@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Mic2, LayoutDashboard, UserCircle, LogOut, FileAudio, Menu, X } from "lucide-react";
+import { Mic2, House, BarChart2, UserCircle, LogOut, FileAudio, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -18,14 +18,14 @@ export function Layout({ children }: LayoutProps) {
   const isActive = (path: string) => location === path;
 
   const learnerItems = [
-    { href: "/", label: "Home", icon: LayoutDashboard },
+    { href: "/", label: "Home", icon: House },
     { href: "/record", label: "Record New", icon: Mic2 },
-    { href: "/learner-portal", label: "My Progress", icon: UserCircle },
+    { href: "/learner-portal", label: "My Progress", icon: BarChart2 },
     { href: "/profile", label: "Profile", icon: UserCircle },
   ];
 
   const reviewerItems = [
-    { href: "/", label: "Home", icon: LayoutDashboard },
+    { href: "/", label: "Home", icon: House },
     { href: "/reviewer-hub", label: "Reviewer Hub", icon: FileAudio },
     { href: "/profile", label: "Profile", icon: UserCircle },
   ];
