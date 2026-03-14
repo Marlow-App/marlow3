@@ -301,14 +301,12 @@ export default function Home() {
           <DrawerContent data-testid="recording-drawer">
             <DrawerHeader className="text-center">
               <DrawerTitle>Record Daily Challenge</DrawerTitle>
-              <DrawerDescription>
-                <div className="flex flex-wrap items-end justify-center gap-x-0.5 mt-3" data-testid="drawer-phrase-characters">
-                  {dailyChallenge.characters.map((tc, i) => (
-                    <DrawerToneChar key={i} toneChar={tc} />
-                  ))}
-                </div>
-                <span className="block mt-2 text-muted-foreground">{dailyChallenge.english}</span>
-              </DrawerDescription>
+              <DrawerDescription>{dailyChallenge.english}</DrawerDescription>
+              <div className="flex flex-wrap items-end justify-center gap-x-0.5 mt-3" data-testid="drawer-phrase-characters">
+                {dailyChallenge.characters.map((tc, i) => (
+                  <DrawerToneChar key={i} toneChar={tc} />
+                ))}
+              </div>
             </DrawerHeader>
             <div className="px-4 pb-8">
               <AudioRecorder
