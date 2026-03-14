@@ -1,13 +1,25 @@
+import { useState, useCallback, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useRecordings, usePendingRecordings } from "@/hooks/use-recordings";
+import { useRecordings, usePendingRecordings, useCreateRecording } from "@/hooks/use-recordings";
+import { useUpload } from "@/hooks/use-upload";
+import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/Layout";
+import { AudioRecorder } from "@/components/AudioRecorder";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
 import { Link } from "wouter";
-import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap } from "lucide-react";
+import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Volume2, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDailyChallenge, phraseToText, type ToneChar } from "@/data/phrases";
+import { apiRequest } from "@/lib/queryClient";
 
 const TONE_COLORS: Record<number, string> = {
   1: "text-red-600 dark:text-red-400",
@@ -41,11 +53,74 @@ function DailyToneChar({ toneChar }: { toneChar: ToneChar }) {
   );
 }
 
+function DrawerToneChar({ toneChar }: { toneChar: ToneChar }) {
+  const isPunctuation = !toneChar.pinyin || /[，。！？、；：]/.test(toneChar.char);
+  return (
+    <span className="inline-flex flex-col items-center mx-[1px]">
+      {!isPunctuation && (
+        <span className={`text-sm leading-tight font-medium ${TONE_PINYIN_COLORS[toneChar.tone]}`}>
+          {toneChar.pinyin}
+        </span>
+      )}
+      <span className={`text-2xl font-medium leading-tight ${isPunctuation ? "text-foreground/60" : TONE_COLORS[toneChar.tone]}`}>
+        {toneChar.char}
+      </span>
+    </span>
+  );
+}
+
+function usePhraseAudio() {
+  const [loadingPhrase, setLoadingPhrase] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioCache = useRef<Map<string, string>>(new Map());
+
+  const playPhrase = useCallback(async (text: string) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    const cached = audioCache.current.get(text);
+    if (cached) {
+      const audio = new Audio(cached);
+      audioRef.current = audio;
+      audio.play().catch(console.error);
+      return;
+    }
+
+    setLoadingPhrase(text);
+    try {
+      const res = await apiRequest("POST", "/api/phrase-audio/generate", { text });
+      const data = await res.json();
+      audioCache.current.set(text, data.audioUrl);
+      const audio = new Audio(data.audioUrl);
+      audioRef.current = audio;
+      audio.play().catch(console.error);
+    } catch (err) {
+      console.error("Failed to generate phrase audio:", err);
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "zh-CN";
+      utterance.rate = 0.8;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    } finally {
+      setLoadingPhrase(null);
+    }
+  }, []);
+
+  return { playPhrase, loadingPhrase };
+}
+
 export default function Home() {
   const { user } = useAuth();
   const isReviewer = user?.role === "reviewer";
   const { data: recordings, isLoading } = useRecordings();
   const { data: pendingRecordings } = usePendingRecordings();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const { toast } = useToast();
+  const { uploadFile, isUploading } = useUpload();
+  const createRecording = useCreateRecording();
+  const { playPhrase, loadingPhrase } = usePhraseAudio();
 
   if (isLoading) {
     return (
@@ -57,9 +132,38 @@ export default function Home() {
     );
   }
 
-  // Greeting based on time of day
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
+  const userLevel = user?.chineseLevel || "Beginner";
+  const dailyChallenge = getDailyChallenge(userLevel);
+  const challengeText = phraseToText(dailyChallenge);
+
+  const handleRecordingComplete = async (file: File) => {
+    try {
+      const uploadRes = await uploadFile(file);
+      if (!uploadRes) throw new Error("Upload failed");
+
+      await createRecording.mutateAsync({
+        audioUrl: uploadRes.objectPath,
+        sentenceText: challengeText,
+      });
+
+      toast({
+        title: "Success!",
+        description: "Your recording has been submitted for review.",
+      });
+
+      setDrawerOpen(false);
+    } catch (error: any) {
+      const errorMsg = error?.message || "Failed to submit recording. Please try again.";
+      toast({
+        title: "Error",
+        description: errorMsg,
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isReviewer) {
     return (
@@ -142,46 +246,78 @@ export default function Home() {
           </Link>
         </header>
 
-        {(() => {
-          const userLevel = user?.chineseLevel || "Beginner";
-          const dailyChallenge = getDailyChallenge(userLevel);
-          const challengeText = phraseToText(dailyChallenge);
-          return (
-            <section data-testid="daily-challenge-section">
-              <div className="flex items-center gap-2 mb-4">
-                <Zap className="w-5 h-5 text-primary" />
-                <h2 className="text-2xl font-bold font-display">Daily Challenge</h2>
-              </div>
-              <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20" data-testid="daily-challenge-card">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                    <div className="space-y-3">
-                      <Link href="/profile?highlight=chineseLevel">
-                        <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10 hover:border-primary/40 transition-colors" data-testid="daily-challenge-level">
-                          {dailyChallenge.level} ✎
-                        </Badge>
-                      </Link>
-                      <div className="flex flex-wrap items-end gap-x-0.5" data-testid="daily-challenge-characters">
-                        {dailyChallenge.characters.map((tc, i) => (
-                          <DailyToneChar key={i} toneChar={tc} />
-                        ))}
-                      </div>
-                      <p className="text-sm text-muted-foreground" data-testid="daily-challenge-english">
-                        {dailyChallenge.english}
-                      </p>
-                    </div>
-                    <Link href={`/record?phrase=${encodeURIComponent(challengeText)}`}>
-                      <Button size="lg" className="rounded-full shadow-md" data-testid="daily-challenge-record-btn">
-                        <Mic2 className="mr-2 h-5 w-5" />
-                        Record This
-                      </Button>
+        <section data-testid="daily-challenge-section">
+          <div className="flex items-center gap-2 mb-4">
+            <Zap className="w-5 h-5 text-primary" />
+            <h2 className="text-2xl font-bold font-display">Daily Challenge</h2>
+          </div>
+          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20" data-testid="daily-challenge-card">
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Link href="/profile?highlight=chineseLevel">
+                      <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10 hover:border-primary/40 transition-colors" data-testid="daily-challenge-level">
+                        {dailyChallenge.level} ✎
+                      </Badge>
                     </Link>
+                    <button
+                      onClick={() => playPhrase(challengeText)}
+                      disabled={!!loadingPhrase}
+                      className="p-1 rounded-full hover:bg-primary/10 transition-colors"
+                      data-testid="daily-challenge-play-btn"
+                    >
+                      {loadingPhrase === challengeText ? (
+                        <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                      ) : (
+                        <Volume2 className="w-4 h-4 text-primary" />
+                      )}
+                    </button>
                   </div>
-                </CardContent>
-              </Card>
-            </section>
-          );
-        })()}
+                  <div className="flex flex-wrap items-end gap-x-0.5" data-testid="daily-challenge-characters">
+                    {dailyChallenge.characters.map((tc, i) => (
+                      <DailyToneChar key={i} toneChar={tc} />
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground" data-testid="daily-challenge-english">
+                    {dailyChallenge.english}
+                  </p>
+                </div>
+                <Button
+                  size="lg"
+                  className="rounded-full shadow-md"
+                  data-testid="daily-challenge-record-btn"
+                  onClick={() => setDrawerOpen(true)}
+                >
+                  <Mic2 className="mr-2 h-5 w-5" />
+                  Record This
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <DrawerContent data-testid="recording-drawer">
+            <DrawerHeader className="text-center">
+              <DrawerTitle>Record Daily Challenge</DrawerTitle>
+              <DrawerDescription>
+                <div className="flex flex-wrap items-end justify-center gap-x-0.5 mt-3" data-testid="drawer-phrase-characters">
+                  {dailyChallenge.characters.map((tc, i) => (
+                    <DrawerToneChar key={i} toneChar={tc} />
+                  ))}
+                </div>
+                <span className="block mt-2 text-muted-foreground">{dailyChallenge.english}</span>
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 pb-8">
+              <AudioRecorder
+                onRecordingComplete={handleRecordingComplete}
+                isUploading={isUploading || createRecording.isPending}
+              />
+            </div>
+          </DrawerContent>
+        </Drawer>
 
         <section>
           <div className="flex items-center justify-between mb-6">
