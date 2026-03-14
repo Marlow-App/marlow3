@@ -131,7 +131,7 @@ export async function setupAuth(app: Express) {
     const role = req.query.role || "learner";
     (req.session as any).pendingRole = role;
     passport.authenticate(`replitauth:${req.hostname}`, {
-      prompt: "select_account",
+      prompt: "login",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
