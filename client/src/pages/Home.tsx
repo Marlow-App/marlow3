@@ -140,7 +140,7 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
   ];
 
   return (
-    <Card className="border-primary/20 bg-primary/5" data-testid="app-tour-banner">
+    <Card className="border-border bg-muted/60" data-testid="app-tour-banner">
       <CardContent className="pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4">
@@ -300,9 +300,7 @@ export default function Home() {
 
   return (
     <Layout>
-      {showTour && !isReviewer && <AppTourBanner onDismiss={dismissTour} />}
-
-      <div className={cn("space-y-8 animate-in transition-opacity duration-300", spotlightHref ? "opacity-25 pointer-events-none" : "")}>
+      <div className="space-y-6 animate-in">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground">
@@ -319,7 +317,10 @@ export default function Home() {
             </Button>
           </Link>
         </header>
+        {showTour && !isReviewer && <AppTourBanner onDismiss={dismissTour} />}
+      </div>
 
+      <div className={cn("space-y-8 mt-8 transition-opacity duration-300", spotlightHref ? "opacity-25 pointer-events-none" : "")}>
         <section data-testid="daily-challenge-section">
           <div className="flex items-center gap-2 mb-4">
             <Zap className="w-5 h-5 text-primary" />
