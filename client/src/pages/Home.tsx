@@ -135,29 +135,29 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
   ];
 
   return (
-    <Card className="border-primary/20 bg-primary/5" data-testid="app-tour-banner">
-      <CardContent className="pt-5 pb-4">
+    <Card className="relative z-30 border-primary/20 bg-primary/5" data-testid="app-tour-banner">
+      <CardContent className="pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Compass className="w-5 h-5 text-primary" />
+          <div className="flex items-start gap-4">
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+              <Compass className="w-8 h-8 text-primary" />
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-lg">Welcome to Marlow!</h3>
-                <p className="text-sm text-muted-foreground mt-1">Here's a quick look at what you can do:</p>
+                <h3 className="font-semibold text-3xl">Welcome to Marlow!</h3>
+                <p className="text-base text-muted-foreground mt-1">Here's a quick look at what you can do:</p>
               </div>
-              <ul className="space-y-2 text-sm">
+              <ul className="space-y-4">
                 {tourItems.map(({ href, icon: Icon, label, desc }) => (
                   <li
                     key={href}
-                    className="flex items-start gap-2 cursor-default rounded-lg px-2 py-1 -mx-2 transition-colors hover:bg-primary/5"
+                    className="flex items-start gap-3 cursor-default rounded-lg px-3 py-2 -mx-3 transition-colors hover:bg-primary/5"
                     onMouseEnter={() => setSpotlightHref(href)}
                     onMouseLeave={() => setSpotlightHref(null)}
                     data-testid={`tour-item-${label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
-                    <Icon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                    <span><strong>{label}</strong> — {desc}</span>
+                    <Icon className="w-6 h-6 text-primary mt-0.5 shrink-0" />
+                    <span className="text-lg"><strong>{label}</strong> — {desc}</span>
                   </li>
                 ))}
               </ul>
@@ -168,10 +168,10 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
             className="p-1 rounded-full hover:bg-primary/10 transition-colors shrink-0"
             data-testid="tour-dismiss-btn"
           >
-            <X className="w-4 h-4 text-muted-foreground" />
+            <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
-        <div className="flex justify-end mt-3">
+        <div className="flex justify-end mt-4">
           <Button size="sm" onClick={onDismiss} data-testid="tour-got-it-btn">
             Got it
           </Button>
