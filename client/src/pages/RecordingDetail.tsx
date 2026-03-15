@@ -602,13 +602,14 @@ export default function RecordingDetail() {
   return (
     <Layout>
       {/* Fixed mini bar — appears when main card scrolls out of view */}
-      <div className={`fixed top-14 md:top-0 left-0 md:left-64 right-0 z-30 bg-card/95 backdrop-blur-sm border-b border-border shadow-md transition-all duration-200 ${showMiniBar ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}>
-        <div className="flex items-center gap-4 px-4 md:px-8 py-2">
+      <div className={`fixed top-16 md:top-0 left-0 md:left-64 right-0 z-30 bg-card/95 backdrop-blur-sm border-b border-border shadow-md transition-all duration-200 ${showMiniBar ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}>
+        <div className="h-1.5 bg-primary w-full" />
+        <div className="flex items-center gap-4 px-4 md:px-8 py-3">
           <div className="flex flex-wrap items-end gap-x-2 gap-y-1 flex-1 min-w-0 overflow-hidden">
             {pinyinData.map((p, i) => (
               <div key={i} className="flex flex-col items-center shrink-0">
-                <span className={`text-xs font-medium leading-tight ${TONE_COLORS[p.tone]}`}>{p.py}</span>
-                <span className={`text-xl font-display font-bold leading-tight ${p.py ? TONE_COLORS[p.tone] : 'text-foreground/60'}`}>{p.char}</span>
+                <span className={`text-sm font-medium leading-tight ${TONE_COLORS[p.tone]}`}>{p.py}</span>
+                <span className={`text-2xl font-display font-bold leading-tight ${p.py ? TONE_COLORS[p.tone] : 'text-foreground/60'}`}>{p.char}</span>
               </div>
             ))}
           </div>
