@@ -15,7 +15,7 @@ import { useUpload } from "@/hooks/use-upload";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Loader2, Crown, Zap, Shield, CheckCircle2 } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, Crown, Zap, Shield, CheckCircle2, Globe, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 
@@ -24,6 +24,24 @@ const CHINESE_LEVELS = [
   "Beginner",
   "Intermediate",
   "Advanced"
+];
+
+const NATIVE_LANGUAGES = [
+  "English", "Spanish", "French", "Portuguese", "German",
+  "Italian", "Dutch", "Russian", "Polish", "Ukrainian",
+  "Japanese", "Korean", "Vietnamese", "Thai", "Indonesian",
+  "Malay", "Hindi", "Bengali", "Urdu", "Tamil",
+  "Arabic", "Turkish", "Persian", "Hebrew", "Swahili",
+  "Swedish", "Norwegian", "Danish", "Finnish", "Greek",
+];
+
+const FOCUS_AREA_OPTIONS = [
+  { value: "tones", label: "Tone Accuracy" },
+  { value: "pronunciation", label: "Pronunciation" },
+  { value: "fluency", label: "Fluency" },
+  { value: "vocabulary", label: "Vocabulary" },
+  { value: "listening", label: "Listening" },
+  { value: "confidence", label: "Confidence" },
 ];
 
 const DIALECTS = [
@@ -61,6 +79,8 @@ export default function Profile() {
     lastName: user?.lastName || "",
     profileImageUrl: user?.profileImageUrl || "",
     chineseLevel: user?.chineseLevel || "",
+    nativeLanguage: (user as any)?.nativeLanguage || "",
+    focusAreas: (user as any)?.focusAreas || [] as string[],
     city: user?.city || "",
     teachingExperience: user?.teachingExperience || 0,
     dialects: user?.dialects || [] as string[]
@@ -133,6 +153,8 @@ export default function Profile() {
         lastName: user.lastName || "",
         profileImageUrl: user.profileImageUrl || "",
         chineseLevel: user.chineseLevel || "",
+        nativeLanguage: (user as any).nativeLanguage || "",
+        focusAreas: (user as any).focusAreas || [],
         city: user.city || "",
         teachingExperience: user.teachingExperience || 0,
         dialects: user.dialects || []
@@ -241,7 +263,7 @@ export default function Profile() {
               </div>
 
               {!isReviewer ? (
-                <div className="space-y-4 pt-4">
+                <div className="space-y-6 pt-4">
                   <div
                     ref={chineseLevelRef}
                     className={`space-y-2 rounded-lg p-3 -mx-3 transition-all duration-500 ${highlightLevel ? "bg-primary/10 ring-2 ring-primary/40 animate-pulse" : ""}`}
@@ -261,6 +283,50 @@ export default function Profile() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Native Language</Label>
+                    <Select
+                      disabled={!isEditing}
+                      value={formData.nativeLanguage}
+                      onValueChange={v => setFormData(p => ({ ...p, nativeLanguage: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your native language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {NATIVE_LANGUAGES.map(lang => (
+                          <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label>Focus Areas</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {FOCUS_AREA_OPTIONS.map(area => (
+                        <div key={area.value} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`focus-${area.value}`}
+                            checked={formData.focusAreas.includes(area.value)}
+                            disabled={!isEditing}
+                            onCheckedChange={(checked) => {
+                              setFormData(prev => {
+                                const focusAreas = checked
+                                  ? [...prev.focusAreas, area.value]
+                                  : prev.focusAreas.filter(v => v !== area.value);
+                                return { ...prev, focusAreas };
+                              });
+                            }}
+                          />
+                          <Label htmlFor={`focus-${area.value}`} className="text-sm font-normal cursor-pointer">
+                            {area.label}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ) : (

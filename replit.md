@@ -41,6 +41,7 @@ The project uses a monorepo layout with three main directories:
   - `PrivacyPolicy` — privacy policy page (accessible to all users)
   - `TermsOfService` — terms of service page (accessible to all users)
   - `ConsentGate` — consent screen shown to new users after login (age, terms, privacy, voice data)
+  - `Onboarding` — 3-step onboarding wizard shown after consent for learners (Chinese level, native language, focus areas)
   - `Profile` — user profile and account management
 
 ### Backend Architecture
@@ -58,7 +59,7 @@ The project uses a monorepo layout with three main directories:
 - **Database**: PostgreSQL (required, via `DATABASE_URL` environment variable)
 - **ORM**: Drizzle ORM with `drizzle-kit` for schema management
 - **Schema** (in `shared/schema.ts` and `shared/models/auth.ts`):
-  - `users` — user accounts (required for Replit Auth)
+  - `users` — user accounts (required for Replit Auth); includes `focusAreas` (text[]), `nativeLanguage` (text), `onboardingComplete` (boolean, default false)
   - `sessions` — session storage (required for Replit Auth)
   - `recordings` — audio recordings submitted by learners (fields: audioUrl, sentenceText, status pending/reviewed)
   - `feedback` — reviewer feedback on recordings (fields: textFeedback, corrections, audioFeedbackUrl, rating (legacy 1-3), characterRatings (JSONB per-character ratings), overallScore (computed percentage 0-100), reviewerId)

@@ -17,6 +17,7 @@ import ManageSubscription from "@/pages/ManageSubscription";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import ConsentGate from "@/pages/ConsentGate";
+import Onboarding from "@/pages/Onboarding";
 import NotFound from "@/pages/not-found";
 
 const PUBLIC_PATHS = ["/privacy-policy", "/terms"];
@@ -41,6 +42,10 @@ function Router() {
 
   if (user && !user.consentGiven && !isPublicPage) {
     return <ConsentGate />;
+  }
+
+  if (user && user.role === "learner" && !user.onboardingComplete && !isPublicPage) {
+    return <Onboarding />;
   }
 
   return (

@@ -25,7 +25,6 @@ export default function ConsentGate() {
         consentTypes: ["age_verification", "terms_of_service", "privacy_policy", "voice_data_processing"],
       });
       await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      window.location.href = "/profile?highlight=chineseLevel";
     } catch (err) {
       toast({ title: "Error", description: "Failed to save consent. Please try again.", variant: "destructive" });
     } finally {

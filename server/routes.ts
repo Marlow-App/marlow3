@@ -60,6 +60,36 @@ export async function registerRoutes(
     }
   });
 
+  // === Onboarding ===
+
+  const onboardingSchema = z.object({
+    chineseLevel: z.string().min(1),
+    nativeLanguage: z.string().min(1),
+    focusAreas: z.array(z.string()).min(1),
+  });
+
+  app.post("/api/onboarding", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const parsed = onboardingSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid onboarding data" });
+      }
+
+      const updatedUser = await authStorage.upsertUser({
+        id: userId,
+        chineseLevel: parsed.data.chineseLevel,
+        nativeLanguage: parsed.data.nativeLanguage,
+        focusAreas: parsed.data.focusAreas,
+        onboardingComplete: true,
+      });
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error saving onboarding:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // === Recordings ===
 
   // List my recordings (for learners) or all recordings (for reviewers)
