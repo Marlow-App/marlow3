@@ -117,7 +117,7 @@ function useAppTour() {
   });
 
   const dismissTour = () => {
-    localStorage.setItem("appTourSeen", "true");
+    localStorage.setItem("appTourSeen", "1");
     setShowTour(false);
   };
 
