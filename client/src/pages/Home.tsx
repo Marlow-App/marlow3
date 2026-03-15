@@ -17,7 +17,6 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { Link } from "wouter";
-import { cn } from "@/lib/utils";
 import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Volume2, Loader2, X, Compass } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDailyChallenge, phraseToText, type ToneChar } from "@/data/phrases";
@@ -192,7 +191,6 @@ export default function Home() {
   const createRecording = useCreateRecording();
   const { playPhrase, loadingPhrase } = usePhraseAudio();
   const { showTour, dismissTour } = useAppTour();
-  const { spotlightHref } = useTourSpotlight();
 
   if (isLoading) {
     return (
@@ -320,7 +318,7 @@ export default function Home() {
         {showTour && !isReviewer && <AppTourBanner onDismiss={dismissTour} />}
       </div>
 
-      <div className={cn("space-y-8 mt-8 transition-opacity duration-300", spotlightHref ? "opacity-25 pointer-events-none" : "")}>
+      <div className="space-y-8 mt-8">
         <section data-testid="daily-challenge-section">
           <div className="flex items-center gap-2 mb-4">
             <Zap className="w-5 h-5 text-primary" />
