@@ -16,7 +16,7 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { Link } from "wouter";
-import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Volume2, Loader2 } from "lucide-react";
+import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Volume2, Loader2, X, Compass } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDailyChallenge, phraseToText, type ToneChar } from "@/data/phrases";
 import { apiRequest } from "@/lib/queryClient";
@@ -111,6 +111,67 @@ function usePhraseAudio() {
   return { playPhrase, loadingPhrase };
 }
 
+function useAppTour() {
+  const [showTour, setShowTour] = useState(() => {
+    return !localStorage.getItem("appTourSeen");
+  });
+
+  const dismissTour = () => {
+    localStorage.setItem("appTourSeen", "true");
+    setShowTour(false);
+  };
+
+  return { showTour, dismissTour };
+}
+
+function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <Card className="border-primary/20 bg-primary/5" data-testid="app-tour-banner">
+      <CardContent className="pt-5 pb-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+              <Compass className="w-5 h-5 text-primary" />
+            </div>
+            <div className="space-y-3">
+              <div>
+                <h3 className="font-semibold text-lg">Welcome to Marlow!</h3>
+                <p className="text-sm text-muted-foreground mt-1">Here's a quick look at what you can do:</p>
+              </div>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2">
+                  <Mic2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <span><strong>Record New</strong> — Record yourself speaking Chinese phrases and submit for review.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <PlayCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <span><strong>My Progress</strong> — Track your recordings and see detailed feedback from reviewers.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <UserCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <span><strong>Profile</strong> — Set your Chinese level, manage your subscription, and customize your experience.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <button
+            onClick={onDismiss}
+            className="p-1 rounded-full hover:bg-primary/10 transition-colors shrink-0"
+            data-testid="tour-dismiss-btn"
+          >
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+        <div className="flex justify-end mt-3">
+          <Button size="sm" onClick={onDismiss} data-testid="tour-got-it-btn">
+            Got it
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Home() {
   const { user } = useAuth();
   const isReviewer = user?.role === "reviewer";
@@ -121,6 +182,7 @@ export default function Home() {
   const { uploadFile, isUploading } = useUpload();
   const createRecording = useCreateRecording();
   const { playPhrase, loadingPhrase } = usePhraseAudio();
+  const { showTour, dismissTour } = useAppTour();
 
   if (isLoading) {
     return (
@@ -245,6 +307,8 @@ export default function Home() {
             </Button>
           </Link>
         </header>
+
+        {showTour && !isReviewer && <AppTourBanner onDismiss={dismissTour} />}
 
         <section data-testid="daily-challenge-section">
           <div className="flex items-center gap-2 mb-4">

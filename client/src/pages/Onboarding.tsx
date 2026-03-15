@@ -6,7 +6,7 @@ import { Loader2, ChevronRight, ChevronLeft, GraduationCap, Globe, Target } from
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-const STEPS = ["level", "language", "focus"] as const;
+const STEPS = ["level", "focus", "language"] as const;
 type Step = typeof STEPS[number];
 
 const CHINESE_LEVELS = [
@@ -16,22 +16,20 @@ const CHINESE_LEVELS = [
   { value: "Advanced", label: "Advanced", description: "Comfortable with most daily interactions" },
 ];
 
-const LANGUAGES = [
+export const NATIVE_LANGUAGES = [
   "English", "Spanish", "French", "Portuguese", "German",
   "Italian", "Dutch", "Russian", "Polish", "Ukrainian",
   "Japanese", "Korean", "Vietnamese", "Thai", "Indonesian",
   "Malay", "Hindi", "Bengali", "Urdu", "Tamil",
-  "Arabic", "Turkish", "Persian", "Hebrew", "Swahili",
-  "Swedish", "Norwegian", "Danish", "Finnish", "Greek",
+  "Arabic", "Turkish", "Javanese", "Telugu", "Marathi",
+  "Gujarati", "Kannada", "Punjabi", "Romanian", "Greek",
 ];
 
-const FOCUS_AREAS = [
-  { value: "tones", label: "Tone Accuracy", description: "Master the four tones" },
-  { value: "pronunciation", label: "Pronunciation", description: "Clear initials and finals" },
-  { value: "fluency", label: "Fluency", description: "Speak more naturally" },
-  { value: "vocabulary", label: "Vocabulary", description: "Expand your word bank" },
-  { value: "listening", label: "Listening", description: "Understand native speech" },
-  { value: "confidence", label: "Confidence", description: "Speak without hesitation" },
+export const FOCUS_AREA_OPTIONS = [
+  { value: "tones", label: "Tones", description: "Master the four tones of Mandarin" },
+  { value: "initials", label: "Initials (starting consonants)", description: "Nail tricky consonants like zh, ch, sh, r" },
+  { value: "finals", label: "Finals (vowels and nasal endings)", description: "Perfect vowel sounds and nasal endings" },
+  { value: "overall_flow", label: "Overall Flow", description: "Sound more natural and fluid when speaking" },
 ];
 
 export default function Onboarding() {
@@ -46,8 +44,8 @@ export default function Onboarding() {
   const stepIndex = STEPS.indexOf(step);
   const canNext =
     (step === "level" && chineseLevel) ||
-    (step === "language" && nativeLanguage) ||
-    (step === "focus" && focusAreas.length > 0);
+    (step === "focus" && focusAreas.length > 0) ||
+    (step === "language" && nativeLanguage);
 
   const handleNext = () => {
     if (stepIndex < STEPS.length - 1) {
@@ -76,6 +74,7 @@ export default function Onboarding() {
         focusAreas,
       });
       await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      window.location.href = "/";
     } catch (err) {
       toast({ title: "Error", description: "Failed to save. Please try again.", variant: "destructive" });
     } finally {
@@ -132,36 +131,6 @@ export default function Onboarding() {
           </Card>
         )}
 
-        {step === "language" && (
-          <Card data-testid="onboarding-step-language">
-            <CardHeader className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                <Globe className="w-6 h-6 text-primary" />
-              </div>
-              <CardTitle className="text-2xl font-display">What's your native language?</CardTitle>
-              <CardDescription>We'll tailor tips to common challenges for your language background.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-2 max-h-[400px] overflow-y-auto pr-1">
-                {LANGUAGES.map(lang => (
-                  <button
-                    key={lang}
-                    onClick={() => setNativeLanguage(lang)}
-                    className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
-                      nativeLanguage === lang
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border hover:border-primary/30 hover:bg-muted/50 text-foreground"
-                    }`}
-                    data-testid={`language-option-${lang}`}
-                  >
-                    {lang}
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {step === "focus" && (
           <Card data-testid="onboarding-step-focus">
             <CardHeader className="text-center">
@@ -172,7 +141,7 @@ export default function Onboarding() {
               <CardDescription>Pick one or more areas. You can change these later.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {FOCUS_AREAS.map(area => (
+              {FOCUS_AREA_OPTIONS.map(area => (
                 <button
                   key={area.value}
                   onClick={() => toggleFocus(area.value)}
@@ -196,6 +165,36 @@ export default function Onboarding() {
           </Card>
         )}
 
+        {step === "language" && (
+          <Card data-testid="onboarding-step-language">
+            <CardHeader className="text-center">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <Globe className="w-6 h-6 text-primary" />
+              </div>
+              <CardTitle className="text-2xl font-display">What's your native language?</CardTitle>
+              <CardDescription>We'll tailor tips to common challenges for your language background.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-2 max-h-[400px] overflow-y-auto pr-1">
+                {NATIVE_LANGUAGES.map(lang => (
+                  <button
+                    key={lang}
+                    onClick={() => setNativeLanguage(lang)}
+                    className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                      nativeLanguage === lang
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:border-primary/30 hover:bg-muted/50 text-foreground"
+                    }`}
+                    data-testid={`language-option-${lang}`}
+                  >
+                    {lang}
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="flex justify-between mt-6">
           {stepIndex > 0 ? (
             <Button variant="ghost" onClick={handleBack} data-testid="onboarding-back-btn">
@@ -206,7 +205,7 @@ export default function Onboarding() {
             <div />
           )}
 
-          {step === "focus" ? (
+          {step === "language" ? (
             <Button
               onClick={handleSubmit}
               disabled={!canNext || submitting}
