@@ -640,7 +640,7 @@ export default function RecordingDetail() {
         </div>
 
         {/* Scroll-triggered mini sticky bar — appears when main card scrolls out of view */}
-        <div className={`sticky top-0 z-30 -mx-4 md:-mx-8 overflow-hidden transition-all duration-200 bg-card/95 backdrop-blur-sm border-b border-border shadow-md ${showMiniBar ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
+        <div className={`sticky top-0 z-30 -mx-4 md:-mx-8 overflow-hidden transition-all duration-200 bg-card/95 backdrop-blur-sm border-b border-border shadow-md ${showMiniBar ? 'max-h-24 opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-2 pointer-events-none'}`}>
           <div className="flex items-center gap-3 px-4 md:px-8 py-2">
             <p className="flex-1 min-w-0 text-base font-semibold text-foreground truncate">
               {recording.sentenceText}
