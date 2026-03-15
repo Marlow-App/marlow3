@@ -116,15 +116,16 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </aside>
 
+      {/* Tour spotlight overlay — fixed, covers main area only on desktop */}
+      <div
+        className={cn(
+          "fixed inset-0 md:left-64 z-[25] bg-black transition-opacity duration-300 pointer-events-none hidden md:block",
+          spotlightHref ? "opacity-60" : "opacity-0"
+        )}
+      />
+
       {/* Main Content Area */}
-      <main className="flex-1 min-h-0 overflow-y-auto bg-background relative">
-        {/* Tour spotlight dark overlay */}
-        <div
-          className={cn(
-            "absolute inset-0 z-20 bg-black transition-opacity duration-300 pointer-events-none hidden md:block",
-            spotlightHref ? "opacity-60" : "opacity-0"
-          )}
-        />
+      <main className="flex-1 min-h-0 overflow-y-auto bg-background">
         <div className="max-w-5xl mx-auto p-4 md:p-8 pb-24">
           {children}
         </div>
