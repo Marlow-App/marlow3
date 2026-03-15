@@ -605,7 +605,7 @@ export default function RecordingDetail() {
           <div className="flex flex-wrap items-end gap-x-2 gap-y-1 flex-1 min-w-0 overflow-hidden">
             {characters.map((char, i) => (
               <div key={i} className="flex flex-col items-center shrink-0">
-                <span className="text-xs text-primary/70 font-medium leading-none mb-0.5">{pinyinData[i]}</span>
+                <span className="text-xs text-primary/70 font-medium leading-none mb-0.5">{pinyinData[i]?.py}</span>
                 <span className="text-xl font-bold text-foreground">{char}</span>
               </div>
             ))}
