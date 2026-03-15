@@ -501,13 +501,15 @@ export default function RecordingDetail() {
   const [showMiniBar, setShowMiniBar] = useState(false);
 
   useEffect(() => {
-    if (!mainCardRef.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { setShowMiniBar(!entry.isIntersecting); },
-      { threshold: 0 }
-    );
-    observer.observe(mainCardRef.current);
-    return () => observer.disconnect();
+    const mainEl = document.querySelector('main');
+    if (!mainEl) return;
+    const handleScroll = () => {
+      if (!mainCardRef.current) return;
+      const rect = mainCardRef.current.getBoundingClientRect();
+      setShowMiniBar(rect.bottom < 0);
+    };
+    mainEl.addEventListener('scroll', handleScroll, { passive: true });
+    return () => mainEl.removeEventListener('scroll', handleScroll);
   }, [recording]);
 
   const deleteRecording = useMutation({
