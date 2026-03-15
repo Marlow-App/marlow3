@@ -499,26 +499,23 @@ export default function RecordingDetail() {
 
   const mainCardRef = useRef<HTMLDivElement>(null);
   const [showMiniBar, setShowMiniBar] = useState(false);
-  const scrollEnabledRef = useRef(false);
+  const [miniBarReady, setMiniBarReady] = useState(false);
 
   useLayoutEffect(() => {
-    scrollEnabledRef.current = false;
     setShowMiniBar(false);
+    setMiniBarReady(false);
     const mainEl = document.querySelector('main');
     if (!mainEl) return;
     mainEl.scrollTop = 0;
-    const rafId = requestAnimationFrame(() => {
-      scrollEnabledRef.current = true;
-    });
     const handleScroll = () => {
-      if (!scrollEnabledRef.current || !mainCardRef.current) return;
+      if (!mainCardRef.current) return;
       const rect = mainCardRef.current.getBoundingClientRect();
       setShowMiniBar(rect.top < 0);
     };
     mainEl.addEventListener('scroll', handleScroll, { passive: true });
+    const rafId = requestAnimationFrame(() => setMiniBarReady(true));
     return () => {
       cancelAnimationFrame(rafId);
-      scrollEnabledRef.current = false;
       mainEl.removeEventListener('scroll', handleScroll);
     };
   }, [recording]);
@@ -610,21 +607,23 @@ export default function RecordingDetail() {
 
   return (
     <Layout>
-      {/* Fixed mini bar — appears when main card scrolls out of view */}
-      <div className={`fixed top-16 md:top-0 left-0 md:left-64 right-0 z-30 bg-card/95 backdrop-blur-sm border-b border-border shadow-md transition-all duration-200 ${showMiniBar ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}>
-        <div className="h-1.5 bg-primary w-full" />
-        <div className="flex items-center gap-4 px-4 md:px-8 py-3">
-          <div className="flex flex-wrap items-end gap-x-2 gap-y-1 flex-1 min-w-0 overflow-hidden">
-            {pinyinData.map((p, i) => (
-              <div key={i} className="flex flex-col items-center shrink-0">
-                <span className={`text-sm font-medium leading-tight ${TONE_COLORS[p.tone]}`}>{p.py}</span>
-                <span className={`text-2xl font-display font-bold leading-tight ${p.py ? TONE_COLORS[p.tone] : 'text-foreground/60'}`}>{p.char}</span>
-              </div>
-            ))}
+      {/* Fixed mini bar — only mounted after first rAF so it can never flash on initial render */}
+      {miniBarReady && (
+        <div className={`fixed top-16 md:top-0 left-0 md:left-64 right-0 z-30 bg-card/95 backdrop-blur-sm border-b border-border shadow-md transition-all duration-200 ${showMiniBar ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}>
+          <div className="h-1.5 bg-primary w-full" />
+          <div className="flex items-center gap-4 px-4 md:px-8 py-3">
+            <div className="flex flex-wrap items-end gap-x-2 gap-y-1 flex-1 min-w-0 overflow-hidden">
+              {pinyinData.map((p, i) => (
+                <div key={i} className="flex flex-col items-center shrink-0">
+                  <span className={`text-sm font-medium leading-tight ${TONE_COLORS[p.tone]}`}>{p.py}</span>
+                  <span className={`text-2xl font-display font-bold leading-tight ${p.py ? TONE_COLORS[p.tone] : 'text-foreground/60'}`}>{p.char}</span>
+                </div>
+              ))}
+            </div>
+            <audio src={recording.audioUrl} controls className="shrink-0 w-44 h-8" preload="none" />
           </div>
-          <audio src={recording.audioUrl} controls className="shrink-0 w-44 h-8" preload="none" />
         </div>
-      </div>
+      )}
 
       <div className="max-w-4xl mx-auto space-y-8 animate-in">
         <div className="flex items-center justify-between">
