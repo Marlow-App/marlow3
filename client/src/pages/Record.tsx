@@ -337,11 +337,11 @@ export default function RecordPage() {
           </div>
 
           {(selectedPhrase || text.trim()) && (
-            <Card className="border-primary/30 bg-primary/5 shadow-sm sticky top-14 z-10" data-testid="active-phrase-display">
-              <CardContent className="py-5 px-6">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-widest text-primary font-semibold mb-2">Recording</p>
+            <Card className="border-primary/30 bg-primary/5 shadow-sm sticky top-0 z-10 max-h-[20vh] overflow-hidden" data-testid="active-phrase-display">
+              <CardContent className="py-2 px-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[9px] uppercase tracking-widest text-primary font-semibold mb-0.5">Recording</p>
                     {selectedPhrase ? (
                       <div>
                         <div className="flex flex-wrap items-end gap-x-0.5">
@@ -349,33 +349,33 @@ export default function RecordPage() {
                             <ToneCharacter key={i} toneChar={tc} size="lg" />
                           ))}
                         </div>
-                        <p className="text-sm text-muted-foreground mt-2">{selectedPhrase.english}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{selectedPhrase.english}</p>
                       </div>
                     ) : (
-                      <p className="text-2xl font-medium text-foreground">{text}</p>
+                      <p className="text-lg font-medium text-foreground line-clamp-2">{text}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5 shrink-0">
                     {selectedPhrase && (
                       <button
                         onClick={() => playPhrase(phraseToText(selectedPhrase))}
-                        className="p-2 rounded-full hover:bg-primary/10 text-primary transition-colors"
+                        className="p-1.5 rounded-full hover:bg-primary/10 text-primary transition-colors"
                         data-testid="active-phrase-speak-btn"
                         disabled={loadingPhrase === phraseToText(selectedPhrase)}
                       >
                         {loadingPhrase === phraseToText(selectedPhrase) ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Volume2 className="w-5 h-5" />
+                          <Volume2 className="w-4 h-4" />
                         )}
                       </button>
                     )}
                     <button
                       onClick={handleClearPhrase}
-                      className="p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                      className="p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                       data-testid="clear-phrase-btn"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
