@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRecordings, usePendingRecordings, useCreateRecording } from "@/hooks/use-recordings";
 import { useUpload } from "@/hooks/use-upload";
@@ -129,6 +129,10 @@ function useAppTour() {
 function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
   const { setSpotlightHref } = useTourSpotlight();
 
+  useEffect(() => {
+    return () => setSpotlightHref(null);
+  }, [setSpotlightHref]);
+
   const tourItems = [
     { href: "/record", icon: Mic2, label: "Record New", desc: "Record yourself speaking Chinese phrases and submit for review." },
     { href: "/learner-portal", icon: PlayCircle, label: "My Progress", desc: "Track your recordings and see detailed feedback from reviewers." },
@@ -136,7 +140,7 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
   ];
 
   return (
-    <Card className="relative z-30 border-primary/20 bg-primary/5" data-testid="app-tour-banner">
+    <Card className="border-primary/20 bg-primary/5" data-testid="app-tour-banner">
       <CardContent className="pt-6 pb-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4">
