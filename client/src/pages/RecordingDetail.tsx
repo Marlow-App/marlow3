@@ -50,7 +50,7 @@ interface PinyinChar {
 }
 
 function getCharPinyin(text: string): PinyinChar[] {
-  const chars = [...text];
+  const chars = Array.from(text);
   const pinyinArr = pinyin(text, { toneType: "symbol", type: "array" });
   const toneArr = pinyin(text, { toneType: "num", type: "array" });
   const result: PinyinChar[] = [];
