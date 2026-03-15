@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { format } from "date-fns";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { type User as SharedUser, type CharacterRating } from "@shared/schema";
@@ -497,6 +497,18 @@ export default function RecordingDetail() {
     recording.userId === user.id || user.role === "reviewer"
   );
 
+  const mainCardRef = useRef<HTMLDivElement>(null);
+  const [showMiniBar, setShowMiniBar] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { setShowMiniBar(!entry.isIntersecting); },
+      { threshold: 0 }
+    );
+    if (mainCardRef.current) observer.observe(mainCardRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const deleteRecording = useMutation({
     mutationFn: async () => {
       await apiRequest("DELETE", `/api/recordings/${recordingId}`);
@@ -627,73 +639,84 @@ export default function RecordingDetail() {
           )}
         </div>
 
+        {/* Scroll-triggered mini sticky bar — appears when main card scrolls out of view */}
+        <div className={`sticky top-0 z-30 -mx-4 md:-mx-8 overflow-hidden transition-all duration-200 bg-card/95 backdrop-blur-sm border-b border-border shadow-md ${showMiniBar ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}>
+          <div className="flex items-center gap-3 px-4 md:px-8 py-2">
+            <p className="flex-1 min-w-0 text-base font-semibold text-foreground truncate">
+              {recording.sentenceText}
+            </p>
+            <audio
+              src={recording.audioUrl}
+              controls
+              className="shrink-0 w-44 h-8"
+              preload="none"
+            />
+          </div>
+        </div>
+
         <div className={`grid grid-cols-1 ${user?.role === 'reviewer' ? 'lg:grid-cols-3' : ''} gap-8`}>
           <div className={`${user?.role === 'reviewer' ? 'lg:col-span-2' : ''} space-y-6`}>
-            <Card className="border-border shadow-md overflow-hidden sticky top-0 z-20 bg-card max-h-[20vh]">
-              <div className="h-1 bg-primary w-full"></div>
-              <CardContent className="py-3 px-5">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <div className="min-w-0 flex-1">
-                    {user?.role !== 'reviewer' && pinyinData.length > 0 ? (
-                      <div className="flex flex-wrap items-end gap-x-0.5 gap-y-1" data-testid="sentence-with-pinyin">
-                        {pinyinData.map((p, i) => (
-                          <span key={i} className="inline-flex flex-col items-center">
-                            {p.py && (
-                              <span className={`text-xs font-medium leading-tight ${TONE_COLORS[p.tone]}`}>{p.py}</span>
-                            )}
-                            <span className={`text-xl font-display font-bold leading-tight ${p.py ? TONE_COLORS[p.tone] : 'text-foreground/60'}`}>{p.char}</span>
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <h2 className="text-xl font-display font-bold text-foreground leading-tight line-clamp-2">
-                        {recording.sentenceText}
-                      </h2>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 shrink-0">
-                    <Badge variant={recording.status === 'reviewed' ? 'default' : 'secondary'} className="px-2 py-0.5 text-[10px]">
+            <div ref={mainCardRef}>
+            <Card className="border-border shadow-md overflow-hidden bg-card">
+              <div className="h-2 bg-primary w-full"></div>
+              <CardContent className="p-8">
+                <div className="mb-8">
+                  {user?.role !== 'reviewer' && pinyinData.length > 0 ? (
+                    <div className="flex flex-wrap items-end gap-x-1 gap-y-2 mb-4" data-testid="sentence-with-pinyin">
+                      {pinyinData.map((p, i) => (
+                        <span key={i} className="inline-flex flex-col items-center">
+                          {p.py && (
+                            <span className={`text-base font-medium leading-tight ${TONE_COLORS[p.tone]}`}>{p.py}</span>
+                          )}
+                          <span className={`text-3xl font-display font-bold leading-tight ${p.py ? TONE_COLORS[p.tone] : 'text-foreground/60'}`}>{p.char}</span>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <h2 className="text-3xl font-display font-bold text-foreground mb-4 leading-tight">
+                      {recording.sentenceText}
+                    </h2>
+                  )}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Badge variant={recording.status === 'reviewed' ? 'default' : 'secondary'} className="px-3 py-1">
                       {recording.status.toUpperCase()}
                     </Badge>
                     {recording.user?.chineseLevel && (
-                      <div className="flex items-center gap-1 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-md" data-testid="learner-level-badge">
-                        <GraduationCap className="w-3 h-3" />
-                        <span className="font-medium text-[10px]">{recording.user.chineseLevel}</span>
+                      <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md" data-testid="learner-level-badge">
+                        <GraduationCap className="w-3.5 h-3.5" />
+                        <span className="font-medium text-xs">{recording.user.chineseLevel}</span>
                       </div>
                     )}
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(recording.createdAt), 'MMM d, yyyy')}
+                    <span className="text-sm text-muted-foreground">
+                      Submitted on {format(new Date(recording.createdAt), 'MMM d, yyyy')}
                     </span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            <Card className="border-border/50 shadow-sm overflow-hidden">
-              <CardContent className="p-4">
-                <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Learner Audio</h3>
-                    <audio 
-                      key={recording.audioUrl}
-                      controls 
-                      className="w-full"
-                      preload="auto"
-                      playsInline
-                      onError={(e: React.SyntheticEvent<HTMLAudioElement, Event>) => {
-                        const target = e.currentTarget;
-                        const error = target.error;
-                        console.error("Audio playback error:", {
-                          code: error?.code,
-                          message: error?.message,
-                        });
-                      }}
-                    >
-                      <source src={recording.audioUrl} />
-                      Your browser does not support the audio element.
-                    </audio>
+                <div className="bg-muted/30 p-6 rounded-2xl border border-border/50">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Learner Audio</h3>
+                  <audio
+                    key={recording.audioUrl}
+                    controls
+                    className="w-full"
+                    preload="auto"
+                    playsInline
+                    onError={(e: React.SyntheticEvent<HTMLAudioElement, Event>) => {
+                      const target = e.currentTarget;
+                      const error = target.error;
+                      console.error("Audio playback error:", {
+                        code: error?.code,
+                        message: error?.message,
+                      });
+                    }}
+                  >
+                    <source src={recording.audioUrl} />
+                    Your browser does not support the audio element.
+                  </audio>
                 </div>
               </CardContent>
             </Card>
+            </div>
 
             <div className="space-y-4">
               <h3 className="text-xl font-bold flex items-center gap-2">
