@@ -499,19 +499,28 @@ export default function RecordingDetail() {
 
   const mainCardRef = useRef<HTMLDivElement>(null);
   const [showMiniBar, setShowMiniBar] = useState(false);
+  const scrollEnabledRef = useRef(false);
 
   useLayoutEffect(() => {
+    scrollEnabledRef.current = false;
+    setShowMiniBar(false);
     const mainEl = document.querySelector('main');
     if (!mainEl) return;
     mainEl.scrollTop = 0;
-    setShowMiniBar(false);
+    const rafId = requestAnimationFrame(() => {
+      scrollEnabledRef.current = true;
+    });
     const handleScroll = () => {
-      if (!mainCardRef.current) return;
+      if (!scrollEnabledRef.current || !mainCardRef.current) return;
       const rect = mainCardRef.current.getBoundingClientRect();
       setShowMiniBar(rect.top < 0);
     };
     mainEl.addEventListener('scroll', handleScroll, { passive: true });
-    return () => mainEl.removeEventListener('scroll', handleScroll);
+    return () => {
+      cancelAnimationFrame(rafId);
+      scrollEnabledRef.current = false;
+      mainEl.removeEventListener('scroll', handleScroll);
+    };
   }, [recording]);
 
   const deleteRecording = useMutation({
