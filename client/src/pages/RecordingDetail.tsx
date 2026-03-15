@@ -501,13 +501,14 @@ export default function RecordingDetail() {
   const [showMiniBar, setShowMiniBar] = useState(false);
 
   useEffect(() => {
+    if (!mainCardRef.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => { setShowMiniBar(!entry.isIntersecting); },
       { threshold: 0 }
     );
-    if (mainCardRef.current) observer.observe(mainCardRef.current);
+    observer.observe(mainCardRef.current);
     return () => observer.disconnect();
-  }, []);
+  }, [recording]);
 
   const deleteRecording = useMutation({
     mutationFn: async () => {
