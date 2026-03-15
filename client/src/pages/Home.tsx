@@ -17,6 +17,7 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { Link } from "wouter";
+import { cn } from "@/lib/utils";
 import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Volume2, Loader2, X, Compass } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDailyChallenge, phraseToText, type ToneChar } from "@/data/phrases";
@@ -171,11 +172,6 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
             <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
-        <div className="flex justify-end mt-4">
-          <Button size="sm" onClick={onDismiss} data-testid="tour-got-it-btn">
-            Got it
-          </Button>
-        </div>
       </CardContent>
     </Card>
   );
@@ -192,6 +188,7 @@ export default function Home() {
   const createRecording = useCreateRecording();
   const { playPhrase, loadingPhrase } = usePhraseAudio();
   const { showTour, dismissTour } = useAppTour();
+  const { spotlightHref } = useTourSpotlight();
 
   if (isLoading) {
     return (
@@ -299,7 +296,9 @@ export default function Home() {
 
   return (
     <Layout>
-      <div className="space-y-8 animate-in">
+      {showTour && !isReviewer && <AppTourBanner onDismiss={dismissTour} />}
+
+      <div className={cn("space-y-8 animate-in transition-opacity duration-300", spotlightHref ? "opacity-25 pointer-events-none" : "")}>
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground">
@@ -316,8 +315,6 @@ export default function Home() {
             </Button>
           </Link>
         </header>
-
-        {showTour && !isReviewer && <AppTourBanner onDismiss={dismissTour} />}
 
         <section data-testid="daily-challenge-section">
           <div className="flex items-center gap-2 mb-4">
