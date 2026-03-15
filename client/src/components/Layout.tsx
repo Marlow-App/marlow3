@@ -1,10 +1,10 @@
-import React, { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Mic2, House, BarChart2, UserCircle, LogOut, FileAudio, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useTourSpotlight } from "@/contexts/TourSpotlightContext";
 
 interface LayoutProps {
   children: ReactNode;
@@ -14,7 +14,7 @@ export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [hoveredHref, setHoveredHref] = useState<string | null>(null);
+  const { spotlightHref } = useTourSpotlight();
 
   const isActive = (path: string) => location === path;
 
@@ -63,27 +63,34 @@ export function Layout({ children }: LayoutProps) {
           <p className="text-xs text-muted-foreground mt-2 pl-1">Master Chinese Tones</p>
         </div>
 
-        <nav
-          className="flex-1 p-4 space-y-2 overflow-y-auto"
-          onMouseLeave={() => setHoveredHref(null)}
-        >
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <div
-                onMouseEnter={() => setHoveredHref(item.href)}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer group",
-                  isActive(item.href) 
-                    ? "bg-primary/10 text-primary font-medium shadow-sm" 
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  hoveredHref && hoveredHref !== item.href && "opacity-40"
-                )}
-              >
-                <item.icon className={cn("w-5 h-5", isActive(item.href) ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-                <span>{item.label}</span>
-              </div>
-            </Link>
-          ))}
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          {navItems.map((item) => {
+            const isSpotlit = spotlightHref === item.href;
+            return (
+              <Link key={item.href} href={item.href}>
+                <div
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer group",
+                    isSpotlit
+                      ? "bg-primary text-primary-foreground font-medium shadow-lg shadow-primary/30 scale-[1.02]"
+                      : isActive(item.href)
+                        ? "bg-primary/10 text-primary font-medium shadow-sm"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <item.icon className={cn(
+                    "w-5 h-5 transition-colors duration-300",
+                    isSpotlit
+                      ? "text-primary-foreground"
+                      : isActive(item.href)
+                        ? "text-primary"
+                        : "text-muted-foreground group-hover:text-foreground"
+                  )} />
+                  <span>{item.label}</span>
+                </div>
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="p-4 border-t border-border/50 bg-muted/10">
@@ -110,7 +117,14 @@ export function Layout({ children }: LayoutProps) {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-h-0 overflow-y-auto bg-background">
+      <main className="flex-1 min-h-0 overflow-y-auto bg-background relative">
+        {/* Tour spotlight dark overlay */}
+        <div
+          className={cn(
+            "absolute inset-0 z-20 bg-black transition-opacity duration-300 pointer-events-none hidden md:block",
+            spotlightHref ? "opacity-60" : "opacity-0"
+          )}
+        />
         <div className="max-w-5xl mx-auto p-4 md:p-8 pb-24">
           {children}
         </div>

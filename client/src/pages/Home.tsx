@@ -4,6 +4,7 @@ import { useRecordings, usePendingRecordings, useCreateRecording } from "@/hooks
 import { useUpload } from "@/hooks/use-upload";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/Layout";
+import { useTourSpotlight } from "@/contexts/TourSpotlightContext";
 import { AudioRecorder } from "@/components/AudioRecorder";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -125,6 +126,14 @@ function useAppTour() {
 }
 
 function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
+  const { setSpotlightHref } = useTourSpotlight();
+
+  const tourItems = [
+    { href: "/record", icon: Mic2, label: "Record New", desc: "Record yourself speaking Chinese phrases and submit for review." },
+    { href: "/learner-portal", icon: PlayCircle, label: "My Progress", desc: "Track your recordings and see detailed feedback from reviewers." },
+    { href: "/profile", icon: UserCircle, label: "Profile", desc: "Set your Chinese level, manage your subscription, and customize your experience." },
+  ];
+
   return (
     <Card className="border-primary/20 bg-primary/5" data-testid="app-tour-banner">
       <CardContent className="pt-5 pb-4">
@@ -139,18 +148,18 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
                 <p className="text-sm text-muted-foreground mt-1">Here's a quick look at what you can do:</p>
               </div>
               <ul className="space-y-2 text-sm">
-                <li className="flex items-start gap-2">
-                  <Mic2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                  <span><strong>Record New</strong> — Record yourself speaking Chinese phrases and submit for review.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <PlayCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                  <span><strong>My Progress</strong> — Track your recordings and see detailed feedback from reviewers.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <UserCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                  <span><strong>Profile</strong> — Set your Chinese level, manage your subscription, and customize your experience.</span>
-                </li>
+                {tourItems.map(({ href, icon: Icon, label, desc }) => (
+                  <li
+                    key={href}
+                    className="flex items-start gap-2 cursor-default rounded-lg px-2 py-1 -mx-2 transition-colors hover:bg-primary/5"
+                    onMouseEnter={() => setSpotlightHref(href)}
+                    onMouseLeave={() => setSpotlightHref(null)}
+                    data-testid={`tour-item-${label.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    <Icon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <span><strong>{label}</strong> — {desc}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
