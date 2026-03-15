@@ -35,7 +35,7 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="h-screen bg-background flex flex-col md:flex-row font-sans text-foreground overflow-hidden">
       {/* Mobile Header */}
-      <header className="md:hidden border-b border-border p-4 flex justify-between items-center bg-card sticky top-0 z-50">
+      <header className="md:hidden border-b border-border px-4 h-16 flex justify-between items-center bg-card sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-lg">
             M

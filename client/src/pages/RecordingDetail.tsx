@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil } from "lucide-react";
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useLayoutEffect } from "react";
 import { format } from "date-fns";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { type User as SharedUser, type CharacterRating } from "@shared/schema";
@@ -500,7 +500,7 @@ export default function RecordingDetail() {
   const mainCardRef = useRef<HTMLDivElement>(null);
   const [showMiniBar, setShowMiniBar] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const mainEl = document.querySelector('main');
     if (!mainEl) return;
     mainEl.scrollTop = 0;
