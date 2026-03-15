@@ -14,6 +14,7 @@ export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hoveredHref, setHoveredHref] = useState<string | null>(null);
 
   const isActive = (path: string) => location === path;
 
@@ -62,15 +63,20 @@ export function Layout({ children }: LayoutProps) {
           <p className="text-xs text-muted-foreground mt-2 pl-1">Master Chinese Tones</p>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav
+          className="flex-1 p-4 space-y-2 overflow-y-auto"
+          onMouseLeave={() => setHoveredHref(null)}
+        >
           {navItems.map((item) => (
             <Link key={item.href} href={item.href}>
               <div
+                onMouseEnter={() => setHoveredHref(item.href)}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer group",
                   isActive(item.href) 
                     ? "bg-primary/10 text-primary font-medium shadow-sm" 
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  hoveredHref && hoveredHref !== item.href && "opacity-40"
                 )}
               >
                 <item.icon className={cn("w-5 h-5", isActive(item.href) ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
