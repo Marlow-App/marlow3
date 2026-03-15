@@ -53,7 +53,9 @@ function Router() {
       <Route path="/record" component={RecordPage} />
       <Route path="/learner-portal" component={LearnerPortal} />
       <Route path="/reviewer-hub" component={ReviewerPortal} />
-      <Route path="/recordings/:id" component={RecordingDetail} />
+      <Route path="/recordings/:id">
+        {(params: { id: string }) => <RecordingDetail key={params.id} />}
+      </Route>
       <Route path="/profile" component={Profile} />
       <Route path="/checkout/success" component={CheckoutSuccess} />
       <Route path="/manage-subscription" component={ManageSubscription} />
