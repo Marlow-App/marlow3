@@ -33,7 +33,7 @@ export function Layout({ children }: LayoutProps) {
   const navItems = user?.role === "reviewer" ? reviewerItems : learnerItems;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row font-sans text-foreground">
+    <div className="h-screen bg-background flex flex-col md:flex-row font-sans text-foreground overflow-hidden">
       {/* Mobile Header */}
       <header className="md:hidden border-b border-border p-4 flex justify-between items-center bg-card sticky top-0 z-50">
         <div className="flex items-center gap-2">
