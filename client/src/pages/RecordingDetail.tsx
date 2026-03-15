@@ -503,6 +503,8 @@ export default function RecordingDetail() {
   useEffect(() => {
     const mainEl = document.querySelector('main');
     if (!mainEl) return;
+    mainEl.scrollTop = 0;
+    setShowMiniBar(false);
     const handleScroll = () => {
       if (!mainCardRef.current) return;
       const rect = mainCardRef.current.getBoundingClientRect();
