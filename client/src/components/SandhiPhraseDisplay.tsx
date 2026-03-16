@@ -73,11 +73,14 @@ export function SandhiPhraseDisplay({
   }, [characters, pinyinChars]);
 
   const sandhiResult: SandhiChar[] = useMemo(() => applyToneSandhi(toneChars), [toneChars]);
-  const hasChanges = useMemo(() => hasSandhiChanges(toneChars), [toneChars]);
+  const hasChanges = useMemo(() => sandhiResult.some(c => c.changed), [sandhiResult]);
 
   return (
-    <div className="space-y-3" data-testid="sandhi-phrase-display">
+    <div className="space-y-2" data-testid="sandhi-phrase-display">
       <div>
+        {showSandhiRow && hasChanges && (
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-0.5 block" data-testid="sandhi-original-label">Original</span>
+        )}
         <div className="flex flex-wrap items-end gap-x-0.5 gap-y-1" data-testid="sandhi-original-row">
           {toneChars.map((tc, i) => (
             <CharDisplay
@@ -93,7 +96,7 @@ export function SandhiPhraseDisplay({
       </div>
       {showSandhiRow && hasChanges && (
         <div>
-          <span className="text-xs text-muted-foreground font-medium mb-1 block" data-testid="sandhi-label">As spoken</span>
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-0.5 block" data-testid="sandhi-label">As spoken</span>
           <div className="flex flex-wrap items-end gap-x-0.5 gap-y-1" data-testid="sandhi-spoken-row">
             {sandhiResult.map((sc, i) => (
               <CharDisplay
