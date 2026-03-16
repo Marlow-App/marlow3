@@ -175,14 +175,6 @@ export function applyToneSandhi(chars: ToneChar[]): SandhiChar[] {
     }
   }
 
-  for (let s = 0; s < segments.length - 1; s++) {
-    const lastIdx = segments[s][segments[s].length - 1];
-    const nextFirstIdx = segments[s + 1][0];
-    if (result[lastIdx].tone === 3 && result[nextFirstIdx].tone === 3) {
-      markChanged(result[lastIdx], 2, changePinyinTone(result[lastIdx].originalPinyin, 2));
-    }
-  }
-
   for (let i = 0; i < result.length; i++) {
     if (result[i].char !== "不") continue;
     if (i + 1 < result.length) {
