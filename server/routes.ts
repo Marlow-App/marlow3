@@ -354,7 +354,7 @@ export async function registerRoutes(
     try {
       const recordingId = Number(req.params.id);
       const reviewerId = (req.user as any).claims.sub;
-      const { textFeedback, corrections, audioFeedbackUrl, characterRatings } = req.body;
+      const { textFeedback, corrections, audioFeedbackUrl, characterRatings, fluencyScore } = req.body;
 
       if (!textFeedback && !corrections && !audioFeedbackUrl) {
         return res.status(400).json({ message: "Feedback text, corrections, or audio is required" });
@@ -362,6 +362,15 @@ export async function registerRoutes(
 
       let overallScore: number | null = null;
       let validatedRatings: any = null;
+      let validatedFluency: number | null = null;
+
+      if (fluencyScore !== undefined && fluencyScore !== null) {
+        const f = Number(fluencyScore);
+        if (!Number.isInteger(f) || f < 1 || f > 5) {
+          return res.status(400).json({ message: "Fluency score must be an integer from 1 to 5" });
+        }
+        validatedFluency = f;
+      }
 
       if (characterRatings && Array.isArray(characterRatings) && characterRatings.length > 0) {
         const { characterRatingSchema } = await import("@shared/schema");
@@ -369,8 +378,14 @@ export async function registerRoutes(
           characterRatingSchema.parse(cr);
         }
         validatedRatings = characterRatings;
-        const total = characterRatings.reduce((sum: number, cr: any) => sum + cr.initial + cr.final + cr.tone, 0);
-        overallScore = Math.round(total / (characterRatings.length * 3));
+        const charTotal = characterRatings.reduce((sum: number, cr: any) => sum + cr.initial + cr.final + cr.tone, 0);
+        const charScore = charTotal / (characterRatings.length * 3);
+        if (validatedFluency !== null) {
+          const fluencyPct = validatedFluency * 20;
+          overallScore = Math.round(charScore * 0.8 + fluencyPct * 0.2);
+        } else {
+          overallScore = Math.round(charScore);
+        }
       }
 
       const feedback = await storage.createFeedback({
@@ -380,6 +395,7 @@ export async function registerRoutes(
         audioFeedbackUrl: audioFeedbackUrl || null,
         rating: null,
         characterRatings: validatedRatings,
+        fluencyScore: validatedFluency,
         overallScore,
         reviewerId,
       } as any);
@@ -404,10 +420,23 @@ export async function registerRoutes(
       if (!existing) return res.status(404).json({ message: "Feedback not found" });
       if (existing.reviewerId !== reviewerId) return res.status(403).json({ message: "You can only edit your own feedback" });
 
-      const { textFeedback, corrections, audioFeedbackUrl, characterRatings } = req.body;
+      const { textFeedback, corrections, audioFeedbackUrl, characterRatings, fluencyScore } = req.body;
 
       let overallScore: number | null = existing.overallScore;
       let validatedRatings: any = undefined;
+      let validatedFluency: number | null | undefined = undefined;
+
+      if (fluencyScore !== undefined) {
+        if (fluencyScore === null) {
+          validatedFluency = null;
+        } else {
+          const f = Number(fluencyScore);
+          if (!Number.isInteger(f) || f < 1 || f > 5) {
+            return res.status(400).json({ message: "Fluency score must be an integer from 1 to 5" });
+          }
+          validatedFluency = f;
+        }
+      }
 
       if (characterRatings !== undefined) {
         if (characterRatings && Array.isArray(characterRatings) && characterRatings.length > 0) {
@@ -416,12 +445,24 @@ export async function registerRoutes(
             characterRatingSchema.parse(cr);
           }
           validatedRatings = characterRatings;
-          const total = characterRatings.reduce((sum: number, cr: any) => sum + cr.initial + cr.final + cr.tone, 0);
-          overallScore = Math.round(total / (characterRatings.length * 3));
         } else {
           validatedRatings = null;
-          overallScore = null;
         }
+      }
+
+      const effectiveRatings = validatedRatings !== undefined ? validatedRatings : (existing.characterRatings || null);
+      const effectiveFluency = validatedFluency !== undefined ? validatedFluency : (existing.fluencyScore ?? null);
+
+      if (effectiveRatings && Array.isArray(effectiveRatings) && effectiveRatings.length > 0) {
+        const charTotal = effectiveRatings.reduce((sum: number, cr: any) => sum + cr.initial + cr.final + cr.tone, 0);
+        const charScore = charTotal / (effectiveRatings.length * 3);
+        if (effectiveFluency !== null) {
+          overallScore = Math.round(charScore * 0.8 + (effectiveFluency * 20) * 0.2);
+        } else {
+          overallScore = Math.round(charScore);
+        }
+      } else {
+        overallScore = null;
       }
 
       const updateData: any = {};
@@ -430,8 +471,11 @@ export async function registerRoutes(
       if (audioFeedbackUrl !== undefined) updateData.audioFeedbackUrl = audioFeedbackUrl;
       if (validatedRatings !== undefined) {
         updateData.characterRatings = validatedRatings;
-        updateData.overallScore = overallScore;
       }
+      if (validatedFluency !== undefined) {
+        updateData.fluencyScore = validatedFluency;
+      }
+      updateData.overallScore = overallScore;
 
       const updated = await storage.updateFeedback(feedbackId, updateData);
       res.json(updated);

@@ -33,6 +33,7 @@ export const feedback = pgTable("feedback", {
   audioFeedbackUrl: text("audio_feedback_url"),
   rating: integer("rating"),
   characterRatings: jsonb("character_ratings"),
+  fluencyScore: integer("fluency_score"),
   overallScore: integer("overall_score"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

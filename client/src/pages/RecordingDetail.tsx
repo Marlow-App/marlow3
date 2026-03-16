@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil } from "lucide-react";
+import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star } from "lucide-react";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useState, useMemo, useRef, useEffect, useLayoutEffect } from "react";
 import { format } from "date-fns";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -100,7 +101,27 @@ function OldRatingDisplay({ rating }: { rating: number | null | undefined }) {
   return <span className={`text-sm font-semibold ${colors[rating] || ""}`}>{labels[rating] || ""}</span>;
 }
 
-function CharacterRatingDisplay({ ratings, isReviewer, pinyinData }: { ratings: CharacterRating[]; isReviewer?: boolean; pinyinData?: PinyinChar[] }) {
+function FluencyDisplay({ score }: { score: number }) {
+  const pct = score * 20;
+  const color = pct >= 70 ? "text-emerald-600 dark:text-emerald-400" :
+    pct >= 40 ? "text-amber-600 dark:text-amber-400" :
+    "text-red-600 dark:text-red-400";
+  return (
+    <div className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2 mt-2" data-testid="fluency-display">
+      <div className="flex items-center gap-1.5">
+        <span className="text-sm font-medium text-muted-foreground">Fluency</span>
+        <div className="flex gap-0.5">
+          {[1, 2, 3, 4, 5].map(s => (
+            <Star key={s} className={`w-4 h-4 ${s <= score ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
+          ))}
+        </div>
+        <span className={`text-sm font-bold ${color}`}>{pct}%</span>
+      </div>
+    </div>
+  );
+}
+
+function CharacterRatingDisplay({ ratings, isReviewer, pinyinData, fluencyScore }: { ratings: CharacterRating[]; isReviewer?: boolean; pinyinData?: PinyinChar[]; fluencyScore?: number | null }) {
   const chinesePinyinOnly = pinyinData?.filter(p => p.py) || [];
   return (
     <div className="space-y-2 mt-2" data-testid="character-ratings-display">
@@ -137,6 +158,44 @@ function CharacterRatingDisplay({ ratings, isReviewer, pinyinData }: { ratings: 
           );
         })}
       </div>
+      {fluencyScore != null && <FluencyDisplay score={fluencyScore} />}
+    </div>
+  );
+}
+
+function FluencyStarPicker({ value, onChange }: { value: number | null; onChange: (v: number | null) => void }) {
+  return (
+    <div className="border border-border/50 rounded-lg p-3 bg-card" data-testid="fluency-picker">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-sm font-medium">Fluency</span>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button type="button" className="text-muted-foreground hover:text-foreground transition-colors" data-testid="fluency-info-btn">
+              <Info className="w-3.5 h-3.5" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 text-sm" side="top">
+            <p className="font-medium mb-1">Fluency Rating</p>
+            <p className="text-muted-foreground">Measures how naturally the sentence flows overall — rhythm, pacing, and connected speech. This accounts for 20% of the total score.</p>
+          </PopoverContent>
+        </Popover>
+        {value !== null && (
+          <span className="text-xs text-muted-foreground ml-auto">{value * 20}%</span>
+        )}
+      </div>
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map(s => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => onChange(value === s ? null : s)}
+            className="p-1 transition-colors hover:opacity-80"
+            data-testid={`fluency-star-${s}`}
+          >
+            <Star className={`w-6 h-6 ${value !== null && s <= value ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -145,10 +204,14 @@ function CharacterRatingInput({
   characters,
   ratings,
   onChange,
+  fluency,
+  onFluencyChange,
 }: {
   characters: string[];
   ratings: CharacterRating[];
   onChange: (ratings: CharacterRating[]) => void;
+  fluency: number | null;
+  onFluencyChange: (v: number | null) => void;
 }) {
   const handleChange = (charIdx: number, dim: "initial" | "final" | "tone", value: number) => {
     const updated = [...ratings];
@@ -160,9 +223,13 @@ function CharacterRatingInput({
     if (ratings.length === 0) return null;
     const allSet = ratings.every(r => r.initial !== -1 && r.final !== -1 && r.tone !== -1);
     if (!allSet) return null;
-    const total = ratings.reduce((sum, r) => sum + r.initial + r.final + r.tone, 0);
-    return Math.round(total / (ratings.length * 3));
-  }, [ratings]);
+    const charTotal = ratings.reduce((sum, r) => sum + r.initial + r.final + r.tone, 0);
+    const charScore = charTotal / (ratings.length * 3);
+    if (fluency !== null) {
+      return Math.round(charScore * 0.8 + (fluency * 20) * 0.2);
+    }
+    return Math.round(charScore);
+  }, [ratings, fluency]);
 
   if (characters.length === 0) {
     return (
@@ -222,6 +289,8 @@ function CharacterRatingInput({
           </div>
         ))}
       </div>
+
+      <FluencyStarPicker value={fluency} onChange={onFluencyChange} />
     </div>
   );
 }
@@ -250,6 +319,7 @@ function EditableFeedbackCard({
       ? (item.characterRatings as CharacterRating[])
       : characters.map(c => ({ character: c, initial: -1 as any, final: -1 as any, tone: -1 as any }))
   );
+  const [editFluency, setEditFluency] = useState<number | null>(item.fluencyScore ?? null);
 
   const allRated = editCharRatings.length > 0 && editCharRatings.every(r => r.initial !== -1 && r.final !== -1 && r.tone !== -1);
 
@@ -295,6 +365,7 @@ function EditableFeedbackCard({
       textFeedback: editTextFeedback,
       corrections: editCorrections || null,
       characterRatings: validRatings.length > 0 ? validRatings : undefined,
+      fluencyScore: editFluency,
     });
   };
 
@@ -306,6 +377,7 @@ function EditableFeedbackCard({
         ? (item.characterRatings as CharacterRating[])
         : characters.map(c => ({ character: c, initial: -1 as any, final: -1 as any, tone: -1 as any }))
     );
+    setEditFluency(item.fluencyScore ?? null);
     setIsEditing(true);
   };
 
@@ -381,6 +453,8 @@ function EditableFeedbackCard({
                   characters={characters}
                   ratings={editCharRatings}
                   onChange={setEditCharRatings}
+                  fluency={editFluency}
+                  onFluencyChange={setEditFluency}
                 />
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Corrections</label>
@@ -416,7 +490,10 @@ function EditableFeedbackCard({
             ) : (
               <>
                 {item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0 && (
-                  <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={isReviewer} pinyinData={pinyinData} />
+                  <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={isReviewer} pinyinData={pinyinData} fluencyScore={item.fluencyScore} />
+                )}
+                {!(item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0) && item.fluencyScore != null && (
+                  <FluencyDisplay score={item.fluencyScore} />
                 )}
 
                 {(item as any).corrections && (
@@ -487,6 +564,7 @@ export default function RecordingDetail() {
   }, [recording]);
 
   const [charRatings, setCharRatings] = useState<CharacterRating[]>([]);
+  const [fluency, setFluency] = useState<number | null>(null);
 
   useMemo(() => {
     if (characters.length > 0 && charRatings.length !== characters.length) {
@@ -574,6 +652,7 @@ export default function RecordingDetail() {
         corrections: correctionsText || undefined,
         audioFeedbackUrl: audioUrl,
         characterRatings: validRatings.length > 0 ? validRatings : undefined,
+        fluencyScore: fluency,
       } as any);
 
       toast({
@@ -584,6 +663,7 @@ export default function RecordingDetail() {
       setFeedbackText("");
       setCorrectionsText("");
       setCharRatings(characters.map(c => ({ character: c, initial: -1 as any, final: -1 as any, tone: -1 as any })));
+      setFluency(null);
       setIsRecordingFeedback(false);
       
     } catch (err) {
@@ -763,6 +843,8 @@ export default function RecordingDetail() {
                     characters={characters}
                     ratings={charRatings}
                     onChange={setCharRatings}
+                    fluency={fluency}
+                    onFluencyChange={setFluency}
                   />
 
                   <div className="space-y-2">

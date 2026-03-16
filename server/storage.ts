@@ -139,6 +139,7 @@ export class DatabaseStorage implements IStorage {
         audioFeedbackUrl: feedbackData.audioFeedbackUrl,
         rating: (feedbackData as any).rating ?? null,
         characterRatings: (feedbackData as any).characterRatings ?? null,
+        fluencyScore: (feedbackData as any).fluencyScore ?? null,
         overallScore: (feedbackData as any).overallScore ?? null,
       })
       .returning();
@@ -166,6 +167,7 @@ export class DatabaseStorage implements IStorage {
     if ((data as any).corrections !== undefined) updateData.corrections = (data as any).corrections;
     if (data.audioFeedbackUrl !== undefined) updateData.audioFeedbackUrl = data.audioFeedbackUrl;
     if ((data as any).characterRatings !== undefined) updateData.characterRatings = (data as any).characterRatings;
+    if ((data as any).fluencyScore !== undefined) updateData.fluencyScore = (data as any).fluencyScore;
     if ((data as any).overallScore !== undefined) updateData.overallScore = (data as any).overallScore;
 
     const [updated] = await db
