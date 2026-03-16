@@ -76,7 +76,7 @@ function SandhiExplainerPopover({ t3, bu, yi }: { t3: boolean; bu: boolean; yi: 
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-medium hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-medium hover:text-foreground transition-colors leading-none"
           data-testid="sandhi-label"
           aria-label="Learn why tones change"
         >
@@ -165,9 +165,14 @@ export function SandhiPhraseDisplay({
   }
 
   return (
-    <div className="flex items-start gap-3" data-testid="sandhi-phrase-display">
-      <div className="flex-shrink-0">
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-0.5 block" data-testid="sandhi-original-label">Original</span>
+    <div className="flex items-end gap-3" data-testid="sandhi-phrase-display">
+      <div className="flex-shrink-0 flex flex-col">
+        <span
+          className="h-4 flex items-center text-[10px] uppercase tracking-wider text-muted-foreground font-medium"
+          data-testid="sandhi-original-label"
+        >
+          Original
+        </span>
         <div className="flex flex-wrap items-end gap-x-0.5 gap-y-1" data-testid="sandhi-original-row">
           {toneChars.map((tc, i) => (
             <CharDisplay
@@ -182,10 +187,10 @@ export function SandhiPhraseDisplay({
         </div>
       </div>
 
-      <div className="self-stretch w-px bg-border flex-shrink-0 mt-4" />
+      <div className="w-px bg-border flex-shrink-0 self-stretch" />
 
-      <div className="flex-shrink-0">
-        <div className="mb-0.5">
+      <div className="flex-shrink-0 flex flex-col">
+        <div className="h-4 flex items-center">
           <SandhiExplainerPopover t3={rules.t3} bu={rules.bu} yi={rules.yi} />
         </div>
         <div className="flex flex-wrap items-end gap-x-0.5 gap-y-1" data-testid="sandhi-spoken-row">
