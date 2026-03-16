@@ -89,7 +89,7 @@ function SandhiExplainerPopover({ t3, bu, yi }: { t3: boolean; bu: boolean; yi: 
         <p className="text-muted-foreground text-xs leading-relaxed">
           In natural speech, certain tones shift depending on what comes before or after them. This is called <em>tone sandhi</em>.
         </p>
-        {t3 && !bu && !yi && (
+        {t3 && (
           <div className="space-y-0.5">
             <p className="font-medium text-foreground text-xs">Third-tone sandhi</p>
             <p className="text-muted-foreground text-xs leading-relaxed">
