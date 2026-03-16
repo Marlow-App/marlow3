@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { useState, useMemo, useRef, useEffect, useLayoutEffect } from "react";
+import { useState, useMemo, useRef, useLayoutEffect } from "react";
 import { format } from "date-fns";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { type User as SharedUser, type CharacterRating } from "@shared/schema";
