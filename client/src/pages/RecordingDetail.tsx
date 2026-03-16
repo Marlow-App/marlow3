@@ -180,7 +180,7 @@ function FluencyStarPicker({ value, onChange }: { value: number | null; onChange
           </PopoverContent>
         </Popover>
         {value !== null && (
-          <span className="text-xs text-muted-foreground ml-auto">{value * 20}%</span>
+          <span className="text-xs text-muted-foreground ml-auto">{value}/5 ({value * 20}%)</span>
         )}
       </div>
       <div className="flex gap-1">
