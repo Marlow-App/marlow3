@@ -63,8 +63,8 @@ function CharDisplay({
       <span className={`${charSize} font-medium leading-tight ${isPunctuation ? "text-foreground/60" : TONE_COLORS[tone]}`}>
         {char}
       </span>
-      {changed && !isPunctuation && (
-        <span className="w-1 h-1 rounded-full bg-primary/60 mt-0.5" />
+      {!isPunctuation && (
+        <span className={`w-1 h-1 rounded-full mt-0.5 ${changed ? "bg-primary/60" : ""}`} />
       )}
     </span>
   );
