@@ -1,6 +1,17 @@
+import { useState, useMemo } from "react";
 import type { ToneChar } from "@/data/phrases";
-import { applyToneSandhi, hasSandhiChanges, pinyinCharsToToneChars, type SandhiChar } from "@/lib/toneSandhi";
-import { useMemo } from "react";
+import {
+  applyToneSandhi,
+  detectSandhiRules,
+  pinyinCharsToToneChars,
+  type SandhiChar,
+} from "@/lib/toneSandhi";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Info } from "lucide-react";
 
 const TONE_COLORS: Record<number, string> = {
   1: "text-red-600 dark:text-red-400",
@@ -59,6 +70,64 @@ function CharDisplay({
   );
 }
 
+function SandhiExplainerPopover({ t3, bu, yi }: { t3: boolean; bu: boolean; yi: boolean }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-medium hover:text-foreground transition-colors"
+          data-testid="sandhi-label"
+          aria-label="Learn why tones change"
+        >
+          As spoken
+          <Info className="w-3 h-3 shrink-0" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent side="top" align="start" className="max-w-xs text-sm space-y-3 p-4" data-testid="sandhi-explainer-popover">
+        <p className="font-semibold text-foreground text-sm">Why do some tones change?</p>
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          In natural speech, certain tones shift depending on what comes before or after them. This is called <em>tone sandhi</em>.
+        </p>
+        {t3 && (
+          <div className="space-y-0.5">
+            <p className="font-medium text-foreground text-xs">Third-tone sandhi</p>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              When two third-tone (T3) syllables appear in a row, the first changes to second tone (T2) before it is spoken.
+              <br />
+              <span className="font-mono text-foreground">T3 + T3 → T2 + T3</span>
+              <br />
+              e.g. 你好 (nǐ hǎo) is spoken as <span className="font-mono text-foreground">níhǎo</span>
+            </p>
+          </div>
+        )}
+        {bu && (
+          <div className="space-y-0.5">
+            <p className="font-medium text-foreground text-xs">不 (bù) sandhi</p>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              不 is normally fourth tone (bù), but changes to second tone (bú) when the following syllable is also fourth tone.
+              <br />
+              <span className="font-mono text-foreground">不 + T4 → bú + T4</span>
+            </p>
+          </div>
+        )}
+        {yi && (
+          <div className="space-y-0.5">
+            <p className="font-medium text-foreground text-xs">一 (yī) sandhi</p>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              一 is normally first tone (yī), but its tone shifts based on what follows:
+              <br />
+              <span className="font-mono text-foreground">一 + T4 → yí + T4</span>
+              <br />
+              <span className="font-mono text-foreground">一 + T1/T2/T3 → yì + T1/T2/T3</span>
+            </p>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function SandhiPhraseDisplay({
   characters,
   pinyinChars,
@@ -74,13 +143,11 @@ export function SandhiPhraseDisplay({
 
   const sandhiResult: SandhiChar[] = useMemo(() => applyToneSandhi(toneChars), [toneChars]);
   const hasChanges = useMemo(() => sandhiResult.some(c => c.changed), [sandhiResult]);
+  const rules = useMemo(() => detectSandhiRules(toneChars), [toneChars]);
 
-  return (
-    <div className="space-y-2" data-testid="sandhi-phrase-display">
-      <div>
-        {showSandhiRow && hasChanges && (
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-0.5 block" data-testid="sandhi-original-label">Original</span>
-        )}
+  if (!showSandhiRow || !hasChanges) {
+    return (
+      <div data-testid="sandhi-phrase-display">
         <div className="flex flex-wrap items-end gap-x-0.5 gap-y-1" data-testid="sandhi-original-row">
           {toneChars.map((tc, i) => (
             <CharDisplay
@@ -94,24 +161,47 @@ export function SandhiPhraseDisplay({
           ))}
         </div>
       </div>
-      {showSandhiRow && hasChanges && (
-        <div>
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-0.5 block" data-testid="sandhi-label">As spoken</span>
-          <div className="flex flex-wrap items-end gap-x-0.5 gap-y-1" data-testid="sandhi-spoken-row">
-            {sandhiResult.map((sc, i) => (
-              <CharDisplay
-                key={i}
-                char={sc.char}
-                tone={sc.tone}
-                pinyin={sc.pinyin}
-                charSize={charSize}
-                pinyinSize={pinyinSize}
-                changed={sc.changed}
-              />
-            ))}
-          </div>
+    );
+  }
+
+  return (
+    <div className="flex items-start gap-3" data-testid="sandhi-phrase-display">
+      <div className="flex-shrink-0">
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-0.5 block" data-testid="sandhi-original-label">Original</span>
+        <div className="flex flex-wrap items-end gap-x-0.5 gap-y-1" data-testid="sandhi-original-row">
+          {toneChars.map((tc, i) => (
+            <CharDisplay
+              key={i}
+              char={tc.char}
+              tone={tc.tone}
+              pinyin={tc.pinyin}
+              charSize={charSize}
+              pinyinSize={pinyinSize}
+            />
+          ))}
         </div>
-      )}
+      </div>
+
+      <div className="self-stretch w-px bg-border flex-shrink-0 mt-4" />
+
+      <div className="flex-shrink-0">
+        <div className="mb-0.5">
+          <SandhiExplainerPopover t3={rules.t3} bu={rules.bu} yi={rules.yi} />
+        </div>
+        <div className="flex flex-wrap items-end gap-x-0.5 gap-y-1" data-testid="sandhi-spoken-row">
+          {sandhiResult.map((sc, i) => (
+            <CharDisplay
+              key={i}
+              char={sc.char}
+              tone={sc.tone}
+              pinyin={sc.pinyin}
+              charSize={charSize}
+              pinyinSize={pinyinSize}
+              changed={sc.changed}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

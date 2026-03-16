@@ -215,6 +215,24 @@ export function hasSandhiChanges(chars: ToneChar[]): boolean {
 
 export const hasSandhi = hasSandhiChanges;
 
+export interface ActiveSandhiRules {
+  t3: boolean;
+  bu: boolean;
+  yi: boolean;
+}
+
+export function detectSandhiRules(chars: ToneChar[]): ActiveSandhiRules {
+  const result = applyToneSandhi(chars);
+  let t3 = false, bu = false, yi = false;
+  for (const r of result) {
+    if (!r.changed) continue;
+    if (r.char === "不") { bu = true; continue; }
+    if (r.char === "一") { yi = true; continue; }
+    if (r.originalTone === 3 && r.tone === 2) { t3 = true; }
+  }
+  return { t3, bu, yi };
+}
+
 export function pinyinCharsToToneChars(pinyinChars: { char: string; py: string; tone: number }[]): ToneChar[] {
   return pinyinChars.map(p => ({
     char: p.char,
