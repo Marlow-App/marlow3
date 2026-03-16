@@ -17,6 +17,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { type User as SharedUser, type CharacterRating } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { pinyin } from "pinyin-pro";
+import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 
 import {
   AlertDialog,
@@ -676,15 +677,8 @@ export default function RecordingDetail() {
               <CardContent className="p-8">
                 <div className="mb-8">
                   {user?.role !== 'reviewer' && pinyinData.length > 0 ? (
-                    <div className="flex flex-wrap items-end gap-x-1 gap-y-2 mb-4" data-testid="sentence-with-pinyin">
-                      {pinyinData.map((p, i) => (
-                        <span key={i} className="inline-flex flex-col items-center">
-                          {p.py && (
-                            <span className={`text-base font-medium leading-tight ${TONE_COLORS[p.tone]}`}>{p.py}</span>
-                          )}
-                          <span className={`text-3xl font-display font-bold leading-tight ${p.py ? TONE_COLORS[p.tone] : 'text-foreground/60'}`}>{p.char}</span>
-                        </span>
-                      ))}
+                    <div className="mb-4" data-testid="sentence-with-pinyin">
+                      <SandhiPhraseDisplay pinyinChars={pinyinData} charSize="text-3xl" pinyinSize="text-base" />
                     </div>
                   ) : (
                     <h2 className="text-3xl font-display font-bold text-foreground mb-4 leading-tight">

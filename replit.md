@@ -28,6 +28,7 @@ The project uses a monorepo layout with three main directories:
 - **File Uploads**: Uppy library with presigned URL flow (AWS S3-compatible via Replit Object Storage)
 - **Audio Recording**: Browser-native MediaRecorder API via custom `AudioRecorder` component with microphone selector dropdown (persisted in localStorage)
 - **Pinyin**: `pinyin-pro` library generates pinyin for learner views on RecordingDetail (sentence header + character rating breakdown); tone-colored display
+- **Tone Sandhi**: `client/src/lib/toneSandhi.ts` implements T3 sandhi (word-aware via dictionary-based segmentation), 不 sandhi (bù→bú before T4), and 一 sandhi (yī→yí before T4, yī→yì before T1/T2/T3) with neutral-tone underlying-tone resolution. `SandhiPhraseDisplay` component shows "Original" and "As spoken" rows side by side. Phrases in `phrases.ts` store canonical/dictionary tones (一=T1/yī, 不=T4/bù); sandhi is computed at render time.
 - **Daily Challenge**: Level-based daily phrase on Home page; `getDailyChallenge(level)` in `client/src/data/phrases.ts` uses date-seeded selection; defaults to "Beginner" when user has no chineseLevel set
 - **Key Pages**:
   - `Landing` — unauthenticated landing page

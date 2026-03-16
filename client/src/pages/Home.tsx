@@ -21,6 +21,7 @@ import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Vo
 import { formatDistanceToNow } from "date-fns";
 import { getDailyChallenge, phraseToText, type ToneChar } from "@/data/phrases";
 import { apiRequest } from "@/lib/queryClient";
+import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 
 const TONE_COLORS: Record<number, string> = {
   1: "text-red-600 dark:text-red-400",
@@ -347,10 +348,8 @@ export default function Home() {
                       )}
                     </button>
                   </div>
-                  <div className="flex flex-wrap items-end gap-x-0.5" data-testid="daily-challenge-characters">
-                    {dailyChallenge.characters.map((tc, i) => (
-                      <DailyToneChar key={i} toneChar={tc} />
-                    ))}
+                  <div data-testid="daily-challenge-characters">
+                    <SandhiPhraseDisplay characters={dailyChallenge.characters} charSize="text-2xl" pinyinSize="text-xs" />
                   </div>
                   <p className="text-sm text-muted-foreground" data-testid="daily-challenge-english">
                     {dailyChallenge.english}

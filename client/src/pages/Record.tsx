@@ -12,6 +12,7 @@ import { useLocation } from "wouter";
 import { ChevronLeft, Info, Volume2, X, Loader2, Crown } from "lucide-react";
 import { getPhrasesForLevel, phraseToText, PHRASE_BANK, type Phrase, type ToneChar } from "@/data/phrases";
 import { apiRequest } from "@/lib/queryClient";
+import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
@@ -114,10 +115,8 @@ function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoading }: 
     >
       <div className="flex items-center justify-between gap-1.5">
         <div className="flex-1 min-w-0">
-          <div className="flex items-end gap-x-0 whitespace-nowrap">
-            {phrase.characters.map((tc, i) => (
-              <ToneCharacter key={i} toneChar={tc} size="sm" />
-            ))}
+          <div className="whitespace-nowrap">
+            <SandhiPhraseDisplay characters={phrase.characters} charSize="text-lg" pinyinSize="text-sm" showSandhiRow={false} />
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5 whitespace-nowrap overflow-x-auto scrollbar-none">{phrase.english}</p>
         </div>
@@ -344,11 +343,7 @@ export default function RecordPage() {
                     <p className="text-[10px] uppercase tracking-widest text-primary font-semibold mb-2">Recording</p>
                     {selectedPhrase ? (
                       <div>
-                        <div className="flex flex-wrap items-end gap-x-0.5">
-                          {selectedPhrase.characters.map((tc, i) => (
-                            <ToneCharacter key={i} toneChar={tc} size="lg" />
-                          ))}
-                        </div>
+                        <SandhiPhraseDisplay characters={selectedPhrase.characters} charSize="text-3xl" pinyinSize="text-base" />
                         <p className="text-sm text-muted-foreground mt-2">{selectedPhrase.english}</p>
                       </div>
                     ) : (
