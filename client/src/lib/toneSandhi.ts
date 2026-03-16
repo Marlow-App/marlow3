@@ -213,6 +213,8 @@ export function hasSandhiChanges(chars: ToneChar[]): boolean {
   return applyToneSandhi(chars).some(c => c.changed);
 }
 
+export const hasSandhi = hasSandhiChanges;
+
 export function pinyinCharsToToneChars(pinyinChars: { char: string; py: string; tone: number }[]): ToneChar[] {
   return pinyinChars.map(p => ({
     char: p.char,

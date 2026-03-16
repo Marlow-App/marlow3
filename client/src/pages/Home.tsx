@@ -19,57 +19,11 @@ import {
 import { Link } from "wouter";
 import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Volume2, Loader2, X, Compass } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { getDailyChallenge, phraseToText, type ToneChar } from "@/data/phrases";
+import { getDailyChallenge, phraseToText } from "@/data/phrases";
 import { apiRequest } from "@/lib/queryClient";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 
-const TONE_COLORS: Record<number, string> = {
-  1: "text-red-600 dark:text-red-400",
-  2: "text-yellow-600 dark:text-yellow-400",
-  3: "text-green-600 dark:text-green-400",
-  4: "text-blue-600 dark:text-blue-400",
-  0: "text-gray-500 dark:text-gray-400",
-};
 
-const TONE_PINYIN_COLORS: Record<number, string> = {
-  1: "text-red-500 dark:text-red-400",
-  2: "text-yellow-500 dark:text-yellow-400",
-  3: "text-green-500 dark:text-green-400",
-  4: "text-blue-500 dark:text-blue-400",
-  0: "text-gray-400 dark:text-gray-500",
-};
-
-function DailyToneChar({ toneChar }: { toneChar: ToneChar }) {
-  const isPunctuation = !toneChar.pinyin || /[，。！？、；：]/.test(toneChar.char);
-  return (
-    <span className="inline-flex flex-col items-center mx-[1px]">
-      {!isPunctuation && (
-        <span className={`text-xs leading-tight font-medium ${TONE_PINYIN_COLORS[toneChar.tone]}`}>
-          {toneChar.pinyin}
-        </span>
-      )}
-      <span className={`text-2xl font-medium leading-tight ${isPunctuation ? "text-foreground/60" : TONE_COLORS[toneChar.tone]}`}>
-        {toneChar.char}
-      </span>
-    </span>
-  );
-}
-
-function DrawerToneChar({ toneChar }: { toneChar: ToneChar }) {
-  const isPunctuation = !toneChar.pinyin || /[，。！？、；：]/.test(toneChar.char);
-  return (
-    <span className="inline-flex flex-col items-center mx-[1px]">
-      {!isPunctuation && (
-        <span className={`text-sm leading-tight font-medium ${TONE_PINYIN_COLORS[toneChar.tone]}`}>
-          {toneChar.pinyin}
-        </span>
-      )}
-      <span className={`text-2xl font-medium leading-tight ${isPunctuation ? "text-foreground/60" : TONE_COLORS[toneChar.tone]}`}>
-        {toneChar.char}
-      </span>
-    </span>
-  );
-}
 
 function usePhraseAudio() {
   const [loadingPhrase, setLoadingPhrase] = useState<string | null>(null);
@@ -374,10 +328,8 @@ export default function Home() {
             <DrawerHeader className="text-center">
               <DrawerTitle>Record Daily Challenge</DrawerTitle>
               <DrawerDescription>{dailyChallenge.english}</DrawerDescription>
-              <div className="flex flex-wrap items-end justify-center gap-x-0.5 mt-3" data-testid="drawer-phrase-characters">
-                {dailyChallenge.characters.map((tc, i) => (
-                  <DrawerToneChar key={i} toneChar={tc} />
-                ))}
+              <div className="flex justify-center mt-3" data-testid="drawer-phrase-characters">
+                <SandhiPhraseDisplay characters={dailyChallenge.characters} charSize="text-2xl" pinyinSize="text-sm" />
               </div>
             </DrawerHeader>
             <div className="px-4 pb-8">

@@ -17,40 +17,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 
-const TONE_COLORS: Record<number, string> = {
-  1: "text-red-600 dark:text-red-400",
-  2: "text-yellow-600 dark:text-yellow-400",
-  3: "text-green-600 dark:text-green-400",
-  4: "text-blue-600 dark:text-blue-400",
-  0: "text-gray-500 dark:text-gray-400",
-};
-
-const TONE_PINYIN_COLORS: Record<number, string> = {
-  1: "text-red-500 dark:text-red-400",
-  2: "text-yellow-500 dark:text-yellow-400",
-  3: "text-green-500 dark:text-green-400",
-  4: "text-blue-500 dark:text-blue-400",
-  0: "text-gray-400 dark:text-gray-500",
-};
-
-function ToneCharacter({ toneChar, size = "lg" }: { toneChar: ToneChar; size?: "sm" | "lg" }) {
-  const isPunctuation = !toneChar.pinyin || /[，。！？、；：]/.test(toneChar.char);
-  const charSize = size === "lg" ? "text-3xl" : "text-lg";
-  const pinyinSize = size === "lg" ? "text-base" : "text-sm";
-
-  return (
-    <span className="inline-flex flex-col items-center mx-[1px]">
-      {!isPunctuation && (
-        <span className={`${pinyinSize} leading-tight font-medium ${TONE_PINYIN_COLORS[toneChar.tone]}`}>
-          {toneChar.pinyin}
-        </span>
-      )}
-      <span className={`${charSize} font-medium leading-tight ${isPunctuation ? "text-foreground/60" : TONE_COLORS[toneChar.tone]}`}>
-        {toneChar.char}
-      </span>
-    </span>
-  );
-}
 
 function usePhraseAudio() {
   const [loadingPhrase, setLoadingPhrase] = useState<string | null>(null);
