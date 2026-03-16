@@ -756,7 +756,7 @@ export default function RecordingDetail() {
               <div className="h-2 bg-primary w-full"></div>
               <CardContent className="p-8">
                 <div className="mb-8">
-                  {user?.role !== 'reviewer' && pinyinData.length > 0 ? (
+                  {pinyinData.length > 0 ? (
                     <div className="mb-4" data-testid="sentence-with-pinyin">
                       <SandhiPhraseDisplay pinyinChars={pinyinData} charSize="text-3xl" pinyinSize="text-base" />
                     </div>
