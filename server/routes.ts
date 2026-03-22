@@ -11,7 +11,7 @@ import { db } from "./db";
 import { generatePhraseAudio, getPhraseAudioFile } from "./elevenlabs";
 import { countChineseChars, MAX_CHARS, REFUND_THRESHOLD, CREDIT_PACKS } from "@shared/credits";
 
-const UNLIMITED_EMAIL = process.env.UNLIMITED_CREDITS_EMAIL ?? "jujusees@gmail.com";
+const UNLIMITED_EMAIL = process.env.UNLIMITED_CREDITS_EMAIL ?? null;
 
 export async function registerRoutes(
   httpServer: Server,
