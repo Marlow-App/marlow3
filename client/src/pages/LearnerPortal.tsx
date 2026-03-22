@@ -105,8 +105,8 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
     const ratio = count / maxCount;
     if (ratio >= 0.75) return "bg-primary text-primary-foreground";
     if (ratio >= 0.5) return "bg-primary/70 text-primary-foreground";
-    if (ratio >= 0.25) return "bg-primary/40 text-primary-foreground";
-    return "bg-primary/20 text-primary font-bold";
+    if (ratio >= 0.25) return "bg-primary/40 text-foreground font-semibold";
+    return "bg-primary/20 text-foreground font-bold";
   };
 
   return (
