@@ -879,9 +879,19 @@ export default function RecordingDetail() {
                 ))
               ) : recording.parentRecordingId && parentRecording?.feedback && parentRecording.feedback.length > 0 ? (
                 <>
-                  <p className="text-xs text-muted-foreground italic bg-muted/20 rounded-xl px-4 py-2">
-                    Awaiting reviewer feedback on this re-recording. Here's the original feedback that prompted it:
-                  </p>
+                  <div className="bg-muted/20 rounded-xl px-4 py-3 space-y-3">
+                    <p className="text-xs text-muted-foreground italic">
+                      Awaiting reviewer feedback on this re-recording. Listen back while you wait:
+                    </p>
+                    {recording.audioUrl && (
+                      <audio controls className="w-full h-10" preload="auto" playsInline>
+                        <source src={recording.audioUrl} />
+                      </audio>
+                    )}
+                    <p className="text-xs text-muted-foreground font-medium pt-1 border-t border-border/40">
+                      Original feedback that prompted this re-recording:
+                    </p>
+                  </div>
                   {parentRecording.feedback.map((item: any) => (
                     <EditableFeedbackCard
                       key={item.id}
