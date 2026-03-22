@@ -103,7 +103,7 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
             </div>
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-3xl">Welcome to Marlow!</h3>
+                <h3 className="font-semibold text-3xl font-display">Welcome to Marlow!</h3>
                 <p className="text-base text-muted-foreground mt-1">Here's a quick look at what you can do:</p>
               </div>
               <ul className="space-y-4">
@@ -195,7 +195,7 @@ export default function Home() {
       <Layout>
         <div className="space-y-8 animate-in">
           <header>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground font-display">
               {greeting}, {user?.firstName || "Reviewer"}
             </h1>
             <p className="text-muted-foreground mt-2 text-lg">
@@ -256,7 +256,7 @@ export default function Home() {
       <div className="space-y-6 animate-in">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground font-display">
               {greeting}, {user?.firstName || "Learner"}
             </h1>
             <p className="text-muted-foreground mt-2 text-lg">

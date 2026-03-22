@@ -36,7 +36,7 @@ The project uses a monorepo layout with three main directories:
 - **Routing**: `wouter` (lightweight client-side router)
 - **State Management**: TanStack React Query for server state (fetching, caching, mutations)
 - **UI Components**: shadcn/ui component library built on Radix UI primitives, styled with Tailwind CSS
-- **Styling**: Tailwind CSS with CSS custom properties for theming. The theme uses a warm "Chinese aesthetic" palette with Imperial Red as primary and Gold as secondary. Fonts: DM Sans (body) and Playfair Display (display/headings)
+- **Styling**: Tailwind CSS with CSS custom properties for theming. The theme uses a warm "Chinese aesthetic" palette with Imperial Red as primary and Gold as secondary. Fonts: DM Sans (body) and Nexa (display/headings, loaded via FontShare CDN)
 - **File Uploads**: Uppy library with presigned URL flow (AWS S3-compatible via Replit Object Storage)
 - **Audio Recording**: Browser-native MediaRecorder API via custom `AudioRecorder` component with microphone selector dropdown (persisted in localStorage)
 - **Pinyin**: `pinyin-pro` library generates pinyin for learner views on RecordingDetail (sentence header + character rating breakdown); tone-colored display

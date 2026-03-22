@@ -1,4 +1,5 @@
 import { useState } from "react";
+import pandaLogoImg from "@assets/Untitled-2-03_1774173679788.png";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,7 +38,7 @@ export default function ConsentGate() {
       <Card className="max-w-lg w-full" data-testid="consent-gate-card">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-3xl">M</div>
+            <img src={pandaLogoImg} alt="Marlow" className="w-12 h-12 rounded-xl object-cover" />
           </div>
           <CardTitle className="text-2xl font-display">Welcome to Marlow</CardTitle>
           <CardDescription className="mt-2">

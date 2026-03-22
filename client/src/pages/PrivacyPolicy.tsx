@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
+import pandaLogo from "@assets/Untitled-2-03_1774173679788.png";
 
 export default function PrivacyPolicy() {
   return (
@@ -11,7 +12,7 @@ export default function PrivacyPolicy() {
         </Link>
 
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold font-display text-2xl">M</div>
+          <img src={pandaLogo} alt="Marlow" className="w-10 h-10 rounded-xl object-cover" />
           <span className="font-display font-bold text-2xl tracking-tight">Marlow</span>
         </div>
 
