@@ -160,7 +160,16 @@ export default function Landing() {
 
             {/* Step 2: Tone Sandhi */}
             <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">2</div>
+                  <h3 className="text-2xl font-bold font-display">We Show the Real Pronunciation</h3>
+                </div>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Chinese pronunciation isn't always what the dictionary says. Marlow shows you both the dictionary tones <em>and</em> how the phrase is actually spoken, so you know what to aim for.
+                </p>
+              </div>
+              <div className="bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-4">
                   <p className="text-[16px] font-semibold uppercase text-muted-foreground tracking-wide">Tone 3 Sandhi</p>
                   <p className="text-[16px] text-muted-foreground font-medium">Tone 3 + Tone 3 → first becomes Tone 2</p>
@@ -177,15 +186,6 @@ export default function Landing() {
                     </span>
                   </div>
                 </div>
-              </div>
-              <div className="order-1 md:order-2 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">2</div>
-                  <h3 className="text-2xl font-bold font-display">We Show the Real Pronunciation</h3>
-                </div>
-                <p className="text-muted-foreground text-lg leading-relaxed">
-                  Chinese pronunciation isn't always what the dictionary says. Marlow shows you both the dictionary tones <em>and</em> how the phrase is actually spoken, so you know what to aim for.
-                </p>
               </div>
             </div>
 
