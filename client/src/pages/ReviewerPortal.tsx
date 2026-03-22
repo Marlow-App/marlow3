@@ -102,7 +102,7 @@ export default function ReviewerPortal() {
     });
   };
 
-  const sortedPending = useMemo(() => sortRecordings(pendingRecordings || []), [pendingRecordings, sortOrder]);
+  const allPending = useMemo(() => sortRecordings(pendingRecordings || []), [pendingRecordings, sortOrder]);
   const sortedReviewed = useMemo(() => sortRecordings(reviewedRecordings), [reviewedRecordings, sortOrder]);
 
   if (loadingPending || loadingAll) {
@@ -139,7 +139,7 @@ export default function ReviewerPortal() {
             <TabsTrigger value="pending" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md" data-testid="tab-pending">
               Waiting
               <Badge variant="secondary" className="ml-auto text-xs" data-testid="pending-count">
-                {sortedPending.length}
+                {allPending.length}
               </Badge>
             </TabsTrigger>
             <TabsTrigger value="reviewed" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md" data-testid="tab-reviewed">
@@ -152,10 +152,10 @@ export default function ReviewerPortal() {
 
           <TabsContent value="pending" className="mt-6">
             <div className="grid gap-4">
-              {sortedPending.map((recording: any) => (
+              {allPending.map((recording: any) => (
                 <RecordingCard key={recording.id} recording={recording} />
               ))}
-              {sortedPending.length === 0 && (
+              {allPending.length === 0 && (
                 <div className="text-center py-20 bg-muted/10 rounded-2xl border border-dashed border-border">
                   <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <PlayCircle className="w-8 h-8" />

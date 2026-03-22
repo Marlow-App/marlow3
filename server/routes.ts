@@ -184,7 +184,8 @@ export async function registerRoutes(
       const pending = await storage.getAllPendingRecordings();
       const pendingWithUser = await Promise.all(pending.map(async (r: any) => {
         const user = await storage.getUser(r.userId);
-        return { ...r, user };
+        const isPro = user?.chineseLevel === "Advanced";
+        return { ...r, user, isPro };
       }));
       res.json(pendingWithUser);
     } catch (error) {
