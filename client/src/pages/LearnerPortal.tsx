@@ -246,10 +246,28 @@ function getTimeGroup(date: Date): string {
 }
 
 function GroupedRecordingsList({ recordings }: { recordings: any[] }) {
-  const grouped = useMemo(() => {
-    const sorted = [...recordings].sort(
+  const { grouped, childrenMap } = useMemo(() => {
+    const idSet = new Set(recordings.map((r: any) => r.id));
+
+    // Separate roots from children (only nest if parent is in this same list)
+    const childrenMap = new Map<number, any[]>();
+    const roots: any[] = [];
+    for (const rec of recordings) {
+      if (rec.parentRecordingId && idSet.has(rec.parentRecordingId)) {
+        const arr = childrenMap.get(rec.parentRecordingId) || [];
+        arr.push(rec);
+        childrenMap.set(rec.parentRecordingId, arr);
+      } else {
+        roots.push(rec);
+      }
+    }
+
+    // Sort roots newest-first
+    const sorted = [...roots].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
+
+    // Time-group the roots
     const groups: { label: string; items: any[] }[] = [];
     let currentLabel = "";
     for (const rec of sorted) {
@@ -260,7 +278,7 @@ function GroupedRecordingsList({ recordings }: { recordings: any[] }) {
       }
       groups[groups.length - 1].items.push(rec);
     }
-    return groups;
+    return { grouped: groups, childrenMap };
   }, [recordings]);
 
   if (recordings.length === 0) return null;
@@ -272,10 +290,24 @@ function GroupedRecordingsList({ recordings }: { recordings: any[] }) {
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2" data-testid={`group-header-${group.label}`}>
             {group.label}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {group.items.map((recording: any) => (
-              <RecordingCard key={recording.id} recording={recording} />
-            ))}
+          <div className="space-y-3">
+            {group.items.map((recording: any) => {
+              const children = (childrenMap.get(recording.id) || []).sort(
+                (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+              );
+              return (
+                <div key={recording.id}>
+                  <RecordingCard recording={recording} />
+                  {children.length > 0 && (
+                    <div className="ml-5 mt-2 pl-4 border-l-2 border-primary/25 space-y-2">
+                      {children.map((child: any) => (
+                        <RecordingCard key={child.id} recording={child} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}
