@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import pandaLogo from "@assets/Untitled-2-03_1774173679788.png";
+import pandaLogo from "@assets/panda_head_1774174364595.png";
 import { Link, useLocation } from "wouter";
 import { Mic2, House, BarChart2, UserCircle, LogOut, FileAudio, Menu, X, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Mobile Header */}
       <header className="md:hidden border-b border-border px-4 h-16 flex justify-between items-center bg-card sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <img src={pandaLogo} alt="Marlow" className="w-9 h-9 rounded-full object-cover object-[50%_30%]" />
+          <img src={pandaLogo} alt="Marlow" className="w-9 h-9 object-contain" />
           <span className="font-display font-bold text-xl tracking-tight">Marlow</span>
         </div>
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
@@ -70,7 +70,7 @@ export function Layout({ children }: LayoutProps) {
       )}>
         <div className="p-6 border-b border-border/50">
           <div className="flex items-center gap-3">
-            <img src={pandaLogo} alt="Marlow" className="w-11 h-11 rounded-full object-cover object-[50%_30%] shadow-lg" />
+            <img src={pandaLogo} alt="Marlow" className="w-11 h-11 object-contain" />
             <span className="font-display font-bold text-2xl tracking-tight text-foreground">Marlow</span>
           </div>
           <p className="text-xs text-muted-foreground mt-2 pl-1">Master Chinese Tones</p>

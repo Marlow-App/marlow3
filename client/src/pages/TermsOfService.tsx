@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
-import pandaLogo from "@assets/Untitled-2-03_1774173679788.png";
+import pandaLogo from "@assets/panda_head_1774174364595.png";
 
 export default function TermsOfService() {
   return (
@@ -12,7 +12,7 @@ export default function TermsOfService() {
         </Link>
 
         <div className="flex items-center gap-3 mb-8">
-          <img src={pandaLogo} alt="Marlow" className="w-10 h-10 rounded-full object-cover object-[50%_30%]" />
+          <img src={pandaLogo} alt="Marlow" className="w-10 h-10 object-contain" />
           <span className="font-display font-bold text-2xl tracking-tight">Marlow</span>
         </div>
 
