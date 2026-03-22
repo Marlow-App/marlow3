@@ -15,6 +15,7 @@ export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hoveredNavHref, setHoveredNavHref] = useState<string | null>(null);
   const { spotlightHref } = useTourSpotlight();
 
   const isActive = (path: string) => location === path;
@@ -78,14 +79,16 @@ export function Layout({ children }: LayoutProps) {
           <p className="text-xs text-muted-foreground mt-2 pl-1">Master Chinese Tones</p>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto" onMouseLeave={() => setHoveredNavHref(null)}>
           {navItems.map((item) => {
             const isSpotlit = spotlightHref === item.href;
+            const isDimmed = hoveredNavHref !== null && hoveredNavHref !== item.href;
             return (
-              <Link key={item.href} href={item.href} className="block">
+              <Link key={item.href} href={item.href} className="block" onMouseEnter={() => setHoveredNavHref(item.href)}>
                 <div
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer group",
+                    isDimmed && "opacity-40",
                     isSpotlit
                       ? "bg-primary text-primary-foreground font-medium shadow-lg shadow-primary/30 scale-[1.02]"
                       : isActive(item.href)

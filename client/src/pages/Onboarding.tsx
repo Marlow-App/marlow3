@@ -40,6 +40,7 @@ export default function Onboarding() {
   const [chineseLevel, setChineseLevel] = useState("");
   const [nativeLanguage, setNativeLanguage] = useState("");
   const [focusAreas, setFocusAreas] = useState<string[]>([]);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   const stepIndex = STEPS.indexOf(step);
   const canNext =
@@ -49,12 +50,14 @@ export default function Onboarding() {
 
   const handleNext = () => {
     if (stepIndex < STEPS.length - 1) {
+      setHoveredCard(null);
       setStep(STEPS[stepIndex + 1]);
     }
   };
 
   const handleBack = () => {
     if (stepIndex > 0) {
+      setHoveredCard(null);
       setStep(STEPS[stepIndex - 1]);
     }
   };
@@ -111,16 +114,17 @@ export default function Onboarding() {
               <CardTitle className="text-2xl font-display">What's your Chinese level?</CardTitle>
               <CardDescription>This helps us pick the right phrases for you.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3" onMouseLeave={() => setHoveredCard(null)}>
               {CHINESE_LEVELS.map(level => (
                 <button
                   key={level.value}
                   onClick={() => setChineseLevel(level.value)}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                  onMouseEnter={() => setHoveredCard(level.value)}
+                  className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 ${
                     chineseLevel === level.value
                       ? "border-primary bg-primary/5 shadow-sm"
                       : "border-border hover:border-primary/30 hover:bg-muted/50"
-                  }`}
+                  } ${hoveredCard && hoveredCard !== level.value ? "opacity-40" : ""}`}
                   data-testid={`level-option-${level.value}`}
                 >
                   <div className="font-medium">{level.label}</div>
@@ -140,16 +144,17 @@ export default function Onboarding() {
               <CardTitle className="text-2xl font-display">What do you want to focus on?</CardTitle>
               <CardDescription>Pick one or more areas. You can change these later.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3" onMouseLeave={() => setHoveredCard(null)}>
               {FOCUS_AREA_OPTIONS.map(area => (
                 <button
                   key={area.value}
                   onClick={() => toggleFocus(area.value)}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-center justify-between ${
+                  onMouseEnter={() => setHoveredCard(area.value)}
+                  className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 flex items-center justify-between ${
                     focusAreas.includes(area.value)
                       ? "border-primary bg-primary/5 shadow-sm"
                       : "border-border hover:border-primary/30 hover:bg-muted/50"
-                  }`}
+                  } ${hoveredCard && hoveredCard !== area.value ? "opacity-40" : ""}`}
                   data-testid={`focus-option-${area.value}`}
                 >
                   <div>
@@ -175,16 +180,17 @@ export default function Onboarding() {
               <CardDescription>We'll tailor tips to common challenges for your language background.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-2 max-h-[400px] overflow-y-auto pr-1">
+              <div className="grid grid-cols-3 gap-2 max-h-[400px] overflow-y-auto pr-1" onMouseLeave={() => setHoveredCard(null)}>
                 {NATIVE_LANGUAGES.map(lang => (
                   <button
                     key={lang}
                     onClick={() => setNativeLanguage(lang)}
-                    className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                    onMouseEnter={() => setHoveredCard(lang)}
+                    className={`px-3 py-2.5 rounded-lg border text-sm font-medium transition-all duration-150 ${
                       nativeLanguage === lang
                         ? "border-primary bg-primary/10 text-primary"
                         : "border-border hover:border-primary/30 hover:bg-muted/50 text-foreground"
-                    }`}
+                    } ${hoveredCard && hoveredCard !== lang ? "opacity-40" : ""}`}
                     data-testid={`language-option-${lang}`}
                   >
                     {lang}
