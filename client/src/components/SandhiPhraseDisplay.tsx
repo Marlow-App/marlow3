@@ -173,7 +173,12 @@ export function SandhiPhraseDisplay({
   }
 
   return (
-    <div className="flex items-end gap-3" data-testid="sandhi-phrase-display">
+    <div
+      className="overflow-x-auto"
+      style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
+      data-testid="sandhi-phrase-display"
+    >
+    <div className="flex items-end gap-3 min-w-max">
       <div className="flex-shrink-0 flex flex-col">
         <span
           className="h-4 flex items-center text-[10px] uppercase tracking-wider text-muted-foreground font-medium"
@@ -217,6 +222,7 @@ export function SandhiPhraseDisplay({
           ))}
         </div>
       </div>
+    </div>
     </div>
   );
 }
