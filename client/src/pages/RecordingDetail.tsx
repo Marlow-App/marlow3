@@ -735,14 +735,6 @@ export default function RecordingDetail() {
              </h1>
           </div>
           <div className="flex items-center gap-2">
-          {isOwner && rerecordLabel && rerecordUrl && (
-            <Link href={rerecordUrl}>
-              <Button variant="outline" size="sm" className="gap-1.5" data-testid="rerecord-btn">
-                <RotateCcw className="w-3.5 h-3.5" />
-                {rerecordLabel}
-              </Button>
-            </Link>
-          )}
           {canDelete && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -863,6 +855,20 @@ export default function RecordingDetail() {
                 <div className="text-center py-8 text-muted-foreground italic bg-muted/20 rounded-xl">
                   No feedback provided yet.
                 </div>
+              )}
+
+              {isOwner && rerecordLabel && rerecordUrl && (
+                <Link href={rerecordUrl}>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full gap-2 h-14 text-base border-2 border-primary/40 hover:border-primary hover:bg-primary/5 transition-all"
+                    data-testid="rerecord-btn"
+                  >
+                    <RotateCcw className="w-5 h-5" />
+                    {rerecordLabel}
+                  </Button>
+                </Link>
               )}
             </div>
           </div>
