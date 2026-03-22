@@ -540,9 +540,9 @@ export async function registerRoutes(
 
   // === User Profile ===
   const profileUpdateSchema = z.object({
-    chineseLevel: z.string().min(1).max(100).optional(),
-    nativeLanguage: z.string().min(1).max(100).optional(),
-    focusAreas: z.array(z.string()).min(1).optional(),
+    chineseLevel: z.string().max(100).optional(),
+    nativeLanguage: z.string().max(100).optional(),
+    focusAreas: z.array(z.string()).optional(),
     city: z.string().max(100).optional(),
     teachingExperience: z.number().int().min(0).max(100).optional(),
     dialects: z.array(z.string()).optional(),
