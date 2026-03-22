@@ -576,6 +576,8 @@ export default function RecordingDetail() {
   const [isRecordingFeedback, setIsRecordingFeedback] = useState(false);
   const [expandedChildren, setExpandedChildren] = useState<Record<number, boolean>>({});
 
+  const [showRerecordFeedback, setShowRerecordFeedback] = useState(true);
+
   const [, navigate] = useLocation();
   const isLoading = loadingRecording || loadingUser;
   const backUrl = user?.role === 'reviewer' ? "/reviewer-hub" : "/learner-portal";
@@ -864,19 +866,67 @@ export default function RecordingDetail() {
               </h3>
               
               {recording.feedback && recording.feedback.length > 0 ? (
-                recording.feedback.map((item: any, idx: number) => (
-                  <EditableFeedbackCard
-                    key={item.id}
-                    item={item}
-                    isOwner={item.reviewerId === user?.id}
-                    isReviewer={user?.role === 'reviewer'}
-                    pinyinData={pinyinData}
-                    recordingId={recordingId}
-                    characters={characters}
-                    rerecordUrl={isOwner && idx === 0 ? rerecordUrl : null}
-                    rerecordLabel={isOwner && idx === 0 ? rerecordLabel : null}
-                  />
-                ))
+                recording.parentRecordingId && parentRecording?.feedback && parentRecording.feedback.length > 0 ? (
+                  // Re-recording with new feedback: show original feedback + collapsible new feedback
+                  <>
+                    {(parentRecording.feedback as any[]).map((item: any) => (
+                      <EditableFeedbackCard
+                        key={item.id}
+                        item={item}
+                        isOwner={item.reviewerId === user?.id}
+                        isReviewer={user?.role === 'reviewer'}
+                        pinyinData={pinyinData}
+                        recordingId={parentRecording.id}
+                        characters={characters}
+                      />
+                    ))}
+                    <div className="border border-border/50 rounded-xl overflow-hidden">
+                      <button
+                        className="w-full flex items-center justify-between px-4 py-3 bg-secondary/5 hover:bg-secondary/10 transition-colors text-left"
+                        onClick={() => setShowRerecordFeedback(v => !v)}
+                        data-testid="toggle-rerecord-feedback"
+                      >
+                        <span className="text-sm font-semibold flex items-center gap-2">
+                          <RotateCcw className="w-4 h-4 text-secondary" />
+                          Feedback on Re-recording
+                        </span>
+                        {showRerecordFeedback ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                      </button>
+                      {showRerecordFeedback && (
+                        <div className="p-3 space-y-3 border-t border-border/30">
+                          {recording.feedback.map((item: any, idx: number) => (
+                            <EditableFeedbackCard
+                              key={item.id}
+                              item={item}
+                              isOwner={item.reviewerId === user?.id}
+                              isReviewer={user?.role === 'reviewer'}
+                              pinyinData={pinyinData}
+                              recordingId={recordingId}
+                              characters={characters}
+                              rerecordUrl={isOwner && idx === 0 ? rerecordUrl : null}
+                              rerecordLabel={isOwner && idx === 0 ? rerecordLabel : null}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  // Regular recording: show feedback cards as before
+                  recording.feedback.map((item: any, idx: number) => (
+                    <EditableFeedbackCard
+                      key={item.id}
+                      item={item}
+                      isOwner={item.reviewerId === user?.id}
+                      isReviewer={user?.role === 'reviewer'}
+                      pinyinData={pinyinData}
+                      recordingId={recordingId}
+                      characters={characters}
+                      rerecordUrl={isOwner && idx === 0 ? rerecordUrl : null}
+                      rerecordLabel={isOwner && idx === 0 ? rerecordLabel : null}
+                    />
+                  ))
+                )
               ) : recording.parentRecordingId ? (
                 user?.role === 'reviewer' && !reviewerHasFeedback ? (
                   // Reviewer view of a re-recording: comparison context + embedded form
