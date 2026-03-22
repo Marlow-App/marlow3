@@ -184,7 +184,7 @@ export default function Landing() {
                   <h3 className="text-2xl font-bold font-display">We Show the Real Pronunciation</h3>
                 </div>
                 <p className="text-muted-foreground text-lg leading-relaxed">
-                  Chinese pronunciation isn't always what the dictionary says. When two Tone 3 syllables follow each other, the first one shifts up to Tone 2 — so 你好 (nǐ hǎo) is actually spoken as ní hǎo. Marlow shows you both the dictionary tones <em>and</em> how the phrase is actually spoken, so you know what to aim for.
+                  Chinese pronunciation isn't always what the dictionary says. Marlow shows you both the dictionary tones <em>and</em> how the phrase is actually spoken, so you know what to aim for.
                 </p>
               </div>
             </div>
