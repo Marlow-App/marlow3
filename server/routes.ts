@@ -243,6 +243,26 @@ export async function registerRoutes(
     }
   });
 
+  // Get child re-recordings for a recording
+  app.get("/api/recordings/:id/children", isAuthenticated, async (req, res) => {
+    try {
+      const parentId = Number(req.params.id);
+      const children = await storage.getChildRecordings(parentId);
+      const childrenWithFeedback = await Promise.all(children.map(async (child) => {
+        const rawFeedback = await storage.getFeedbackForRecording(child.id);
+        const feedbackWithReviewer = await Promise.all(rawFeedback.map(async (f: any) => {
+          const reviewer = await storage.getUser(f.reviewerId);
+          return { ...f, reviewer };
+        }));
+        return { ...child, feedback: feedbackWithReviewer };
+      }));
+      res.json(childrenWithFeedback);
+    } catch (error) {
+      console.error("Error getting child recordings:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.delete("/api/recordings/:id", isAuthenticated, async (req, res) => {
     try {
       const recordingId = Number(req.params.id);

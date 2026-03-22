@@ -52,6 +52,18 @@ export function useRecording(id: number) {
   });
 }
 
+export function useChildRecordings(parentId: number) {
+  return useQuery({
+    queryKey: ["/api/recordings", parentId, "children"],
+    queryFn: async () => {
+      const res = await fetch(`/api/recordings/${parentId}/children`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch child recordings");
+      return await res.json() as (Recording & { feedback: any[] })[];
+    },
+    enabled: !!parentId,
+  });
+}
+
 export function useCreateRecording() {
   const queryClient = useQueryClient();
   return useMutation({

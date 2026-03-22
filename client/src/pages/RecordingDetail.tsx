@@ -1,6 +1,6 @@
 import { useParams, Link, useLocation } from "wouter";
 import { Layout } from "@/components/Layout";
-import { useRecording } from "@/hooks/use-recordings";
+import { useRecording, useChildRecordings } from "@/hooks/use-recordings";
 import { useCreateFeedback } from "@/hooks/use-feedback";
 import { useUpload } from "@/hooks/use-upload";
 import { useToast } from "@/hooks/use-toast";
@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronDown, ChevronUp, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star, RotateCcw } from "lucide-react";
 import { countChineseChars } from "@shared/credits";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useState, useMemo, useRef, useLayoutEffect } from "react";
@@ -563,6 +563,7 @@ export default function RecordingDetail() {
   const recordingId = parseInt(id || "0");
   const { data: recording, isLoading: loadingRecording } = useRecording(recordingId);
   const { data: user, isLoading: loadingUser } = useQuery<SharedUser>({ queryKey: ["/api/auth/user"] });
+  const { data: childRecordings } = useChildRecordings(recordingId);
   const createFeedback = useCreateFeedback(recordingId);
   const { uploadFile, isUploading } = useUpload();
   const { toast } = useToast();
@@ -572,6 +573,7 @@ export default function RecordingDetail() {
   const [feedbackText, setFeedbackText] = useState("");
   const [correctionsText, setCorrectionsText] = useState("");
   const [isRecordingFeedback, setIsRecordingFeedback] = useState(false);
+  const [expandedChildren, setExpandedChildren] = useState<Record<number, boolean>>({});
 
   const [, navigate] = useLocation();
   const isLoading = loadingRecording || loadingUser;
@@ -601,6 +603,7 @@ export default function RecordingDetail() {
   );
 
   const isOwner = user && recording && recording.userId === user.id && user.role !== "reviewer";
+  const reviewerHasFeedback = user?.role === 'reviewer' && recording?.feedback?.some((f: any) => f.reviewerId === user?.id);
   const charCount = recording ? countChineseChars(recording.sentenceText) : 0;
   const rerecordLabel = isOwner
     ? recording?.status === "pending"
@@ -881,7 +884,70 @@ export default function RecordingDetail() {
             </div>
           </div>
 
-          {user?.role === 'reviewer' && (
+          {/* Nested re-recordings */}
+          {isOwner && childRecordings && childRecordings.length > 0 && (
+            <div className="col-span-full space-y-3">
+              <h3 className="text-lg font-bold flex items-center gap-2 text-muted-foreground">
+                <RotateCcw className="w-4 h-4" />
+                Re-recordings
+              </h3>
+              {childRecordings.map((child) => {
+                const isExpanded = expandedChildren[child.id] ?? true;
+                const latestFeedback = child.feedback?.[0];
+                const childChars = extractChineseChars(child.sentenceText);
+                const childPinyin = getCharPinyin(child.sentenceText);
+                return (
+                  <Card key={child.id} className="border-2 border-primary/20 bg-primary/3">
+                    <CardContent className="p-5">
+                      <button
+                        className="w-full flex items-center justify-between gap-3 text-left"
+                        onClick={() => setExpandedChildren(prev => ({ ...prev, [child.id]: !isExpanded }))}
+                        data-testid={`toggle-child-${child.id}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Badge variant={child.status === "reviewed" ? "secondary" : "outline"} className="shrink-0">
+                            {child.status === "reviewed" ? "Reviewed" : "Awaiting review"}
+                          </Badge>
+                          {latestFeedback?.overallScore != null && (
+                            <ScoreBadge score={latestFeedback.overallScore} />
+                          )}
+                          <span className="text-sm text-muted-foreground">{format(new Date(child.createdAt), 'MMM d, HH:mm')}</span>
+                        </div>
+                        {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
+                      </button>
+
+                      {isExpanded && (
+                        <div className="mt-4 space-y-4">
+                          {child.audioUrl && (
+                            <audio controls className="w-full h-10" preload="auto" playsInline>
+                              <source src={child.audioUrl} />
+                            </audio>
+                          )}
+                          {child.feedback && child.feedback.length > 0 ? (
+                            child.feedback.map((item: any) => (
+                              <EditableFeedbackCard
+                                key={item.id}
+                                item={item}
+                                isOwner={false}
+                                isReviewer={false}
+                                pinyinData={childPinyin}
+                                recordingId={child.id}
+                                characters={childChars}
+                              />
+                            ))
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic text-center py-4">No feedback yet on this re-recording.</p>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {user?.role === 'reviewer' && !reviewerHasFeedback && (
             <div className="space-y-6">
               <Card className="shadow-lg border-t-4 border-t-secondary sticky top-8">
                 <CardHeader>

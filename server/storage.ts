@@ -21,6 +21,7 @@ export interface IStorage {
   createRecording(userId: string, recording: InsertRecording, creditCost?: number, parentRecordingId?: number): Promise<Recording>;
   getRecording(id: number): Promise<Recording | undefined>;
   getRecordingsByUser(userId: string): Promise<Recording[]>;
+  getChildRecordings(parentId: number): Promise<Recording[]>;
   getAllPendingRecordings(): Promise<(Recording & { user: User | null })[]>;
   getAllRecordings(): Promise<(Recording & { user: User | null })[]>;
   deleteRecording(id: number): Promise<boolean>;
@@ -67,6 +68,14 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(recordings)
       .where(eq(recordings.userId, userId))
+      .orderBy(desc(recordings.createdAt));
+  }
+
+  async getChildRecordings(parentId: number): Promise<Recording[]> {
+    return db
+      .select()
+      .from(recordings)
+      .where(eq(recordings.parentRecordingId, parentId))
       .orderBy(desc(recordings.createdAt));
   }
 
