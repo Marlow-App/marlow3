@@ -480,24 +480,24 @@ export default function Profile() {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                        <Coins className="w-7 h-7 text-primary" />
+                      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                        <Coins className="w-9 h-9 text-primary" />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your balance</p>
-                        <p className="text-4xl font-bold font-display text-foreground" data-testid="profile-credit-balance">
+                        <p className="text-base font-semibold uppercase tracking-wider text-muted-foreground">Your balance</p>
+                        <p className="text-5xl font-bold font-display text-foreground" data-testid="profile-credit-balance">
                           {isUnlimited ? "∞" : balance}
                         </p>
-                        <p className="text-sm text-muted-foreground">credits</p>
+                        <p className="text-lg text-muted-foreground">credits</p>
                       </div>
                     </div>
                     <div className="text-right space-y-1">
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Shield className="w-3.5 h-3.5" />
+                      <div className="flex items-center gap-1.5 text-base text-muted-foreground">
+                        <Shield className="w-4.5 h-4.5" />
                         <span>{freeBalance} free</span>
                       </div>
-                      <p className="text-xs text-muted-foreground">1 credit = 1 character</p>
-                      <p className="text-xs text-muted-foreground">{REFUND_THRESHOLD}%+ score → refunded</p>
+                      <p className="text-base text-muted-foreground">1 credit = 1 character</p>
+                      <p className="text-base text-muted-foreground">{REFUND_THRESHOLD}%+ score → refunded</p>
                     </div>
                   </div>
                 </CardContent>
@@ -506,23 +506,23 @@ export default function Profile() {
               {/* How credits work */}
               <Card className="border-border/60">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base">How credits work</CardTitle>
+                  <CardTitle className="text-xl">How credits work</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 text-sm text-muted-foreground">
+                <CardContent className="space-y-3 text-lg text-muted-foreground">
                   <div className="flex items-start gap-2">
-                    <Star className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <Star className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
                     <span>You received <strong>{SIGNUP_BONUS} free credits</strong> when you joined.</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <TrendingUp className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                    <TrendingUp className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
                     <span><strong>+{DAILY_REWARD} free credit per day</strong> (up to 3 banked at a time).</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Coins className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                    <Coins className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
                     <span>Recording a phrase costs <strong>1 credit per Chinese character</strong> (max {10} chars per session).</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <RotateCcw className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <RotateCcw className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
                     <span>Score <strong>{REFUND_THRESHOLD}% or higher</strong> on a recording and your credits are automatically refunded.</span>
                   </div>
                 </CardContent>
@@ -530,22 +530,22 @@ export default function Profile() {
 
               {/* Credit packs */}
               <div>
-                <h2 className="text-lg font-semibold mb-3">Buy credits</h2>
+                <h2 className="text-2xl font-semibold mb-3">Buy credits</h2>
                 <Card className="border-border/60 overflow-hidden">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-base">
                     <thead>
                       <tr className="border-b border-border/50 bg-muted/30">
-                        <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Price</th>
-                        <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Credits</th>
-                        <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Value</th>
-                        <th className="px-4 py-2.5"></th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Price</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Credits</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Value</th>
+                        <th className="px-4 py-3"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/50">
                       {CREDIT_PACKS.map(pack => (
                         <tr key={pack.usd} className="hover:bg-muted/20 transition-colors" data-testid={`credit-pack-${pack.usd}`}>
-                          <td className="px-4 py-3 font-semibold">${pack.usd}</td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3.5 font-semibold">${pack.usd}</td>
+                          <td className="px-4 py-3.5">
                             <span className="font-semibold">{pack.credits}</span>
                             {pack.highlight && (
                               <span className={`ml-2 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
@@ -584,26 +584,26 @@ export default function Profile() {
 
               {/* Transaction history */}
               <div>
-                <h2 className="text-lg font-semibold mb-3">Transaction history</h2>
+                <h2 className="text-2xl font-semibold mb-3">Transaction history</h2>
                 {!transactions || transactions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-6 text-center">No transactions yet.</p>
+                  <p className="text-lg text-muted-foreground py-6 text-center">No transactions yet.</p>
                 ) : (
                   <Card className="border-border/60 divide-y divide-border/50">
                     {transactions.slice(0, 20).map((tx: any) => {
                       const { label, color, icon: Icon } = txTypeLabel(tx.type);
                       const isPositive = tx.amount > 0;
                       return (
-                        <div key={tx.id} className="flex items-center justify-between px-4 py-3" data-testid={`tx-row-${tx.id}`}>
+                        <div key={tx.id} className="flex items-center justify-between px-4 py-3.5" data-testid={`tx-row-${tx.id}`}>
                           <div className="flex items-center gap-3">
-                            <div className={`w-7 h-7 rounded-full flex items-center justify-center bg-muted/50 ${color}`}>
-                              <Icon className="w-3.5 h-3.5" />
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center bg-muted/50 ${color}`}>
+                              <Icon className="w-4.5 h-4.5" />
                             </div>
                             <div>
-                              <p className="text-sm font-medium">{label}</p>
-                              <p className="text-xs text-muted-foreground">{format(new Date(tx.createdAt), "MMM d, yyyy")}</p>
+                              <p className="text-base font-medium">{label}</p>
+                              <p className="text-sm text-muted-foreground">{format(new Date(tx.createdAt), "MMM d, yyyy")}</p>
                             </div>
                           </div>
-                          <span className={`text-sm font-bold ${isPositive ? "text-emerald-600" : "text-amber-600"}`}>
+                          <span className={`text-base font-bold ${isPositive ? "text-emerald-600" : "text-amber-600"}`}>
                             {isPositive ? "+" : ""}{tx.amount}
                           </span>
                         </div>
