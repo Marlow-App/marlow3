@@ -1,10 +1,11 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Mic2, House, BarChart2, UserCircle, LogOut, FileAudio, Menu, X } from "lucide-react";
+import { Mic2, House, BarChart2, UserCircle, LogOut, FileAudio, Menu, X, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { useTourSpotlight } from "@/contexts/TourSpotlightContext";
+import { useQuery } from "@tanstack/react-query";
 
 interface LayoutProps {
   children: ReactNode;
@@ -32,6 +33,20 @@ export function Layout({ children }: LayoutProps) {
   ];
 
   const navItems = user?.role === "reviewer" ? reviewerItems : learnerItems;
+
+  const { data: creditData } = useQuery<{ creditBalance: number; freeCreditsBalance: number; isUnlimited: boolean }>({
+    queryKey: ['/api/credits/balance'],
+    enabled: user?.role === "learner",
+  });
+
+  const totalCredits = (creditData?.creditBalance ?? 0) + (creditData?.freeCreditsBalance ?? 0);
+  const isUnlimited = creditData?.isUnlimited ?? false;
+
+  const subLabel = user?.role === "reviewer"
+    ? "Reviewer"
+    : isUnlimited
+      ? "∞ credits"
+      : `${totalCredits} credit${totalCredits !== 1 ? "s" : ""}`;
 
   return (
     <div className="h-screen bg-background flex flex-col md:flex-row font-sans text-foreground overflow-hidden">
@@ -101,7 +116,10 @@ export function Layout({ children }: LayoutProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{user?.firstName || (user as any)?.username || "Learner"}</p>
-                <p className="text-xs text-muted-foreground truncate">Free Plan</p>
+                <p className="text-xs text-muted-foreground truncate flex items-center gap-1" data-testid="sidebar-credit-label">
+                  {user?.role === "learner" && <Coins className="w-3 h-3 shrink-0" />}
+                  {subLabel}
+                </p>
               </div>
             </div>
           </Link>

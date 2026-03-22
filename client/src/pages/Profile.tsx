@@ -531,53 +531,55 @@ export default function Profile() {
               {/* Credit packs */}
               <div>
                 <h2 className="text-lg font-semibold mb-3">Buy credits</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {CREDIT_PACKS.map(pack => (
-                    <Card
-                      key={pack.usd}
-                      className={`relative overflow-hidden hover:shadow-md transition-shadow ${
-                        pack.highlight === "most_popular"
-                          ? "border-primary/40 ring-2 ring-primary/20"
-                          : pack.highlight === "best_value"
-                            ? "border-secondary/40"
-                            : "border-border/60"
-                      }`}
-                      data-testid={`credit-pack-${pack.usd}`}
-                    >
-                      {pack.highlight && (
-                        <div className={`absolute top-2 right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                          pack.highlight === "most_popular"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-secondary-foreground"
-                        }`}>
-                          {pack.highlight === "most_popular" ? "Most Popular" : "Best Value"}
-                        </div>
-                      )}
-                      <CardContent className="pt-5 pb-4">
-                        <div className="mb-3">
-                          <p className="text-2xl font-bold font-display">{pack.credits}</p>
-                          <p className="text-sm text-muted-foreground">credits</p>
-                        </div>
-                        <p className="text-xs text-muted-foreground mb-4">
-                          ≈ ${(pack.usd / pack.credits * 100).toFixed(1)}¢ per credit
-                        </p>
-                        <Button
-                          className="w-full"
-                          variant={pack.highlight === "most_popular" ? "default" : "outline"}
-                          disabled={checkoutLoading === pack.usd}
-                          onClick={() => handleBuyCredits(pack.usd)}
-                          data-testid={`buy-pack-${pack.usd}`}
-                        >
-                          {checkoutLoading === pack.usd ? (
-                            <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Processing...</>
-                          ) : (
-                            `$${pack.usd}`
-                          )}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                <Card className="border-border/60 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border/50 bg-muted/30">
+                        <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Price</th>
+                        <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Credits</th>
+                        <th className="text-left px-4 py-2.5 font-medium text-muted-foreground hidden sm:table-cell">Value</th>
+                        <th className="px-4 py-2.5"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {CREDIT_PACKS.map(pack => (
+                        <tr key={pack.usd} className="hover:bg-muted/20 transition-colors" data-testid={`credit-pack-${pack.usd}`}>
+                          <td className="px-4 py-3 font-semibold">${pack.usd}</td>
+                          <td className="px-4 py-3">
+                            <span className="font-semibold">{pack.credits}</span>
+                            {pack.highlight && (
+                              <span className={`ml-2 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                                pack.highlight === "most_popular"
+                                  ? "bg-primary/15 text-primary"
+                                  : "bg-secondary/20 text-secondary-foreground"
+                              }`}>
+                                {pack.highlight === "most_popular" ? "Most Popular" : "Best Value"}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                            {(pack.usd / pack.credits * 100).toFixed(1)}¢ each
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <Button
+                              size="sm"
+                              variant={pack.highlight === "most_popular" ? "default" : "outline"}
+                              disabled={checkoutLoading === pack.usd}
+                              onClick={() => handleBuyCredits(pack.usd)}
+                              data-testid={`buy-pack-${pack.usd}`}
+                            >
+                              {checkoutLoading === pack.usd ? (
+                                <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Processing...</>
+                              ) : (
+                                "Buy"
+                              )}
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Card>
               </div>
 
               {/* Transaction history */}
