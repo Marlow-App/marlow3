@@ -245,25 +245,26 @@ function getTimeGroup(date: Date): string {
   return format(date, "MMMM yyyy");
 }
 
-function GroupedRecordingsList({ recordings }: { recordings: any[] }) {
+function GroupedRecordingsList({ recordings, childLookup }: { recordings: any[]; childLookup?: any[] }) {
   const { grouped, childrenMap } = useMemo(() => {
     const idSet = new Set(recordings.map((r: any) => r.id));
+    // Look for children in the broader set (cross-status) when provided
+    const source = childLookup ?? recordings;
 
-    // Separate roots from children (only nest if parent is in this same list)
+    // Build children map: anything in source whose parent is one of our roots
     const childrenMap = new Map<number, any[]>();
-    const roots: any[] = [];
-    for (const rec of recordings) {
+    for (const rec of source) {
       if (rec.parentRecordingId && idSet.has(rec.parentRecordingId)) {
         const arr = childrenMap.get(rec.parentRecordingId) || [];
-        arr.push(rec);
-        childrenMap.set(rec.parentRecordingId, arr);
-      } else {
-        roots.push(rec);
+        if (!arr.some((x: any) => x.id === rec.id)) {
+          arr.push(rec);
+          childrenMap.set(rec.parentRecordingId, arr);
+        }
       }
     }
 
     // Sort roots newest-first
-    const sorted = [...roots].sort(
+    const sorted = [...recordings].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
@@ -279,7 +280,7 @@ function GroupedRecordingsList({ recordings }: { recordings: any[] }) {
       groups[groups.length - 1].items.push(rec);
     }
     return { grouped: groups, childrenMap };
-  }, [recordings]);
+  }, [recordings, childLookup]);
 
   if (recordings.length === 0) return null;
 
@@ -465,6 +466,8 @@ export default function LearnerPortal() {
     }
   }, [searchString]);
 
+  const allRecordingsList = recordings || [];
+
   const pendingRecordings = useMemo(
     () => recordings?.filter((r: any) => r.status === "pending") || [],
     [recordings]
@@ -473,6 +476,20 @@ export default function LearnerPortal() {
   const reviewedRecordings = useMemo(
     () => recordings?.filter((r: any) => r.status === "reviewed") || [],
     [recordings]
+  );
+
+  // Pending re-recordings whose parent is already reviewed are shown nested
+  // in the Completed tab — hide them from Waiting Review to avoid duplication
+  const reviewedIds = useMemo(
+    () => new Set(reviewedRecordings.map((r: any) => r.id)),
+    [reviewedRecordings]
+  );
+
+  const visiblePendingRecordings = useMemo(
+    () => pendingRecordings.filter(
+      (r: any) => !(r.parentRecordingId && reviewedIds.has(r.parentRecordingId))
+    ),
+    [pendingRecordings, reviewedIds]
   );
 
   if (isLoading) {
@@ -508,7 +525,7 @@ export default function LearnerPortal() {
             <TabsTrigger value="waiting" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md" data-testid="tab-waiting">
               Waiting Review
               <Badge variant="secondary" className="ml-auto text-xs">
-                {pendingRecordings.length}
+                {visiblePendingRecordings.length}
               </Badge>
             </TabsTrigger>
             <TabsTrigger value="completed" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md" data-testid="tab-completed">
@@ -520,8 +537,8 @@ export default function LearnerPortal() {
           </TabsList>
 
           <TabsContent value="waiting" className="mt-4">
-            {pendingRecordings.length > 0 ? (
-              <GroupedRecordingsList recordings={pendingRecordings} />
+            {visiblePendingRecordings.length > 0 ? (
+              <GroupedRecordingsList recordings={visiblePendingRecordings} />
             ) : (
               <div className="text-center py-10 bg-muted/10 rounded-2xl border border-dashed border-border">
                 <CheckCircle2 className="w-8 h-8 text-green-500/40 mx-auto mb-2" />
@@ -533,7 +550,7 @@ export default function LearnerPortal() {
 
           <TabsContent value="completed" className="mt-4">
             {reviewedRecordings.length > 0 ? (
-              <GroupedRecordingsList recordings={reviewedRecordings} />
+              <GroupedRecordingsList recordings={reviewedRecordings} childLookup={allRecordingsList} />
             ) : (
               <div className="text-center py-10 bg-muted/10 rounded-2xl border border-dashed border-border">
                 <MessageCircle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
