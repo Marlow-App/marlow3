@@ -2,8 +2,8 @@ export const CREDIT_PACKS = [
   { usd: 5,   credits: 15,  label: "Test pack",         highlight: null            },
   { usd: 10,  credits: 35,  label: "Regular pack",      highlight: null            },
   { usd: 20,  credits: 75,  label: "Most Popular",      highlight: "most_popular"  },
-  { usd: 50,  credits: 200, label: "Best Value",        highlight: "best_value"    },
-  { usd: 100, credits: 425, label: "Serious learners",  highlight: null            },
+  { usd: 50,  credits: 200, label: "Large pack",         highlight: null            },
+  { usd: 100, credits: 425, label: "Best Value",        highlight: "best_value"    },
 ] as const;
 
 export type CreditPackUsd = typeof CREDIT_PACKS[number]["usd"];
