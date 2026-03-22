@@ -82,7 +82,7 @@ export function Layout({ children }: LayoutProps) {
           {navItems.map((item) => {
             const isSpotlit = spotlightHref === item.href;
             return (
-              <Link key={item.href} href={item.href}>
+              <Link key={item.href} href={item.href} className="block">
                 <div
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer group",

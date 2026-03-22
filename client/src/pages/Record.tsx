@@ -248,7 +248,7 @@ export default function RecordPage() {
       <div className="max-w-2xl mx-auto space-y-3 animate-in">
         <div className="space-y-4">
           <div className="flex items-center gap-1">
-            <button onClick={() => setLocation(-1 as any)} className="p-1 -ml-1 rounded-md hover:bg-muted transition-colors" data-testid="back-btn">
+            <button onClick={() => window.history.back()} className="p-1 -ml-1 rounded-md hover:bg-muted transition-colors" data-testid="back-btn">
               <ChevronLeft className="w-9 h-9 text-foreground" strokeWidth={3} />
             </button>
             <h1 className="text-3xl font-bold font-display">{rerecordOf ? "Re-record" : "New Recording"}</h1>
