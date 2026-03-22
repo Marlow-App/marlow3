@@ -107,7 +107,7 @@ export default function Landing() {
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">How It Works</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Every recording gets detailed, character-by-character feedback from a native speaker.
+              Every recording gets detailed, character-by-character feedback from a linguistically trained native speaker.
             </p>
           </div>
 
