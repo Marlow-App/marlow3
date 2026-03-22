@@ -259,13 +259,24 @@ export default function Landing() {
               <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6">
                 <div className="space-y-4">
                   <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Overall Comments</p>
+                  <div className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-medium text-muted-foreground">Fluency</span>
+                      <div className="flex gap-0.5">
+                        {[1,2,3,4,5].map(s => (
+                          <Star key={s} className={`w-4 h-4 ${s <= 4 ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
+                        ))}
+                      </div>
+                      <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">80%</span>
+                    </div>
+                  </div>
                   <div className="bg-muted/30 rounded-xl p-4">
                     <div className="flex gap-3">
                       <div className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold text-xs shrink-0">L</div>
                       <div>
                         <p className="text-sm font-medium">Native Speaker from Changchun</p>
                         <p className="text-foreground/80 mt-2 leading-relaxed">
-                          Tones 1 and 4 consistently good, but you tend to mix up Tones 2 and 3. When a third tone comes before another third tone, the first one changes to a second tone. Practice this pattern with "你好" — the "nǐ" actually sounds like "ní" in natural speech.
+                          Tones 1 and 4 consistently good, but you tend to mix up Tones 2 and 3. When a third tone comes before another third tone, the first one changes to a second tone.
                         </p>
                       </div>
                     </div>
