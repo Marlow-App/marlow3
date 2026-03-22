@@ -39,7 +39,7 @@ export function Layout({ children }: LayoutProps) {
     enabled: user?.role === "learner",
   });
 
-  const totalCredits = (creditData?.creditBalance ?? 0) + (creditData?.freeCreditsBalance ?? 0);
+  const totalCredits = creditData?.creditBalance ?? 0;
   const isUnlimited = creditData?.isUnlimited ?? false;
 
   const subLabel = user?.role === "reviewer"

@@ -47,7 +47,7 @@ The project uses a monorepo layout with three main directories:
   - `Home` — dashboard with greeting, daily challenge, and recent recordings
   - `Record` — record audio with sentence text input; supports `?phrase=` URL param for pre-selection; shows credit balance pill + cost preview (1 credit/char); 95%+ refund note
   - `LearnerPortal` — view your recordings and their feedback
-  - `ReviewerPortal` — view pending recordings with Pro Waiting/Waiting/Completed tabs + sort toggle
+  - `ReviewerPortal` — view pending recordings with Waiting/Completed tabs + sort toggle
   - `RecordingDetail` — view a specific recording with ability to leave feedback; reviewers can edit and delete their own feedback inline
   - `CheckoutSuccess` — post-payment confirmation page shown after Stripe checkout (shows credits added)
   - `PrivacyPolicy` — privacy policy page (accessible to all users)

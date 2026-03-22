@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mic, PlayCircle, ArrowRight, User as UserIcon, GraduationCap, Crown, ArrowUpDown } from "lucide-react";
+import { Mic, PlayCircle, ArrowRight, User as UserIcon, GraduationCap, ArrowUpDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
@@ -29,9 +29,7 @@ function RatingBadge({ rating, overallScore }: { rating?: number | null; overall
   const c = config[rating];
   if (!c) return null;
   return (
-    <div className="flex items-center gap-1">
-      <span className={`text-[10px] font-semibold ${c.textColor}`}>{c.label}</span>
-    </div>
+    <span className={`text-xs font-semibold ${c.textColor}`} data-testid={`rating-label-${rating}`}>{c.label}</span>
   );
 }
 
@@ -47,12 +45,6 @@ function RecordingCard({ recording, showReviewButton = true }: { recording: any;
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="text-xl font-medium">{recording.sentenceText}</h3>
-                {recording.isPro && (
-                  <Badge variant="default" className="bg-primary text-primary-foreground text-[10px] py-0 px-1.5" data-testid={`pro-badge-${recording.id}`}>
-                    <Crown className="w-2.5 h-2.5 mr-0.5" />
-                    Pro
-                  </Badge>
-                )}
               </div>
               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5 bg-muted px-2 py-0.5 rounded-md">
@@ -110,16 +102,7 @@ export default function ReviewerPortal() {
     });
   };
 
-  const proPending = useMemo(() => {
-    const filtered = pendingRecordings?.filter((r: any) => r.isPro) || [];
-    return sortRecordings(filtered);
-  }, [pendingRecordings, sortOrder]);
-
-  const freePending = useMemo(() => {
-    const filtered = pendingRecordings?.filter((r: any) => !r.isPro) || [];
-    return sortRecordings(filtered);
-  }, [pendingRecordings, sortOrder]);
-
+  const sortedPending = useMemo(() => sortRecordings(pendingRecordings || []), [pendingRecordings, sortOrder]);
   const sortedReviewed = useMemo(() => sortRecordings(reviewedRecordings), [reviewedRecordings, sortOrder]);
 
   if (loadingPending || loadingAll) {
@@ -151,19 +134,12 @@ export default function ReviewerPortal() {
           </Button>
         </div>
 
-        <Tabs defaultValue="pro-pending" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-auto p-1 rounded-xl">
-            <TabsTrigger value="pro-pending" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md" data-testid="tab-pro-pending">
-              <Crown className="w-3.5 h-3.5" />
-              Pro Waiting
-              <Badge variant="secondary" className="ml-auto text-xs" data-testid="pro-pending-count">
-                {proPending.length}
-              </Badge>
-            </TabsTrigger>
+        <Tabs defaultValue="pending" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 h-auto p-1 rounded-xl">
             <TabsTrigger value="pending" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md" data-testid="tab-pending">
               Waiting
               <Badge variant="secondary" className="ml-auto text-xs" data-testid="pending-count">
-                {freePending.length}
+                {sortedPending.length}
               </Badge>
             </TabsTrigger>
             <TabsTrigger value="reviewed" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md" data-testid="tab-reviewed">
@@ -174,29 +150,12 @@ export default function ReviewerPortal() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="pro-pending" className="mt-6">
-            <div className="grid gap-4">
-              {proPending.map((recording: any) => (
-                <RecordingCard key={recording.id} recording={recording} />
-              ))}
-              {proPending.length === 0 && (
-                <div className="text-center py-20 bg-muted/10 rounded-2xl border border-dashed border-border">
-                  <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Crown className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-xl font-medium">No Pro recordings waiting</h3>
-                  <p className="text-muted-foreground mt-2">Pro subscriber recordings will appear here for priority review.</p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
           <TabsContent value="pending" className="mt-6">
             <div className="grid gap-4">
-              {freePending.map((recording: any) => (
+              {sortedPending.map((recording: any) => (
                 <RecordingCard key={recording.id} recording={recording} />
               ))}
-              {freePending.length === 0 && (
+              {sortedPending.length === 0 && (
                 <div className="text-center py-20 bg-muted/10 rounded-2xl border border-dashed border-border">
                   <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <PlayCircle className="w-8 h-8" />
