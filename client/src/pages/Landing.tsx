@@ -162,18 +162,18 @@ export default function Landing() {
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-4">
-                  <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Tone 3 Sandhi</p>
-                  <p className="text-xs text-muted-foreground font-medium">Tone 3 + Tone 3 → first becomes Tone 2</p>
-                  <div className="grid grid-cols-[80px_1fr] gap-x-3 gap-y-2 text-sm items-center">
-                    <span className="text-muted-foreground/70 text-right text-xs">Dictionary</span>
-                    <span className="flex gap-3">
-                      <span className="flex flex-col items-center"><span className="text-xs font-medium text-[#3b82f6]">nǐ</span><span className="font-bold text-xl">你</span></span>
-                      <span className="flex flex-col items-center"><span className="text-xs font-medium text-[#3b82f6]">hǎo</span><span className="font-bold text-xl">好</span></span>
+                  <p className="text-[16px] font-semibold uppercase text-muted-foreground tracking-wide">Tone 3 Sandhi</p>
+                  <p className="text-[16px] text-muted-foreground font-medium">Tone 3 + Tone 3 → first becomes Tone 2</p>
+                  <div className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-2 items-center">
+                    <span className="text-muted-foreground/70 text-right text-[16px]">Dictionary</span>
+                    <span className="flex gap-4">
+                      <span className="flex flex-col items-center"><span className="text-[16px] font-medium text-[#3b82f6]">nǐ</span><span className="font-bold text-[26px]">你</span></span>
+                      <span className="flex flex-col items-center"><span className="text-[16px] font-medium text-[#3b82f6]">hǎo</span><span className="font-bold text-[26px]">好</span></span>
                     </span>
-                    <span className="text-muted-foreground/70 text-right text-xs">As spoken</span>
-                    <span className="flex gap-3">
-                      <span className="flex flex-col items-center"><span className="text-xs font-semibold text-amber-500">ní</span><span className="font-bold text-xl">你</span></span>
-                      <span className="flex flex-col items-center"><span className="text-xs font-medium text-[#3b82f6]">hǎo</span><span className="font-bold text-xl">好</span></span>
+                    <span className="text-muted-foreground/70 text-right text-[16px]">As spoken</span>
+                    <span className="flex gap-4">
+                      <span className="flex flex-col items-center"><span className="text-[16px] font-semibold text-amber-500">ní</span><span className="font-bold text-[26px]">你</span></span>
+                      <span className="flex flex-col items-center"><span className="text-[16px] font-medium text-[#3b82f6]">hǎo</span><span className="font-bold text-[26px]">好</span></span>
                     </span>
                   </div>
                 </div>
