@@ -133,7 +133,7 @@ export default function Landing() {
                       <Mic2 className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Today's phrase</p>
+                      <p className="text-[16px] text-muted-foreground uppercase tracking-wide font-semibold">Today's phrase</p>
                       <div className="flex items-end gap-1 mt-1">
                         <span className="inline-flex flex-col items-center">
                           <span className="text-xs text-green-500 font-medium">nǐ</span>
