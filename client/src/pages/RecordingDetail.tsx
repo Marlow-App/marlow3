@@ -877,36 +877,151 @@ export default function RecordingDetail() {
                     rerecordLabel={isOwner && idx === 0 ? rerecordLabel : null}
                   />
                 ))
-              ) : recording.parentRecordingId && parentRecording?.feedback && parentRecording.feedback.length > 0 ? (
-                <>
-                  <div className="bg-muted/20 rounded-xl px-4 py-3 space-y-3">
-                    <p className="text-xs text-muted-foreground italic">
-                      Awaiting reviewer feedback on this re-recording. Listen back while you wait:
+              ) : recording.parentRecordingId ? (
+                user?.role === 'reviewer' && !reviewerHasFeedback ? (
+                  // Reviewer view of a re-recording: comparison context + embedded form
+                  <div className="bg-muted/10 border border-border/50 rounded-xl p-4 space-y-4">
+                    <p className="text-sm font-medium text-foreground">
+                      The learner submitted a re-recording. Compare with the original and give updated feedback.
                     </p>
-                    {recording.audioUrl && (
-                      <audio controls className="w-full h-10" preload="auto" playsInline>
-                        <source src={recording.audioUrl} />
-                      </audio>
+
+                    <div className="grid gap-3">
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Re-recording</p>
+                        {recording.audioUrl && (
+                          <audio controls className="w-full h-10" preload="auto" playsInline>
+                            <source src={recording.audioUrl} />
+                          </audio>
+                        )}
+                      </div>
+                      {parentRecording?.audioUrl && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Original recording</p>
+                          <audio controls className="w-full h-10" preload="auto" playsInline>
+                            <source src={parentRecording.audioUrl} />
+                          </audio>
+                        </div>
+                      )}
+                    </div>
+
+                    {parentRecording?.feedback && parentRecording.feedback.length > 0 && (
+                      <div className="space-y-3 pt-2 border-t border-border/40">
+                        <p className="text-xs text-muted-foreground font-medium">Previous feedback for reference:</p>
+                        {(parentRecording.feedback as any[]).map((item: any) => (
+                          <EditableFeedbackCard
+                            key={item.id}
+                            item={item}
+                            isOwner={item.reviewerId === user?.id}
+                            isReviewer={true}
+                            pinyinData={pinyinData}
+                            recordingId={parentRecording.id}
+                            characters={characters}
+                          />
+                        ))}
+                      </div>
                     )}
-                    <p className="text-xs text-muted-foreground font-medium pt-1 border-t border-border/40">
-                      Original feedback that prompted this re-recording:
-                    </p>
+
+                    {/* Embedded Add Feedback form */}
+                    <div className="pt-2 border-t border-border/40 space-y-4">
+                      <p className="text-sm font-semibold">Your feedback on the re-recording</p>
+                      <CharacterRatingInput
+                        characters={characters}
+                        ratings={charRatings}
+                        onChange={setCharRatings}
+                        fluency={fluency}
+                        onFluencyChange={setFluency}
+                      />
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Corrections</label>
+                        <Textarea
+                          placeholder="Write corrections for specific characters or phrases..."
+                          className="min-h-[80px] resize-none"
+                          value={correctionsText}
+                          onChange={(e) => setCorrectionsText(e.target.value)}
+                          data-testid="corrections-text-input"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Overall Comments</label>
+                        <Textarea
+                          placeholder="Provide overall feedback on tones and pronunciation..."
+                          className="min-h-[120px] resize-none"
+                          value={feedbackText}
+                          onChange={(e) => setFeedbackText(e.target.value)}
+                          data-testid="feedback-text-input"
+                        />
+                      </div>
+                      <Separator />
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Audio Correction (Optional)</label>
+                        {isRecordingFeedback ? (
+                          <AudioRecorder
+                            onRecordingComplete={handleFeedbackSubmit}
+                            isUploading={isUploading || createFeedback.isPending}
+                          />
+                        ) : (
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => setIsRecordingFeedback(true)}
+                            data-testid="record-audio-btn"
+                          >
+                            <Mic className="w-4 h-4 mr-2" />
+                            Record Audio Response
+                          </Button>
+                        )}
+                      </div>
+                      {!isRecordingFeedback && (
+                        <Button
+                          className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                          onClick={() => handleFeedbackSubmit()}
+                          disabled={createFeedback.isPending || (!feedbackText.trim() && !correctionsText.trim()) || (characters.length > 0 && !allRated)}
+                          data-testid="submit-feedback-btn"
+                        >
+                          {createFeedback.isPending ? "Submitting..." : "Submit Text Feedback"}
+                        </Button>
+                      )}
+                      {isRecordingFeedback && (
+                        <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={() => setIsRecordingFeedback(false)} data-testid="cancel-recording-btn">
+                          Cancel Recording
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  {parentRecording.feedback.map((item: any) => (
-                    <EditableFeedbackCard
-                      key={item.id}
-                      item={item}
-                      isOwner={false}
-                      isReviewer={false}
-                      pinyinData={pinyinData}
-                      recordingId={parentRecording.id}
-                      characters={characters}
-                    />
-                  ))}
-                </>
+                ) : (
+                  // Learner view of a re-recording: awaiting message + parent context
+                  <>
+                    <div className="bg-muted/20 rounded-xl px-4 py-3 space-y-3">
+                      <p className="text-xs text-muted-foreground italic">
+                        Awaiting reviewer feedback on this re-recording. Listen back while you wait:
+                      </p>
+                      {recording.audioUrl && (
+                        <audio controls className="w-full h-10" preload="auto" playsInline>
+                          <source src={recording.audioUrl} />
+                        </audio>
+                      )}
+                      {parentRecording?.feedback && parentRecording.feedback.length > 0 && (
+                        <p className="text-xs text-muted-foreground font-medium pt-1 border-t border-border/40">
+                          Original feedback that prompted this re-recording:
+                        </p>
+                      )}
+                    </div>
+                    {parentRecording?.feedback && (parentRecording.feedback as any[]).map((item: any) => (
+                      <EditableFeedbackCard
+                        key={item.id}
+                        item={item}
+                        isOwner={false}
+                        isReviewer={false}
+                        pinyinData={pinyinData}
+                        recordingId={parentRecording.id}
+                        characters={characters}
+                      />
+                    ))}
+                  </>
+                )
               ) : (
                 <div className="text-center py-8 text-muted-foreground italic bg-muted/20 rounded-xl">
-                  {recording.parentRecordingId ? "Awaiting reviewer feedback on this re-recording." : "No feedback provided yet."}
+                  No feedback provided yet.
                 </div>
               )}
             </div>
@@ -975,7 +1090,7 @@ export default function RecordingDetail() {
             </div>
           )}
 
-          {user?.role === 'reviewer' && !reviewerHasFeedback && (
+          {user?.role === 'reviewer' && !reviewerHasFeedback && !recording.parentRecordingId && (
             <div className="space-y-6">
               <Card className="shadow-lg border-t-4 border-t-secondary sticky top-8">
                 <CardHeader>
