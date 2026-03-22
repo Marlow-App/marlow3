@@ -608,12 +608,13 @@ export default function RecordingDetail() {
   const isOwner = user && recording && recording.userId === user.id && user.role !== "reviewer";
   const reviewerHasFeedback = user?.role === 'reviewer' && recording?.feedback?.some((f: any) => f.reviewerId === user?.id);
   const charCount = recording ? countChineseChars(recording.sentenceText) : 0;
-  const rerecordLabel = isOwner
+  const alreadyHasRerecording = childRecordings && childRecordings.length > 0;
+  const rerecordLabel = isOwner && !alreadyHasRerecording
     ? recording?.status === "pending"
       ? "Free redo"
       : `Re-record (30% off, ${Math.ceil(charCount * 0.7)} credit${Math.ceil(charCount * 0.7) !== 1 ? "s" : ""})`
     : null;
-  const rerecordUrl = recording
+  const rerecordUrl = recording && !alreadyHasRerecording
     ? `/record?rerecordOf=${recordingId}&sentenceText=${encodeURIComponent(recording.sentenceText)}&redo=${recording.status === "pending" ? "free" : "discount"}`
     : null;
 
