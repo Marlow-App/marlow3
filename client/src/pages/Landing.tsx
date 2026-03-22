@@ -123,7 +123,7 @@ export default function Landing() {
                   Pick from a daily challenge matched to your level, choose from our phrase bank, or type your own sentence. Hit record and speak naturally.
                 </p>
               </div>
-              <div className="bg-card rounded-2xl shadow-lg border border-border/50 p-6">
+              <div className="bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 pb-4 border-b border-border/30">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
@@ -157,7 +157,7 @@ export default function Landing() {
 
             {/* Step 2: Get Rated */}
             <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6">
+              <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Character Ratings</p>
@@ -229,7 +229,7 @@ export default function Landing() {
                   For anything rated less than "Great," the reviewer explains exactly what went wrong and how to fix it. You get targeted advice for each character that needs work.
                 </p>
               </div>
-              <div className="bg-card rounded-2xl shadow-lg border border-border/50 p-6">
+              <div className="bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-4">
                   <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Corrections</p>
                   <div className="space-y-3">
@@ -256,7 +256,7 @@ export default function Landing() {
 
             {/* Step 4: Overall Comments */}
             <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6">
+              <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-4">
                   <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Overall Comments</p>
                   <div className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2">
