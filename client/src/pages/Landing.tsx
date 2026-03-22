@@ -194,7 +194,7 @@ export default function Landing() {
               <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Character Ratings</p>
+                    <p className="text-[16px] font-semibold uppercase text-muted-foreground tracking-wide">Character Ratings</p>
 
                     <span className="text-lg font-bold text-amber-600">72%</span>
                   </div>
@@ -266,7 +266,7 @@ export default function Landing() {
               </div>
               <div className="bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-4">
-                  <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Corrections</p>
+                  <p className="text-[16px] font-semibold uppercase text-muted-foreground tracking-wide">Corrections</p>
                   <div className="space-y-3">
                     <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg p-3">
                       <div className="flex items-start gap-2">
@@ -293,7 +293,7 @@ export default function Landing() {
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-4">
-                  <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Overall Comments</p>
+                  <p className="text-[16px] font-semibold uppercase text-muted-foreground tracking-wide">Overall Comments</p>
                   <div className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2">
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-medium text-muted-foreground">Fluency</span>
