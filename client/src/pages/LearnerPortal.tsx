@@ -179,7 +179,7 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
                 } ${today ? "ring-1.5 ring-primary ring-offset-1 ring-offset-background" : ""}`}
                 data-testid={`calendar-day-${key}`}
               >
-                <span className="text-sm font-normal leading-none">{format(day, "d")}</span>
+                <span className={`text-sm leading-none ${count > 0 ? "font-bold" : "font-normal"}`}>{format(day, "d")}</span>
                 {count > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 bg-foreground text-background text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">
                     {count}
