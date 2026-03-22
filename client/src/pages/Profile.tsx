@@ -548,10 +548,10 @@ export default function Profile() {
                           <td className="px-4 py-3.5">
                             <span className="font-semibold">{pack.credits}</span>
                             {pack.highlight && (
-                              <span className={`ml-2 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                              <span className={`ml-2 text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${
                                 pack.highlight === "most_popular"
-                                  ? "bg-primary/15 text-primary"
-                                  : "bg-secondary/20 text-secondary-foreground"
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-amber-400 text-amber-950"
                               }`}>
                                 {pack.highlight === "most_popular" ? "Most Popular" : "Best Value"}
                               </span>
@@ -562,14 +562,13 @@ export default function Profile() {
                           </td>
                           <td className="px-4 py-3 text-right">
                             <Button
-                              size="sm"
-                              variant={pack.highlight === "most_popular" ? "default" : "outline"}
                               disabled={checkoutLoading === pack.usd}
                               onClick={() => handleBuyCredits(pack.usd)}
                               data-testid={`buy-pack-${pack.usd}`}
+                              className="min-w-[100px] font-bold bg-primary hover:bg-primary/85 active:bg-primary/75 text-primary-foreground transition-colors"
                             >
                               {checkoutLoading === pack.usd ? (
-                                <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Processing...</>
+                                <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Processing...</>
                               ) : (
                                 "Buy"
                               )}
