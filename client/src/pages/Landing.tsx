@@ -42,7 +42,7 @@ export default function Landing() {
               Master Chinese <span className="text-primary">Tones</span> with Real Feedback.
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
-              Don't guess if you sound right. Submit voice recordings and get personalized correction from native speakers.
+              Don't guess if you sound right. Submit voice recordings and get personalized feedback from native speakers trained in linguistics and language teaching.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <a href="/api/login?role=learner">
