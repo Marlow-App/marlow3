@@ -19,6 +19,7 @@ import { type User as SharedUser, type CharacterRating } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { pinyin } from "pinyin-pro";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
+import { useDisplayPrefs } from "@/hooks/use-display-prefs";
 
 import {
   AlertDialog,
@@ -545,6 +546,8 @@ export default function RecordingDetail() {
   const { uploadFile, isUploading } = useUpload();
   const { toast } = useToast();
   
+  const { showPinyin } = useDisplayPrefs();
+
   const [feedbackText, setFeedbackText] = useState("");
   const [correctionsText, setCorrectionsText] = useState("");
   const [isRecordingFeedback, setIsRecordingFeedback] = useState(false);
@@ -757,8 +760,18 @@ export default function RecordingDetail() {
               <CardContent className="p-8">
                 <div className="mb-8">
                   {pinyinData.length > 0 ? (
-                    <div className="mb-4" data-testid="sentence-with-pinyin">
+                    <div className="mb-4 group/pinyin" data-testid="sentence-with-pinyin">
                       <SandhiPhraseDisplay pinyinChars={pinyinData} charSize="text-3xl" pinyinSize="text-base" />
+                      {showPinyin && (
+                        <div className="mt-2 h-5 opacity-0 group-hover/pinyin:opacity-100 transition-opacity duration-200">
+                          <p className="text-xs text-muted-foreground">
+                            Pinyin is on —{" "}
+                            <Link href="/profile?tab=settings" className="underline hover:text-foreground transition-colors">
+                              turn it off in Settings
+                            </Link>
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <h2 className="text-3xl font-display font-bold text-foreground mb-4 leading-tight">

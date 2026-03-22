@@ -12,6 +12,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Info } from "lucide-react";
+import { useDisplayPrefs } from "@/hooks/use-display-prefs";
 
 const TONE_COLORS: Record<number, string> = {
   1: "text-red-600 dark:text-red-400",
@@ -44,6 +45,7 @@ function CharDisplay({
   charSize = "text-2xl",
   pinyinSize = "text-xs",
   changed = false,
+  showPinyin = true,
 }: {
   char: string;
   tone: number;
@@ -51,11 +53,12 @@ function CharDisplay({
   charSize?: string;
   pinyinSize?: string;
   changed?: boolean;
+  showPinyin?: boolean;
 }) {
   const isPunctuation = !pinyin || /[，。！？、；：]/.test(char);
   return (
     <span className="inline-flex flex-col items-center mx-[1px]">
-      {!isPunctuation && (
+      {showPinyin && !isPunctuation && (
         <span className={`${pinyinSize} leading-tight font-medium ${TONE_PINYIN_COLORS[tone]}`}>
           {pinyin}
         </span>
@@ -63,7 +66,7 @@ function CharDisplay({
       <span className={`${charSize} font-medium leading-tight ${isPunctuation ? "text-foreground/60" : TONE_COLORS[tone]}`}>
         {char}
       </span>
-      {!isPunctuation && (
+      {showPinyin && !isPunctuation && (
         <span className={`w-1 h-1 rounded-full mt-0.5 ${changed ? "bg-primary/60" : ""}`} />
       )}
     </span>
@@ -135,6 +138,8 @@ export function SandhiPhraseDisplay({
   pinyinSize = "text-xs",
   showSandhiRow = true,
 }: SandhiPhraseDisplayProps) {
+  const { showPinyin, showSandhi } = useDisplayPrefs();
+
   const toneChars: ToneChar[] = useMemo(() => {
     if (characters) return characters;
     if (pinyinChars) return pinyinCharsToToneChars(pinyinChars);
@@ -145,7 +150,9 @@ export function SandhiPhraseDisplay({
   const hasChanges = useMemo(() => sandhiResult.some(c => c.changed), [sandhiResult]);
   const rules = useMemo(() => detectSandhiRules(toneChars), [toneChars]);
 
-  if (!showSandhiRow || !hasChanges) {
+  const effectiveShowSandhi = showSandhiRow && showSandhi && hasChanges;
+
+  if (!effectiveShowSandhi) {
     return (
       <div data-testid="sandhi-phrase-display">
         <div className="flex flex-wrap items-end gap-x-0.5 gap-y-1" data-testid="sandhi-original-row">
@@ -157,6 +164,7 @@ export function SandhiPhraseDisplay({
               pinyin={tc.pinyin}
               charSize={charSize}
               pinyinSize={pinyinSize}
+              showPinyin={showPinyin}
             />
           ))}
         </div>
@@ -182,6 +190,7 @@ export function SandhiPhraseDisplay({
               pinyin={tc.pinyin}
               charSize={charSize}
               pinyinSize={pinyinSize}
+              showPinyin={showPinyin}
             />
           ))}
         </div>
@@ -203,6 +212,7 @@ export function SandhiPhraseDisplay({
               charSize={charSize}
               pinyinSize={pinyinSize}
               changed={sc.changed}
+              showPinyin={showPinyin}
             />
           ))}
         </div>
