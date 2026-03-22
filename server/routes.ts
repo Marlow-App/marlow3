@@ -176,6 +176,11 @@ export async function registerRoutes(
   // List all pending recordings (Control Center)
   app.get(api.recordings.listPending.path, isAuthenticated, async (req, res) => {
     try {
+      const userId = (req.user as any).claims.sub;
+      const dbUser = await storage.getUser(userId);
+      if (dbUser?.role !== "reviewer") {
+        return res.status(403).json({ message: "Reviewers only" });
+      }
       const pending = await storage.getAllPendingRecordings();
       const pendingWithUser = await Promise.all(pending.map(async (r: any) => {
         const user = await storage.getUser(r.userId);
@@ -191,6 +196,11 @@ export async function registerRoutes(
   // List all recordings (Admin/Reviewer view for completed)
   app.get("/api/all-recordings", isAuthenticated, async (req, res) => {
     try {
+      const userId = (req.user as any).claims.sub;
+      const dbUser = await storage.getUser(userId);
+      if (dbUser?.role !== "reviewer") {
+        return res.status(403).json({ message: "Reviewers only" });
+      }
       const recordings = await storage.getAllRecordings();
 
       const recordingsEnhanced = await Promise.all(recordings.map(async (r: any) => {
@@ -486,14 +496,26 @@ export async function registerRoutes(
   });
 
   // === User Profile ===
+  const profileUpdateSchema = z.object({
+    chineseLevel: z.string().min(1).max(100).optional(),
+    nativeLanguage: z.string().min(1).max(100).optional(),
+    focusAreas: z.array(z.string()).min(1).optional(),
+    city: z.string().max(100).optional(),
+    teachingExperience: z.number().int().min(0).max(100).optional(),
+    dialects: z.array(z.string()).optional(),
+  });
+
   app.patch("/api/auth/user", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).claims.sub;
-      const updates = req.body;
+      const parsed = profileUpdateSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: parsed.error.errors[0].message });
+      }
 
       const updatedUser = await authStorage.upsertUser({
         id: userId,
-        ...updates,
+        ...parsed.data,
       });
 
       res.json(updatedUser);
