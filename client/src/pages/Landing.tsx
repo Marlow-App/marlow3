@@ -158,12 +158,81 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Step 2: Get Rated */}
+            {/* Step 2: Tone Sandhi */}
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
+                <div className="space-y-4">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Real Pronunciation</p>
+
+                  {/* 你好 — T3+T3 sandhi */}
+                  <div className="space-y-1.5">
+                    <p className="text-xs text-muted-foreground font-medium">Tone 3 + Tone 3 → first becomes Tone 2</p>
+                    <div className="grid grid-cols-[80px_1fr] gap-x-3 gap-y-1 text-sm">
+                      <span className="text-muted-foreground/70 text-right">Dictionary</span>
+                      <span className="flex gap-3">
+                        <span className="flex flex-col items-center"><span className="text-xs font-medium text-[#3b82f6]">nǐ</span><span className="font-bold text-base">你</span></span>
+                        <span className="flex flex-col items-center"><span className="text-xs font-medium text-[#3b82f6]">hǎo</span><span className="font-bold text-base">好</span></span>
+                      </span>
+                      <span className="text-muted-foreground/70 text-right">As spoken</span>
+                      <span className="flex gap-3">
+                        <span className="flex flex-col items-center"><span className="text-xs font-semibold text-amber-500">ní ↑</span><span className="font-bold text-base">你</span></span>
+                        <span className="flex flex-col items-center"><span className="text-xs font-medium text-[#3b82f6]">hǎo</span><span className="font-bold text-base">好</span></span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-border/30" />
+
+                  {/* 一个 — 一 sandhi */}
+                  <div className="space-y-1.5">
+                    <p className="text-xs text-muted-foreground font-medium">一 (yī) changes before Tone 4 → yì</p>
+                    <div className="grid grid-cols-[80px_1fr] gap-x-3 gap-y-1 text-sm">
+                      <span className="text-muted-foreground/70 text-right">Dictionary</span>
+                      <span className="flex gap-3">
+                        <span className="flex flex-col items-center"><span className="text-xs font-medium text-[#3b82f6]">yī</span><span className="font-bold text-base">一</span></span>
+                        <span className="flex flex-col items-center"><span className="text-xs font-medium text-red-500">gè</span><span className="font-bold text-base">个</span></span>
+                      </span>
+                      <span className="text-muted-foreground/70 text-right">As spoken</span>
+                      <span className="flex gap-3">
+                        <span className="flex flex-col items-center"><span className="text-xs font-semibold text-amber-500">yì ↓</span><span className="font-bold text-base">一</span></span>
+                        <span className="flex flex-col items-center"><span className="text-xs font-medium text-red-500">gè</span><span className="font-bold text-base">个</span></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="order-1 md:order-2 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">2</div>
+                  <h3 className="text-2xl font-bold font-display">We Show the Real Pronunciation</h3>
+                </div>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Chinese pronunciation isn't always what the dictionary says. Tones shift depending on what's around them — and most apps ignore this entirely. Marlow shows you both the dictionary tones <em>and</em> how the phrase is actually spoken.
+                </p>
+                <ul className="space-y-2 text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                    <span><strong className="text-foreground">Tone 3 sandhi</strong> — when two Tone 3s follow each other, the first shifts up to Tone 2 (你好: nǐ hǎo → ní hǎo)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                    <span><strong className="text-foreground">一 sandhi</strong> — 一 (yī) becomes yì before Tone 4, and yí before everything else</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                    <span><strong className="text-foreground">不 sandhi</strong> — 不 (bù) flips to bú when followed by Tone 4</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Step 3: Get Rated */}
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">Character Ratings</p>
+
                     <span className="text-lg font-bold text-amber-600">72%</span>
                   </div>
 
@@ -212,7 +281,7 @@ export default function Landing() {
               </div>
               <div className="order-1 md:order-2 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">2</div>
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">3</div>
                   <h3 className="text-2xl font-bold font-display">Get Rated Character by Character</h3>
                 </div>
                 <p className="text-muted-foreground text-lg leading-relaxed">
@@ -221,11 +290,11 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Step 3: Corrections */}
+            {/* Step 4: Corrections */}
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">3</div>
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">4</div>
                   <h3 className="text-2xl font-bold font-display">Specific Corrections</h3>
                 </div>
                 <p className="text-muted-foreground text-lg leading-relaxed">
@@ -257,7 +326,7 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Step 4: Overall Comments */}
+            {/* Step 5: Overall Comments */}
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-4">
@@ -296,7 +365,7 @@ export default function Landing() {
               </div>
               <div className="order-1 md:order-2 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">4</div>
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">5</div>
                   <h3 className="text-2xl font-bold font-display">Overall Comments</h3>
                 </div>
                 <p className="text-muted-foreground text-lg leading-relaxed">
