@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
         </Link>
 
         <div className="flex items-center gap-3 mb-8">
-          <img src={pandaLogo} alt="Marlow" className="w-[53px] h-[53px] object-contain" />
+          <img src={pandaLogo} alt="Marlow" className="w-16 h-16 object-contain" />
           <span className="font-display font-bold text-2xl tracking-tight">Marlow</span>
         </div>
 
