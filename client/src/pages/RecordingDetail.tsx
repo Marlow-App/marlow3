@@ -564,6 +564,7 @@ export default function RecordingDetail() {
   const { data: recording, isLoading: loadingRecording } = useRecording(recordingId);
   const { data: user, isLoading: loadingUser } = useQuery<SharedUser>({ queryKey: ["/api/auth/user"] });
   const { data: childRecordings } = useChildRecordings(recordingId);
+  const { data: parentRecording } = useRecording(recording?.parentRecordingId ?? 0);
   const createFeedback = useCreateFeedback(recordingId);
   const { uploadFile, isUploading } = useUpload();
   const { toast } = useToast();
@@ -876,9 +877,26 @@ export default function RecordingDetail() {
                     rerecordLabel={isOwner && idx === 0 ? rerecordLabel : null}
                   />
                 ))
+              ) : recording.parentRecordingId && parentRecording?.feedback && parentRecording.feedback.length > 0 ? (
+                <>
+                  <p className="text-xs text-muted-foreground italic bg-muted/20 rounded-xl px-4 py-2">
+                    Awaiting reviewer feedback on this re-recording. Here's the original feedback that prompted it:
+                  </p>
+                  {parentRecording.feedback.map((item: any) => (
+                    <EditableFeedbackCard
+                      key={item.id}
+                      item={item}
+                      isOwner={false}
+                      isReviewer={false}
+                      pinyinData={pinyinData}
+                      recordingId={parentRecording.id}
+                      characters={characters}
+                    />
+                  ))}
+                </>
               ) : (
                 <div className="text-center py-8 text-muted-foreground italic bg-muted/20 rounded-xl">
-                  No feedback provided yet.
+                  {recording.parentRecordingId ? "Awaiting reviewer feedback on this re-recording." : "No feedback provided yet."}
                 </div>
               )}
             </div>

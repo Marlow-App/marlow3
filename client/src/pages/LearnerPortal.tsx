@@ -328,6 +328,8 @@ function RecordingCard({ recording }: { recording: any }) {
             >
               {recording.status === "reviewed" ? (
                 <span className="flex items-center gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Reviewed</span>
+              ) : recording.parentRecordingId ? (
+                "Re-recording pending"
               ) : (
                 "Pending"
               )}
