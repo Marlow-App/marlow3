@@ -12,7 +12,7 @@ export default function TermsOfService() {
         </Link>
 
         <div className="flex items-center gap-3 mb-8">
-          <img src={pandaLogo} alt="Marlow" className="w-10 h-10 rounded-xl object-cover" />
+          <img src={pandaLogo} alt="Marlow" className="w-10 h-10 rounded-full object-cover object-[50%_30%]" />
           <span className="font-display font-bold text-2xl tracking-tight">Marlow</span>
         </div>
 

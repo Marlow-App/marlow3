@@ -18,7 +18,7 @@ export default function Landing() {
       {/* Navigation */}
       <nav className="p-6 md:px-12 flex justify-between items-center z-10">
         <div className="flex items-center gap-2">
-          <img src={pandaLogo} alt="Marlow" className="w-10 h-10 rounded-xl object-cover" />
+          <img src={pandaLogo} alt="Marlow" className="w-10 h-10 rounded-full object-cover object-[50%_30%]" />
           <span className="font-display font-bold text-2xl tracking-tight">Marlow</span>
         </div>
         <div className="flex items-center gap-4">
@@ -421,7 +421,7 @@ export default function Landing() {
       <footer className="py-12 px-6 md:px-12 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <img src={pandaLogo} alt="Marlow" className="w-8 h-8 rounded-lg object-cover" />
+            <img src={pandaLogo} alt="Marlow" className="w-8 h-8 rounded-full object-cover object-[50%_30%]" />
             <span className="font-display font-bold text-xl">Marlow</span>
           </div>
           <div className="flex items-center gap-6">

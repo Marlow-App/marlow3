@@ -90,7 +90,7 @@ export default function Onboarding() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
         <div className="flex items-center justify-center gap-3 mb-6">
-          <img src={pandaLogo} alt="Marlow" className="w-12 h-12 rounded-xl object-cover" />
+          <img src={pandaLogo} alt="Marlow" className="w-14 h-14 rounded-full object-cover object-[50%_30%]" />
         </div>
 
         <div className="flex justify-center gap-2 mb-8" data-testid="onboarding-progress">

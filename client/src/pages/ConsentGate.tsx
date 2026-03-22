@@ -38,7 +38,7 @@ export default function ConsentGate() {
       <Card className="max-w-lg w-full" data-testid="consent-gate-card">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <img src={pandaLogoImg} alt="Marlow" className="w-12 h-12 rounded-xl object-cover" />
+            <img src={pandaLogoImg} alt="Marlow" className="w-14 h-14 rounded-full object-cover object-[50%_30%]" />
           </div>
           <CardTitle className="text-2xl font-display">Welcome to Marlow</CardTitle>
           <CardDescription className="mt-2">
