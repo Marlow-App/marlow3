@@ -4,18 +4,21 @@ import {
   feedback,
   users,
   userConsents,
+  creditTransactions,
   type InsertRecording,
   type InsertFeedback,
   type Recording,
   type Feedback,
-  type User
+  type User,
+  type CreditTransaction
 } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { authStorage } from "./replit_integrations/auth/storage";
-import { ObjectStorageService, objectStorageClient } from "./replit_integrations/object_storage";
+import { ObjectStorageService } from "./replit_integrations/object_storage";
+import { SIGNUP_BONUS, DAILY_REWARD, MAX_FREE_BANK } from "@shared/credits";
 
 export interface IStorage {
-  createRecording(userId: string, recording: InsertRecording): Promise<Recording>;
+  createRecording(userId: string, recording: InsertRecording, creditCost?: number): Promise<Recording>;
   getRecording(id: number): Promise<Recording | undefined>;
   getRecordingsByUser(userId: string): Promise<Recording[]>;
   getAllPendingRecordings(): Promise<(Recording & { user: User | null })[]>;
@@ -29,6 +32,13 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   saveConsents(userId: string, consentTypes: string[], policyVersion: string, ipAddress: string): Promise<void>;
   hasUserConsented(userId: string): Promise<boolean>;
+  // Credit methods
+  grantSignupBonus(userId: string): Promise<void>;
+  grantDailyReward(userId: string): Promise<boolean>;
+  addCredits(userId: string, amount: number, stripeSessionId: string): Promise<void>;
+  spendCredits(userId: string, recordingId: number, amount: number): Promise<void>;
+  refundCredits(recordingId: number): Promise<void>;
+  getCreditTransactions(userId: string): Promise<CreditTransaction[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -36,10 +46,10 @@ export class DatabaseStorage implements IStorage {
     return authStorage.getUser(id);
   }
 
-  async createRecording(userId: string, recording: InsertRecording): Promise<Recording> {
+  async createRecording(userId: string, recording: InsertRecording, creditCost = 0): Promise<Recording> {
     const [newRecording] = await db
       .insert(recordings)
-      .values({ ...recording, userId })
+      .values({ ...recording, userId, creditCost })
       .returning();
     return newRecording;
   }
@@ -101,6 +111,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(feedback.recordingId, id));
 
     await db.delete(feedback).where(eq(feedback.recordingId, id));
+    await db.delete(creditTransactions).where(eq(creditTransactions.recordingId, id));
     await db.delete(recordings).where(eq(recordings.id, id));
 
     const objService = new ObjectStorageService();
@@ -144,7 +155,6 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     
-    // Update recording status to reviewed
     await db
       .update(recordings)
       .set({ status: "reviewed" })
@@ -235,6 +245,143 @@ export class DatabaseStorage implements IStorage {
   async hasUserConsented(userId: string): Promise<boolean> {
     const user = await this.getUser(userId);
     return !!user?.consentGiven;
+  }
+
+  // ─── Credit Methods ───────────────────────────────────────────────────────
+
+  async grantSignupBonus(userId: string): Promise<void> {
+    const existing = await db
+      .select()
+      .from(creditTransactions)
+      .where(and(
+        eq(creditTransactions.userId, userId),
+        eq(creditTransactions.type, "signup_bonus")
+      ));
+    if (existing.length > 0) return;
+
+    await db.insert(creditTransactions).values({
+      userId,
+      type: "signup_bonus",
+      amount: SIGNUP_BONUS,
+    });
+
+    const user = await this.getUser(userId);
+    await authStorage.upsertUser({
+      id: userId,
+      creditBalance: (user?.creditBalance ?? 0) + SIGNUP_BONUS,
+      freeCreditsBalance: (user?.freeCreditsBalance ?? 0) + SIGNUP_BONUS,
+    });
+  }
+
+  async grantDailyReward(userId: string): Promise<boolean> {
+    const user = await this.getUser(userId);
+    if (!user) return false;
+
+    const freeBalance = user.freeCreditsBalance ?? 0;
+    if (freeBalance >= MAX_FREE_BANK) return false;
+
+    const nowUtc = new Date();
+    const todayUtc = new Date(Date.UTC(nowUtc.getUTCFullYear(), nowUtc.getUTCMonth(), nowUtc.getUTCDate()));
+
+    if (user.lastDailyRewardAt) {
+      const lastDate = new Date(user.lastDailyRewardAt);
+      const lastUtc = new Date(Date.UTC(lastDate.getUTCFullYear(), lastDate.getUTCMonth(), lastDate.getUTCDate()));
+      if (lastUtc >= todayUtc) return false;
+    }
+
+    await db.insert(creditTransactions).values({
+      userId,
+      type: "daily_reward",
+      amount: DAILY_REWARD,
+    });
+
+    await authStorage.upsertUser({
+      id: userId,
+      creditBalance: (user.creditBalance ?? 0) + DAILY_REWARD,
+      freeCreditsBalance: freeBalance + DAILY_REWARD,
+      lastDailyRewardAt: nowUtc,
+    });
+
+    return true;
+  }
+
+  async addCredits(userId: string, amount: number, stripeSessionId: string): Promise<void> {
+    const existing = await db
+      .select()
+      .from(creditTransactions)
+      .where(eq(creditTransactions.stripeSessionId, stripeSessionId));
+    if (existing.length > 0) return;
+
+    await db.insert(creditTransactions).values({
+      userId,
+      type: "purchase",
+      amount,
+      stripeSessionId,
+    });
+
+    const user = await this.getUser(userId);
+    await authStorage.upsertUser({
+      id: userId,
+      creditBalance: (user?.creditBalance ?? 0) + amount,
+    });
+  }
+
+  async spendCredits(userId: string, recordingId: number, amount: number): Promise<void> {
+    if (amount <= 0) return;
+
+    await db.insert(creditTransactions).values({
+      userId,
+      type: "spend",
+      amount: -amount,
+      recordingId,
+    });
+
+    const user = await this.getUser(userId);
+    const newTotal = (user?.creditBalance ?? 0) - amount;
+    const newFree = Math.max(0, (user?.freeCreditsBalance ?? 0) - amount);
+    await authStorage.upsertUser({
+      id: userId,
+      creditBalance: newTotal,
+      freeCreditsBalance: newFree,
+    });
+  }
+
+  async refundCredits(recordingId: number): Promise<void> {
+    const [recording] = await db
+      .select()
+      .from(recordings)
+      .where(eq(recordings.id, recordingId));
+
+    if (!recording || recording.creditsRefunded || recording.creditCost <= 0) return;
+
+    const amount = recording.creditCost;
+    const userId = recording.userId;
+
+    await db.insert(creditTransactions).values({
+      userId,
+      type: "refund",
+      amount,
+      recordingId,
+    });
+
+    await db
+      .update(recordings)
+      .set({ creditsRefunded: true })
+      .where(eq(recordings.id, recordingId));
+
+    const user = await this.getUser(userId);
+    await authStorage.upsertUser({
+      id: userId,
+      creditBalance: (user?.creditBalance ?? 0) + amount,
+    });
+  }
+
+  async getCreditTransactions(userId: string): Promise<CreditTransaction[]> {
+    return db
+      .select()
+      .from(creditTransactions)
+      .where(eq(creditTransactions.userId, userId))
+      .orderBy(desc(creditTransactions.createdAt));
   }
 }
 

@@ -12,6 +12,8 @@ export const recordings = pgTable("recordings", {
   audioUrl: text("audio_url").notNull(),
   sentenceText: text("sentence_text").notNull(),
   status: text("status", { enum: ["pending", "reviewed"] }).default("pending").notNull(),
+  creditCost: integer("credit_cost").default(0).notNull(),
+  creditsRefunded: boolean("credits_refunded").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -38,6 +40,16 @@ export const feedback = pgTable("feedback", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const creditTransactions = pgTable("credit_transactions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: text("type", { enum: ["signup_bonus", "daily_reward", "purchase", "spend", "refund"] }).notNull(),
+  amount: integer("amount").notNull(),
+  recordingId: integer("recording_id"),
+  stripeSessionId: text("stripe_session_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const recordingsRelations = relations(recordings, ({ one, many }) => ({
   user: one(users, {
@@ -58,11 +70,20 @@ export const feedbackRelations = relations(feedback, ({ one }) => ({
   }),
 }));
 
+export const creditTransactionsRelations = relations(creditTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [creditTransactions.userId],
+    references: [users.id],
+  }),
+}));
+
 // Schemas
 export const insertRecordingSchema = createInsertSchema(recordings).omit({ 
   id: true, 
   userId: true, 
-  status: true, 
+  status: true,
+  creditCost: true,
+  creditsRefunded: true,
   createdAt: true 
 });
 
@@ -77,3 +98,4 @@ export type Recording = typeof recordings.$inferSelect;
 export type InsertRecording = z.infer<typeof insertRecordingSchema>;
 export type Feedback = typeof feedback.$inferSelect;
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
+export type CreditTransaction = typeof creditTransactions.$inferSelect;

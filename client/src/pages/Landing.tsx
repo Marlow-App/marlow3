@@ -1,10 +1,12 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Mic2, MessageCircle, TrendingUp, ChevronRight } from "lucide-react";
+import { Mic2, MessageCircle, TrendingUp, ChevronRight, Coins, RotateCcw, Star } from "lucide-react";
 import { useRef } from "react";
+import { CREDIT_PACKS, SIGNUP_BONUS, REFUND_THRESHOLD } from "@shared/credits";
 
 export default function Landing() {
   const howItWorksRef = useRef<HTMLElement>(null);
+  const pricingRef = useRef<HTMLElement>(null);
 
   const scrollToHowItWorks = () => {
     howItWorksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -30,7 +32,6 @@ export default function Landing() {
 
       {/* Hero Section */}
       <section className="relative pt-12 pb-24 md:pt-24 md:pb-32 px-6 md:px-12 max-w-7xl mx-auto w-full">
-        {/* Abstract Background Decoration */}
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl z-0"></div>
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl z-0"></div>
 
@@ -45,7 +46,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row gap-4">
               <a href="/api/login?role=learner">
                 <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-primary hover:bg-primary/90 shadow-xl shadow-primary/30 transition-all hover:-translate-y-1">
-                  Start Recording Free
+                  Start Free — {SIGNUP_BONUS} Credits Included
                 </Button>
               </a>
               <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2" onClick={scrollToHowItWorks} data-testid="how-it-works-btn">
@@ -301,8 +302,88 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section ref={pricingRef} className="py-24 px-6 md:px-12 bg-muted/20" data-testid="pricing-section">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Simple, Pay-as-You-Learn</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              No monthly subscription. Buy credits, use them when you want. Start free with {SIGNUP_BONUS} credits.
+            </p>
+          </div>
+
+          {/* Free perks */}
+          <div className="bg-card rounded-2xl border border-border/50 p-6 mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-emerald-500" />
+                <span className="font-semibold">Free to start</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Get {SIGNUP_BONUS} credits on signup, plus +1 free credit per day (up to 3 banked).</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <RotateCcw className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium">Score {REFUND_THRESHOLD}%+ → credits refunded</span>
+            </div>
+            <a href="/api/login?role=learner">
+              <Button variant="outline" className="rounded-full" data-testid="pricing-start-free">
+                Start Free
+              </Button>
+            </a>
+          </div>
+
+          {/* Credit packs grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" data-testid="pricing-packs-grid">
+            {CREDIT_PACKS.map(pack => (
+              <div
+                key={pack.usd}
+                className={`relative bg-card rounded-2xl border p-5 text-center flex flex-col items-center gap-2 hover:shadow-lg transition-shadow ${
+                  pack.highlight === "most_popular"
+                    ? "border-primary/40 ring-2 ring-primary/20"
+                    : pack.highlight === "best_value"
+                      ? "border-secondary/40"
+                      : "border-border/60"
+                }`}
+                data-testid={`pricing-pack-${pack.usd}`}
+              >
+                {pack.highlight && (
+                  <div className={`absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full whitespace-nowrap ${
+                    pack.highlight === "most_popular"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground"
+                  }`}>
+                    {pack.highlight === "most_popular" ? "Most Popular" : "Best Value"}
+                  </div>
+                )}
+                <div className="flex items-center gap-1 text-primary mt-2">
+                  <Coins className="w-4 h-4" />
+                  <span className="text-2xl font-bold font-display">{pack.credits}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">credits</p>
+                <p className="text-xl font-bold">${pack.usd}</p>
+                <p className="text-[10px] text-muted-foreground">≈ {(pack.usd / pack.credits * 100).toFixed(1)}¢ / credit</p>
+                <a href="/api/login?role=learner" className="w-full mt-1">
+                  <Button
+                    variant={pack.highlight === "most_popular" ? "default" : "outline"}
+                    size="sm"
+                    className="w-full rounded-full"
+                    data-testid={`pricing-buy-${pack.usd}`}
+                  >
+                    Buy
+                  </Button>
+                </a>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            1 credit = 1 Chinese character. Max 10 characters per recording session.
+          </p>
+        </div>
+      </section>
+
       {/* Features Grid */}
-      <section className="py-24 bg-muted/20">
+      <section className="py-24 bg-background">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="text-center mb-16 max-w-2xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Why Marlow works</h2>

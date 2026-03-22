@@ -14,7 +14,6 @@ import LearnerPortal from "@/pages/LearnerPortal";
 import RecordingDetail from "@/pages/RecordingDetail";
 import Profile from "@/pages/Profile";
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
-import ManageSubscription from "@/pages/ManageSubscription";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import ConsentGate from "@/pages/ConsentGate";
@@ -64,7 +63,6 @@ function Router() {
       </Route>
       <Route path="/profile" component={Profile} />
       <Route path="/checkout/success" component={CheckoutSuccess} />
-      <Route path="/manage-subscription" component={ManageSubscription} />
       <Route component={NotFound} />
     </Switch>
   );

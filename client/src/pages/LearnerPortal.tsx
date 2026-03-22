@@ -1,12 +1,11 @@
 import { Layout } from "@/components/Layout";
 import { useRecordings } from "@/hooks/use-recordings";
 import { Link, useLocation, useSearch } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight, ChevronLeft, Crown, Loader2, MapPin, Calendar, Trash2 } from "lucide-react";
+import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight, ChevronLeft, Loader2, MapPin, Calendar, Trash2, RotateCcw } from "lucide-react";
 import { format, formatDistanceToNow, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, isToday, isBefore, startOfDay, isThisWeek, isThisMonth, differenceInMonths } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useMemo } from "react";
@@ -22,7 +21,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 function RatingBadge({ rating, overallScore }: { rating?: number | null; overallScore?: number | null }) {
@@ -294,12 +292,15 @@ function RecordingCard({ recording }: { recording: any }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/recordings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/credits/balance"] });
       toast({ title: "Recording deleted", description: "The recording has been removed." });
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to delete the recording.", variant: "destructive" });
     },
   });
+
+  const isRefunded = recording.creditsRefunded && recording.creditCost > 0;
 
   return (
     <>
@@ -315,6 +316,12 @@ function RecordingCard({ recording }: { recording: any }) {
             </p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
+            {isRefunded && (
+              <Badge variant="secondary" className="rounded-full px-2 text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200" data-testid={`refunded-badge-${recording.id}`}>
+                <RotateCcw className="w-2.5 h-2.5 mr-1" />
+                Refunded
+              </Badge>
+            )}
             <Badge
               variant={recording.status === "reviewed" ? "default" : "secondary"}
               className="rounded-full px-2 text-[10px]"
@@ -406,9 +413,7 @@ function RecordingCard({ recording }: { recording: any }) {
 
 export default function LearnerPortal() {
   const { data: recordings, isLoading } = useRecordings() as { data: any[]; isLoading: boolean };
-  const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const searchString = useSearch();
 
   const initialTab = useMemo(() => {
@@ -417,48 +422,14 @@ export default function LearnerPortal() {
     return tab === "completed" ? "completed" : "waiting";
   }, []);
 
-  const { data: products } = useQuery<any[]>({
-    queryKey: ["/api/stripe/products"],
-  });
-
-  const { data: subscriptionData } = useQuery<any>({
-    queryKey: ["/api/stripe/subscription"],
-  });
-
   useEffect(() => {
     const params = new URLSearchParams(searchString);
     if (params.get("checkout") === "success") {
-      toast({ title: "Subscription activated!", description: "Welcome to your new plan." });
+      toast({ title: "Credits added!", description: "Your purchase was successful." });
     } else if (params.get("checkout") === "cancel") {
       toast({ title: "Checkout cancelled", description: "No charges were made.", variant: "destructive" });
     }
   }, [searchString]);
-
-  const handleCheckout = async (priceId: string) => {
-    setCheckoutLoading(priceId);
-    try {
-      const res = await apiRequest("POST", "/api/stripe/checkout", { priceId });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (err) {
-      toast({ title: "Checkout failed", description: "Please try again.", variant: "destructive" });
-    } finally {
-      setCheckoutLoading(null);
-    }
-  };
-
-  const handleManageSubscription = () => {
-    navigate('/manage-subscription');
-  };
-
-  const hasSubscription = !!subscriptionData?.subscription;
-
-  const getProductPrice = (productName: string) => {
-    const product = products?.find((p: any) => p.name === productName);
-    return product?.prices?.[0];
-  };
 
   const pendingRecordings = useMemo(
     () => recordings?.filter((r: any) => r.status === "pending") || [],
@@ -549,141 +520,6 @@ export default function LearnerPortal() {
             </Link>
           </div>
         )}
-
-        <div className="mt-10 relative rounded-2xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-secondary/6 to-transparent" />
-          <div
-            className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full opacity-[0.07]"
-            style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
-          />
-          <div
-            className="absolute -top-20 -left-20 w-56 h-56 rounded-full opacity-[0.05]"
-            style={{ background: "radial-gradient(circle, hsl(var(--secondary)) 0%, transparent 70%)" }}
-          />
-          <div className="relative p-6 space-y-5">
-            <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-widest text-primary/70 mb-1">Level Up Your Practice</p>
-              <h2 className="text-xl font-display font-bold">Go Pro</h2>
-            </div>
-
-            <div className="grid gap-5 md:grid-cols-2">
-              <Card
-                className={`relative overflow-hidden backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow ${
-                  !hasSubscription
-                    ? 'border-green-500/30 bg-gradient-to-br from-green-500/5 via-background/80 to-background/80 ring-2 ring-green-500/20'
-                    : 'border-border bg-background/80'
-                }`}
-                data-testid="free-plan-card"
-              >
-                <CardHeader className="relative">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`${!hasSubscription ? 'text-green-600' : 'text-muted-foreground'} font-bold uppercase tracking-widest text-[10px]`}>
-                      {!hasSubscription ? 'Current Plan' : 'Free Tier'}
-                    </span>
-                  </div>
-                  <CardTitle className="text-xl font-display">Free</CardTitle>
-                  <CardDescription className="text-sm">Get started with basic practice.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-3 relative">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className={`w-4 h-4 mt-1 ${!hasSubscription ? 'text-green-600' : 'text-muted-foreground'}`} />
-                    <p className="text-sm">1 recording / day</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className={`w-4 h-4 mt-1 ${!hasSubscription ? 'text-green-600' : 'text-muted-foreground'}`} />
-                    <p className="text-sm">Standard feedback</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card
-                className={`relative overflow-hidden backdrop-blur-sm shadow-lg hover:shadow-xl transition-shadow ${
-                  hasSubscription
-                    ? subscriptionData?.subscription?.cancel_at_period_end
-                      ? 'border-yellow-500/30 bg-gradient-to-br from-yellow-500/5 via-background/80 to-background/80 ring-2 ring-yellow-500/20'
-                      : 'border-green-500/30 bg-gradient-to-br from-green-500/5 via-background/80 to-background/80 ring-2 ring-green-500/20'
-                    : 'border-primary/30 bg-background/80'
-                }`}
-                data-testid="pro-plan-card"
-              >
-                <div
-                  className="absolute -bottom-16 -right-16 w-40 h-40 rounded-full opacity-10"
-                  style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
-                />
-                <CardHeader className="relative">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Crown className={`w-5 h-5 ${
-                      hasSubscription
-                        ? subscriptionData?.subscription?.cancel_at_period_end
-                          ? 'text-yellow-600 fill-yellow-600'
-                          : 'text-green-600 fill-green-600'
-                        : 'text-primary fill-primary'
-                    }`} />
-                    <span className={`${
-                      hasSubscription
-                        ? subscriptionData?.subscription?.cancel_at_period_end
-                          ? 'text-yellow-600'
-                          : 'text-green-600'
-                        : 'text-primary'
-                    } font-bold uppercase tracking-widest text-[10px]`}>
-                      {hasSubscription
-                        ? subscriptionData?.subscription?.cancel_at_period_end ? 'Cancelled' : 'Active'
-                        : 'Upgrade'}
-                    </span>
-                  </div>
-                  <CardTitle className="text-xl font-display">Pro Plan</CardTitle>
-                  <CardDescription className="text-sm">
-                    {hasSubscription
-                      ? subscriptionData?.subscription?.cancel_at_period_end
-                        ? 'Cancelled — you still have access until the end of your billing period.'
-                        : 'Your subscription is active.'
-                      : 'For serious learners who want faster progress.'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-3 relative">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
-                    <p className="text-sm">3 recordings / day</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600 mt-1" />
-                    <p className="text-sm">Priority feedback</p>
-                  </div>
-                </CardContent>
-                <CardFooter className="relative">
-                  {hasSubscription ? (
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={handleManageSubscription}
-                      data-testid="manage-subscription-btn"
-                    >
-                      Manage Subscription
-                    </Button>
-                  ) : (
-                    <Button
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
-                      disabled={!!checkoutLoading}
-                      onClick={() => {
-                        const price = getProductPrice("Pro Plan") || getProductPrice("Pro Starter");
-                        if (price) handleCheckout(price.id);
-                      }}
-                      data-testid="checkout-pro-btn"
-                    >
-                      {checkoutLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...
-                        </>
-                      ) : (
-                        "Upgrade $7.99/mo"
-                      )}
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
-            </div>
-          </div>
-        </div>
       </div>
     </Layout>
   );

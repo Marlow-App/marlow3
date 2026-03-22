@@ -7,9 +7,11 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import { authStorage } from "./replit_integrations/auth/storage";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripe/stripeClient";
-import { sql } from "drizzle-orm";
 import { db } from "./db";
 import { generatePhraseAudio, getPhraseAudioFile } from "./elevenlabs";
+import { countChineseChars, MAX_CHARS, REFUND_THRESHOLD, CREDIT_PACKS } from "@shared/credits";
+
+const UNLIMITED_EMAIL = "jujusees@gmail.com";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -83,9 +85,50 @@ export async function registerRoutes(
         focusAreas: parsed.data.focusAreas,
         onboardingComplete: true,
       });
+
+      // Grant signup bonus idempotently
+      await storage.grantSignupBonus(userId);
+
       res.json(updatedUser);
     } catch (error) {
       console.error("Error saving onboarding:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // === Credits ===
+
+  app.get("/api/credits/balance", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const userEmail = (req.user as any).claims.email;
+
+      if (userEmail === UNLIMITED_EMAIL) {
+        return res.json({ creditBalance: 999, freeCreditsBalance: 0, isUnlimited: true });
+      }
+
+      // Fire-and-forget daily reward
+      storage.grantDailyReward(userId).catch(console.error);
+
+      const user = await storage.getUser(userId);
+      res.json({
+        creditBalance: user?.creditBalance ?? 0,
+        freeCreditsBalance: user?.freeCreditsBalance ?? 0,
+        isUnlimited: false,
+      });
+    } catch (error) {
+      console.error("Error getting credit balance:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/credits/transactions", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const transactions = await storage.getCreditTransactions(userId);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error getting transactions:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -98,14 +141,14 @@ export async function registerRoutes(
       const user = (req.user as any);
       const userId = user.claims.sub;
       const dbUser = await storage.getUser(userId);
-      
+
       let recordings;
       if (dbUser?.role === 'reviewer') {
         recordings = await storage.getAllRecordings();
       } else {
         recordings = await storage.getRecordingsByUser(userId);
       }
-      
+
       const recordingsEnhanced = await Promise.all(recordings.map(async (r: any) => {
         const u = await storage.getUser(r.userId);
         let feedbackList: any[] = [];
@@ -136,21 +179,7 @@ export async function registerRoutes(
       const pending = await storage.getAllPendingRecordings();
       const pendingWithUser = await Promise.all(pending.map(async (r: any) => {
         const user = await storage.getUser(r.userId);
-        let isPro = false;
-        if (user?.stripeSubscriptionId) {
-          isPro = true;
-        } else if (user?.stripeCustomerId) {
-          try {
-            const stripe = await getUncachableStripeClient();
-            const subs = await stripe.subscriptions.list({
-              customer: user.stripeCustomerId,
-              status: 'active',
-              limit: 1,
-            });
-            isPro = subs.data.length > 0;
-          } catch (e) {}
-        }
-        return { ...r, user, isPro };
+        return { ...r, user };
       }));
       res.json(pendingWithUser);
     } catch (error) {
@@ -163,7 +192,7 @@ export async function registerRoutes(
   app.get("/api/all-recordings", isAuthenticated, async (req, res) => {
     try {
       const recordings = await storage.getAllRecordings();
-      
+
       const recordingsEnhanced = await Promise.all(recordings.map(async (r: any) => {
         const user = await storage.getUser(r.userId);
         let feedbackList: any[] = [];
@@ -185,61 +214,12 @@ export async function registerRoutes(
     }
   });
 
-  // Remaining recordings for today (must be before :id route)
-  app.get("/api/recordings/remaining", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).claims.sub;
-      const userEmail = (req.user as any).claims.email;
-
-      const UNLIMITED_EMAIL = "jujusees@gmail.com";
-      if (userEmail === UNLIMITED_EMAIL) {
-        return res.json({ dailyLimit: 999, used: 0, remaining: 999, tier: 'unlimited' });
-      }
-
-      let dailyLimit = 1;
-      let tier = 'free';
-
-      const user = await storage.getUser(userId);
-      if (user?.stripeCustomerId) {
-        const subResult = await db.execute(
-          sql`SELECT s.status, p.metadata as product_metadata
-            FROM stripe.subscriptions s
-            LEFT JOIN stripe.prices pr ON s.items->0->'price'->>'id' = pr.id
-            LEFT JOIN stripe.products p ON pr.product = p.id
-            WHERE s.customer = ${user.stripeCustomerId}
-            AND s.status IN ('active', 'trialing')
-            LIMIT 1`
-        );
-        const sub = subResult.rows[0] as any;
-        if (sub) {
-          const subTier = typeof sub.product_metadata === 'string'
-            ? JSON.parse(sub.product_metadata)?.tier
-            : sub.product_metadata?.tier;
-          if (subTier === 'pro' || subTier === 'starter' || subTier === 'max') {
-            dailyLimit = 3;
-            tier = 'pro';
-          }
-        }
-      }
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const userRecordings = await storage.getRecordingsByUser(userId);
-      const used = userRecordings.filter(r => new Date(r.createdAt) >= today).length;
-
-      res.json({ dailyLimit, used, remaining: Math.max(0, dailyLimit - used), tier });
-    } catch (error) {
-      console.error("Error getting remaining recordings:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
   // Get single recording
   app.get(api.recordings.get.path, isAuthenticated, async (req, res) => {
     try {
       const recording = await storage.getRecording(Number(req.params.id));
       if (!recording) return res.status(404).json({ message: "Not found" });
-      
+
       const user = await storage.getUser(recording.userId);
       const rawFeedback = await storage.getFeedbackForRecording(recording.id);
       const feedbackWithReviewer = await Promise.all(rawFeedback.map(async (f: any) => {
@@ -290,60 +270,50 @@ export async function registerRoutes(
       const userId = (req.user as any).claims.sub;
       const userEmail = (req.user as any).claims.email;
 
-      const UNLIMITED_EMAIL = "jujusees@gmail.com";
       const isUnlimited = userEmail === UNLIMITED_EMAIL;
 
-      let dailyLimit = 1;
-      let tier = 'free';
+      const charCount = countChineseChars(input.sentenceText);
 
       if (!isUnlimited) {
-        const user = await storage.getUser(userId);
-        if (user?.stripeCustomerId) {
-          const subResult = await db.execute(
-            sql`SELECT s.status, p.metadata as product_metadata
-              FROM stripe.subscriptions s
-              LEFT JOIN stripe.prices pr ON s.items->0->'price'->>'id' = pr.id
-              LEFT JOIN stripe.products p ON pr.product = p.id
-              WHERE s.customer = ${user.stripeCustomerId}
-              AND s.status IN ('active', 'trialing')
-              LIMIT 1`
-          );
-          const sub = subResult.rows[0] as any;
-          if (sub) {
-            const subTier = typeof sub.product_metadata === 'string'
-              ? JSON.parse(sub.product_metadata)?.tier
-              : sub.product_metadata?.tier;
-            if (subTier === 'pro' || subTier === 'starter' || subTier === 'max') {
-              dailyLimit = 3;
-              tier = 'pro';
-            }
-          }
+        // Validate char count
+        if (charCount > MAX_CHARS) {
+          return res.status(400).json({
+            message: `Recording text too long. Maximum ${MAX_CHARS} Chinese characters allowed.`,
+            charCount,
+            max: MAX_CHARS,
+          });
         }
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const userRecordings = await storage.getRecordingsByUser(userId);
-        const todaysRecordings = userRecordings.filter(r => new Date(r.createdAt) >= today);
+        if (charCount === 0) {
+          return res.status(400).json({ message: "Please include at least one Chinese character." });
+        }
 
-        if (todaysRecordings.length >= dailyLimit) {
-          const upgradeMsg = tier === 'free'
-            ? ' Upgrade to the Pro Plan for more recordings!'
-            : '';
-          return res.status(403).json({
-            message: `Daily limit of ${dailyLimit} recording${dailyLimit > 1 ? 's' : ''} reached (${tier === 'free' ? 'Free' : 'Pro'} plan).${upgradeMsg}`,
-            dailyLimit,
-            used: todaysRecordings.length,
+        // Check credit balance
+        const user = await storage.getUser(userId);
+        const balance = user?.creditBalance ?? 0;
+        if (balance < charCount) {
+          return res.status(402).json({
+            message: `Not enough credits. This recording costs ${charCount} credit${charCount > 1 ? 's' : ''} but you only have ${balance}.`,
+            required: charCount,
+            balance,
           });
         }
       }
 
-      const recording = await storage.createRecording(userId, input);
+      const creditCost = isUnlimited ? 0 : charCount;
+      const recording = await storage.createRecording(userId, input, creditCost);
+
+      if (!isUnlimited && creditCost > 0) {
+        await storage.spendCredits(userId, recording.id, creditCost);
+      }
+
       res.status(201).json(recording);
     } catch (err) {
       if (err instanceof z.ZodError) {
         res.status(400).json({ message: err.errors[0].message });
         return;
       }
+      console.error("Error creating recording:", err);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -388,7 +358,7 @@ export async function registerRoutes(
         }
       }
 
-      const feedback = await storage.createFeedback({
+      const feedbackRecord = await storage.createFeedback({
         recordingId,
         textFeedback: textFeedback || "",
         corrections: corrections || null,
@@ -399,8 +369,13 @@ export async function registerRoutes(
         overallScore,
         reviewerId,
       } as any);
-      
-      res.status(201).json(feedback);
+
+      // Refund credits if score >= REFUND_THRESHOLD
+      if (overallScore !== null && overallScore >= REFUND_THRESHOLD) {
+        storage.refundCredits(recordingId).catch(console.error);
+      }
+
+      res.status(201).json(feedbackRecord);
     } catch (err) {
       if (err instanceof z.ZodError) {
         res.status(400).json({ message: err.errors[0].message });
@@ -469,12 +444,8 @@ export async function registerRoutes(
       if (textFeedback !== undefined) updateData.textFeedback = textFeedback;
       if (corrections !== undefined) updateData.corrections = corrections || null;
       if (audioFeedbackUrl !== undefined) updateData.audioFeedbackUrl = audioFeedbackUrl;
-      if (validatedRatings !== undefined) {
-        updateData.characterRatings = validatedRatings;
-      }
-      if (validatedFluency !== undefined) {
-        updateData.fluencyScore = validatedFluency;
-      }
+      if (validatedRatings !== undefined) updateData.characterRatings = validatedRatings;
+      if (validatedFluency !== undefined) updateData.fluencyScore = validatedFluency;
       updateData.overallScore = overallScore;
 
       const updated = await storage.updateFeedback(feedbackId, updateData);
@@ -513,12 +484,12 @@ export async function registerRoutes(
     try {
       const userId = (req.user as any).claims.sub;
       const updates = req.body;
-      
+
       const updatedUser = await authStorage.upsertUser({
         id: userId,
         ...updates,
       });
-      
+
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -538,97 +509,15 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/stripe/products", async (_req, res) => {
-    try {
-      const result = await db.execute(
-        sql`SELECT 
-          p.id as product_id,
-          p.name as product_name,
-          p.description as product_description,
-          p.metadata as product_metadata,
-          pr.id as price_id,
-          pr.unit_amount,
-          pr.currency,
-          pr.recurring
-        FROM stripe.products p
-        LEFT JOIN stripe.prices pr ON pr.product = p.id AND pr.active = true
-        WHERE p.active = true
-        ORDER BY pr.unit_amount ASC`
-      );
-
-      const productsMap = new Map();
-      for (const row of result.rows as any[]) {
-        if (!productsMap.has(row.product_id)) {
-          productsMap.set(row.product_id, {
-            id: row.product_id,
-            name: row.product_name,
-            description: row.product_description,
-            metadata: row.product_metadata,
-            prices: []
-          });
-        }
-        if (row.price_id) {
-          productsMap.get(row.product_id).prices.push({
-            id: row.price_id,
-            unit_amount: row.unit_amount,
-            currency: row.currency,
-            recurring: row.recurring,
-          });
-        }
-      }
-
-      const dbProducts = Array.from(productsMap.values());
-      if (dbProducts.length > 0) {
-        return res.json(dbProducts);
-      }
-
-      console.log("No products in database, fetching from Stripe API...");
-      const stripe = await getUncachableStripeClient();
-      const [stripeProducts, stripePrices] = await Promise.all([
-        stripe.products.list({ active: true, limit: 100 }),
-        stripe.prices.list({ active: true, limit: 100 }),
-      ]);
-
-      const apiProductsMap = new Map();
-      for (const product of stripeProducts.data) {
-        apiProductsMap.set(product.id, {
-          id: product.id,
-          name: product.name,
-          description: product.description,
-          metadata: product.metadata,
-          prices: [],
-        });
-      }
-      for (const price of stripePrices.data) {
-        const productId = typeof price.product === 'string' ? price.product : price.product?.toString();
-        if (apiProductsMap.has(productId)) {
-          apiProductsMap.get(productId).prices.push({
-            id: price.id,
-            unit_amount: price.unit_amount,
-            currency: price.currency,
-            recurring: price.recurring,
-          });
-        }
-      }
-
-      const apiProducts = Array.from(apiProductsMap.values())
-        .filter((p: any) => p.prices.length > 0)
-        .sort((a: any, b: any) => (a.prices[0]?.unit_amount || 0) - (b.prices[0]?.unit_amount || 0));
-
-      res.json(apiProducts);
-    } catch (error) {
-      console.error("Error listing products:", error);
-      res.json([]);
-    }
-  });
-
+  // Credit pack checkout (one-time payment)
   app.post("/api/stripe/checkout", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).claims.sub;
-      const { priceId } = req.body;
+      const { usd } = req.body;
 
-      if (!priceId) {
-        return res.status(400).json({ message: "priceId is required" });
+      const pack = CREDIT_PACKS.find(p => p.usd === usd);
+      if (!pack) {
+        return res.status(400).json({ message: "Invalid credit pack" });
       }
 
       const user = await storage.getUser(userId);
@@ -645,20 +534,31 @@ export async function registerRoutes(
           metadata: { userId: user.id },
         });
         customerId = customer.id;
-        await authStorage.upsertUser({
-          id: userId,
-          stripeCustomerId: customerId,
-        });
+        await authStorage.upsertUser({ id: userId, stripeCustomerId: customerId });
       }
 
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
-        line_items: [{ price: priceId, quantity: 1 }],
-        mode: 'subscription',
-        success_url: `${baseUrl}/checkout/success`,
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            unit_amount: pack.usd * 100,
+            product_data: {
+              name: `${pack.credits} Marlow Credits`,
+              description: `${pack.credits} credits for tone practice recordings`,
+            },
+          },
+          quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: `${baseUrl}/checkout/success?credits=${pack.credits}`,
         cancel_url: `${baseUrl}/profile`,
+        metadata: {
+          userId: user.id,
+          credits: String(pack.credits),
+        },
       });
 
       res.json({ url: session.url });
@@ -668,59 +568,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/stripe/subscription", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).claims.sub;
-      const user = await storage.getUser(userId);
-
-      if (!user?.stripeCustomerId) {
-        return res.json({ subscription: null });
-      }
-
-      const stripe = await getUncachableStripeClient();
-
-      let sub: any = null;
-
-      const subscriptions = await stripe.subscriptions.list({
-        customer: user.stripeCustomerId,
-        status: 'active',
-        limit: 1,
-      });
-
-      if (subscriptions.data.length > 0) {
-        sub = subscriptions.data[0];
-      } else {
-        const allSubscriptions = await stripe.subscriptions.list({
-          customer: user.stripeCustomerId,
-          status: 'all',
-          limit: 5,
-        });
-        sub = allSubscriptions.data.find(
-          s => s.status === 'active' || s.status === 'trialing'
-        ) || null;
-      }
-
-      if (sub) {
-        const priceItem = sub.items?.data?.[0]?.price;
-        if (priceItem?.product && typeof priceItem.product === 'string') {
-          const product = await stripe.products.retrieve(priceItem.product);
-          priceItem.product = product;
-        }
-
-        if (!user.stripeSubscriptionId) {
-          await authStorage.upsertUser({
-            id: userId,
-            stripeSubscriptionId: sub.id,
-          });
-        }
-      }
-
-      res.json({ subscription: sub });
-    } catch (error) {
-      console.error("Error getting subscription:", error);
-      res.json({ subscription: null });
-    }
-  });
+  // === Phrase Audio ===
 
   app.post("/api/phrase-audio/generate", isAuthenticated, async (req, res) => {
     try {
@@ -730,9 +578,9 @@ export async function registerRoutes(
       }
       const audioUrl = await generatePhraseAudio(text);
       res.json({ audioUrl });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error generating phrase audio:", error);
-      res.status(500).json({ message: error.message || "Failed to generate audio" });
+      res.status(500).json({ message: "Failed to generate audio" });
     }
   });
 
@@ -760,133 +608,6 @@ export async function registerRoutes(
       if (!res.headersSent) {
         res.status(500).json({ message: "Failed to serve audio" });
       }
-    }
-  });
-
-  app.post("/api/stripe/portal", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).claims.sub;
-      const user = await storage.getUser(userId);
-
-      if (!user?.stripeCustomerId) {
-        return res.status(400).json({ message: "No subscription found" });
-      }
-
-      const stripe = await getUncachableStripeClient();
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-      const session = await stripe.billingPortal.sessions.create({
-        customer: user.stripeCustomerId,
-        return_url: `${baseUrl}/learner-portal`,
-      });
-
-      res.json({ url: session.url });
-    } catch (error) {
-      console.error("Error creating portal session:", error);
-      res.status(500).json({ message: "Failed to create portal session" });
-    }
-  });
-
-  app.post("/api/stripe/switch-plan", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).claims.sub;
-      const { newPriceId } = req.body;
-
-      if (!newPriceId) {
-        return res.status(400).json({ message: "newPriceId is required" });
-      }
-
-      const user = await storage.getUser(userId);
-      if (!user?.stripeCustomerId) {
-        return res.status(400).json({ message: "No active subscription found" });
-      }
-
-      const stripe = await getUncachableStripeClient();
-      const subscriptions = await stripe.subscriptions.list({
-        customer: user.stripeCustomerId,
-        status: 'active',
-        limit: 1,
-      });
-
-      if (subscriptions.data.length === 0) {
-        return res.status(400).json({ message: "No active subscription found" });
-      }
-
-      const subscription = subscriptions.data[0];
-      const subscriptionItemId = subscription.items.data[0].id;
-
-      const updated = await stripe.subscriptions.update(subscription.id, {
-        items: [{
-          id: subscriptionItemId,
-          price: newPriceId,
-        }],
-        proration_behavior: 'create_prorations',
-      });
-
-      res.json({ subscription: updated });
-    } catch (error) {
-      console.error("Error switching plan:", error);
-      res.status(500).json({ message: "Failed to switch plan" });
-    }
-  });
-
-  app.post("/api/stripe/cancel", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).claims.sub;
-      const user = await storage.getUser(userId);
-
-      if (!user?.stripeCustomerId) {
-        return res.status(400).json({ message: "No active subscription found" });
-      }
-
-      const stripe = await getUncachableStripeClient();
-      const subscriptions = await stripe.subscriptions.list({
-        customer: user.stripeCustomerId,
-        status: 'active',
-        limit: 1,
-      });
-
-      if (subscriptions.data.length === 0) {
-        return res.status(400).json({ message: "No active subscription found" });
-      }
-
-      const updated = await stripe.subscriptions.update(subscriptions.data[0].id, {
-        cancel_at_period_end: true,
-      });
-
-      res.json({ subscription: updated });
-    } catch (error) {
-      console.error("Error cancelling subscription:", error);
-      res.status(500).json({ message: "Failed to cancel subscription" });
-    }
-  });
-
-  app.post("/api/stripe/reactivate", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).claims.sub;
-      const user = await storage.getUser(userId);
-
-      if (!user?.stripeCustomerId) {
-        return res.status(400).json({ message: "No subscription found" });
-      }
-
-      const stripe = await getUncachableStripeClient();
-      const subscriptions = await stripe.subscriptions.list({
-        customer: user.stripeCustomerId,
-        limit: 1,
-      });
-
-      if (subscriptions.data.length === 0) {
-        return res.status(400).json({ message: "No subscription found" });
-      }
-
-      const updated = await stripe.subscriptions.update(subscriptions.data[0].id, {
-        cancel_at_period_end: false,
-      });
-
-      res.json({ subscription: updated });
-    } catch (error) {
-      console.error("Error reactivating subscription:", error);
-      res.status(500).json({ message: "Failed to reactivate subscription" });
     }
   });
 

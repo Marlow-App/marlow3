@@ -1,28 +1,21 @@
 import { useEffect } from "react";
-import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useLocation, useSearch } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Crown, Mic, ArrowRight } from "lucide-react";
+import { CheckCircle2, Coins, Mic, ArrowRight } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { Layout } from "@/components/Layout";
 
 export default function CheckoutSuccess() {
   const [, navigate] = useLocation();
-
-  const { data: subscriptionData, isLoading } = useQuery<any>({
-    queryKey: ['/api/stripe/subscription'],
-  });
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const credits = parseInt(params.get("credits") ?? "0", 10);
 
   useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ['/api/stripe/subscription'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/credits/balance'] });
     queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
   }, []);
-
-  const sub = subscriptionData?.subscription;
-  const planName = 'Pro Plan';
-  const dailyLimit = 3;
-  const price = '$7.99';
 
   return (
     <Layout>
@@ -32,34 +25,29 @@ export default function CheckoutSuccess() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold font-display" data-testid="checkout-success-title">Thanks for signing up!</h1>
-          <p className="text-muted-foreground text-lg">Your subscription is now active.</p>
+          <h1 className="text-3xl font-bold font-display" data-testid="checkout-success-title">Credits added!</h1>
+          <p className="text-muted-foreground text-lg">Your purchase was successful.</p>
         </div>
 
-        {isLoading ? (
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        ) : sub ? (
+        {credits > 0 && (
           <Card className="w-full border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
             <CardContent className="pt-6 space-y-4">
               <div className="flex items-center justify-center gap-2">
-                <Crown className="w-6 h-6 text-primary fill-primary" />
-                <span className="text-xl font-bold font-display" data-testid="checkout-plan-name">{planName}</span>
-                <span className="text-muted-foreground">— {price}/mo</span>
+                <Coins className="w-6 h-6 text-primary" />
+                <span className="text-2xl font-bold font-display" data-testid="checkout-credits-added">+{credits} credits</span>
               </div>
               <div className="space-y-2 text-left">
                 <div className="flex items-center gap-2">
                   <Mic className="w-4 h-4 text-green-600" />
-                  <p className="text-sm">Up to <strong>{dailyLimit} recordings</strong> per day</p>
+                  <p className="text-sm">1 credit = 1 Chinese character recorded</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <p className="text-sm">Priority feedback</p>
+                  <p className="text-sm">Score 95%+ and your credits are refunded</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-        ) : (
-          <p className="text-muted-foreground">Setting up your subscription...</p>
         )}
 
         <div className="flex gap-3">
@@ -73,10 +61,10 @@ export default function CheckoutSuccess() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/profile?tab=credits')}
             data-testid="checkout-success-profile-btn"
           >
-            View Profile
+            View Credits
           </Button>
         </div>
       </div>

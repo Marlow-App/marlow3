@@ -90,7 +90,7 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
   const tourItems = [
     { href: "/record", icon: Mic2, label: "Record New", desc: "Record yourself speaking Chinese phrases and submit for review." },
     { href: "/learner-portal", icon: PlayCircle, label: "My Progress", desc: "Track your recordings and see detailed feedback from reviewers." },
-    { href: "/profile", icon: UserCircle, label: "Profile", desc: "Set your Chinese level, manage your subscription, and customize your experience." },
+    { href: "/profile", icon: UserCircle, label: "Profile", desc: "Set your Chinese level, manage your credits, and customize your experience." },
   ];
 
   return (

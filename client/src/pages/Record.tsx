@@ -8,14 +8,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useLocation } from "wouter";
-import { ChevronLeft, Info, Volume2, X, Loader2, Crown } from "lucide-react";
-import { getPhrasesForLevel, phraseToText, PHRASE_BANK, type Phrase, type ToneChar } from "@/data/phrases";
+import { useLocation, Link } from "wouter";
+import { ChevronLeft, Info, Volume2, X, Loader2, Coins } from "lucide-react";
+import { getPhrasesForLevel, phraseToText, PHRASE_BANK, type Phrase } from "@/data/phrases";
 import { apiRequest } from "@/lib/queryClient";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { countChineseChars, MAX_CHARS, REFUND_THRESHOLD } from "@shared/credits";
 
 
 function usePhraseAudio() {
@@ -89,7 +89,7 @@ function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoading }: 
         <button
           onClick={handlePlay}
           className="shrink-0 p-1 rounded-full hover:bg-primary/10 text-primary/60 hover:text-primary transition-colors"
-          title="Listen (ElevenLabs)"
+          title="Listen"
           data-testid="phrase-speak-btn"
           disabled={isLoading}
         >
@@ -124,8 +124,9 @@ export default function RecordPage() {
   const { playPhrase, loadingPhrase } = usePhraseAudio();
   const { user } = useAuth();
   const userLevel = user?.chineseLevel || "Beginner";
-  const { data: remainingData } = useQuery<{ dailyLimit: number; used: number; remaining: number; tier: string }>({
-    queryKey: ['/api/recordings/remaining'],
+
+  const { data: creditData } = useQuery<{ creditBalance: number; freeCreditsBalance: number; isUnlimited: boolean }>({
+    queryKey: ['/api/credits/balance'],
   });
 
   const dailyPhrases = getPhrasesForLevel(userLevel, 10);
@@ -161,11 +162,36 @@ export default function RecordPage() {
     setText("");
   };
 
+  const activeText = selectedPhrase ? phraseToText(selectedPhrase) : text;
+  const charCost = countChineseChars(activeText);
+  const balance = creditData?.creditBalance ?? 0;
+  const isUnlimited = creditData?.isUnlimited ?? false;
+  const canAfford = isUnlimited || balance >= charCost;
+  const tooLong = !isUnlimited && charCost > MAX_CHARS;
+
   const handleRecordingComplete = async (file: File) => {
-    if (!text.trim()) {
+    if (!activeText.trim()) {
       toast({
         title: "Sentence Required",
         description: "Please enter or select a sentence before recording.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (tooLong) {
+      toast({
+        title: "Too many characters",
+        description: `Maximum ${MAX_CHARS} Chinese characters per recording.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!canAfford) {
+      toast({
+        title: "Not enough credits",
+        description: `This recording costs ${charCost} credit${charCost > 1 ? "s" : ""} but you only have ${balance}. Buy more credits in your profile.`,
         variant: "destructive",
       });
       return;
@@ -177,7 +203,7 @@ export default function RecordPage() {
 
       await createRecording.mutateAsync({
         audioUrl: uploadRes.objectPath,
-        sentenceText: text,
+        sentenceText: activeText,
       });
 
       toast({
@@ -218,23 +244,17 @@ export default function RecordPage() {
                 {userLevel} ✎
               </Button>
             </Link>
-            {remainingData && (
-              <div className="flex items-center gap-1.5" data-testid="recording-limit-info">
-                <span className="text-sm text-muted-foreground" data-testid="remaining-count">
-                  {remainingData.tier === 'unlimited' ? 'Unlimited' : `${remainingData.remaining} remaining`}
+
+            {/* Credit balance pill */}
+            <Link href="/profile?tab=credits">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer" data-testid="credit-balance-pill">
+                <Coins className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground" data-testid="credit-balance-count">
+                  {isUnlimited ? "∞" : balance}
                 </span>
-                <Link href="/profile?highlight=subscription">
-                  <Badge
-                    variant={remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'default' : 'outline'}
-                    className={`cursor-pointer ${remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'bg-primary text-primary-foreground' : ''}`}
-                    data-testid="tier-badge"
-                  >
-                    {(remainingData.tier === 'pro' || remainingData.tier === 'unlimited') && <Crown className="w-3 h-3 mr-1" />}
-                    {remainingData.tier === 'pro' || remainingData.tier === 'unlimited' ? 'Pro' : 'Free'}
-                  </Badge>
-                </Link>
+                <span className="text-xs text-muted-foreground">credits</span>
               </div>
-            )}
+            </Link>
           </div>
         </div>
 
@@ -282,7 +302,7 @@ export default function RecordPage() {
             </label>
             <div className="relative">
               <Input
-                placeholder="Type Chinese here (max 40 characters)..."
+                placeholder={`Type Chinese here (max ${MAX_CHARS} characters)...`}
                 className="text-base bg-muted/20 focus:bg-background transition-colors pr-16"
                 value={selectedPhrase ? "" : text}
                 onChange={(e) => {
@@ -302,10 +322,10 @@ export default function RecordPage() {
           </div>
 
           {(selectedPhrase || text.trim()) && (
-            <Card className="border-primary/30 bg-primary/5 shadow-sm sticky top-0 z-10" data-testid="active-phrase-display">
+            <Card className={`border-primary/30 bg-primary/5 shadow-sm sticky top-0 z-10 ${tooLong ? "border-destructive/50 bg-destructive/5" : ""}`} data-testid="active-phrase-display">
               <CardContent className="py-5 px-6">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
+                  <div className="flex-1">
                     <p className="text-[10px] uppercase tracking-widest text-primary font-semibold mb-2">Recording</p>
                     {selectedPhrase ? (
                       <div>
@@ -314,6 +334,34 @@ export default function RecordPage() {
                       </div>
                     ) : (
                       <p className="text-2xl font-medium text-foreground">{text}</p>
+                    )}
+
+                    {/* Cost preview */}
+                    {charCost > 0 && !isUnlimited && (
+                      <div className="mt-3 flex items-center gap-2 flex-wrap">
+                        <div className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
+                          tooLong
+                            ? "bg-destructive/10 text-destructive"
+                            : canAfford
+                              ? "bg-primary/10 text-primary"
+                              : "bg-destructive/10 text-destructive"
+                        }`} data-testid="credit-cost-preview">
+                          <Coins className="w-3 h-3" />
+                          <span>
+                            {tooLong
+                              ? `${charCost} chars — max ${MAX_CHARS}`
+                              : canAfford
+                                ? `Costs ${charCost} credit${charCost > 1 ? "s" : ""}`
+                                : `Need ${charCost} credits (you have ${balance})`
+                            }
+                          </span>
+                        </div>
+                        {canAfford && !tooLong && charCost > 0 && (
+                          <span className="text-[10px] text-muted-foreground">
+                            95%+ score → credits refunded
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                   <div className="flex items-center gap-1">
@@ -349,7 +397,7 @@ export default function RecordPage() {
               <div className="bg-muted/30 p-3 border-b border-border/50 flex gap-2 items-center">
                 <Info className="w-4 h-4 text-primary shrink-0" />
                 <p className="text-sm text-muted-foreground">
-                  Speak naturally and clearly with your microphone close.
+                  Speak naturally and clearly with your microphone close. Score {REFUND_THRESHOLD}%+ and your credits are refunded.
                 </p>
               </div>
               <AudioRecorder

@@ -4,6 +4,18 @@
 
 Marlow is a web application for learning Chinese tones through voice recording and native speaker feedback. Learners record themselves speaking Chinese sentences, submit recordings for review, and receive text and audio feedback from native speakers/reviewers. The app has two main user roles: **Learners** (who record and receive feedback) and **Reviewers** (who listen to recordings and provide corrections).
 
+## Credit System
+
+Marlow uses a credit-based (pay-as-you-go) model instead of subscriptions:
+- **1 credit = 1 Chinese character** recorded (max 10 chars per session)
+- **Signup bonus**: 10 credits granted on first onboarding completion
+- **Daily reward**: +1 free credit/day (fire-and-forget on balance fetch), max 3 banked
+- **Refund**: Score ≥ 95% → credits automatically refunded
+- **Packs**: $5→15, $10→35, $20→75 (Most Popular), $50→200 (Best Value), $100→425
+- **Unlimited bypass**: `jujusees@gmail.com` has unlimited credits (no deduction)
+- **Stripe**: One-time `payment` mode checkout with `price_data` and `metadata: {userId, credits}`
+- **Constants** in `shared/credits.ts`: `CREDIT_PACKS`, `MAX_CHARS=10`, `REFUND_THRESHOLD=95`, `SIGNUP_BONUS=10`, `DAILY_REWARD=1`, `MAX_FREE_BANK=3`
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -33,17 +45,16 @@ The project uses a monorepo layout with three main directories:
 - **Key Pages**:
   - `Landing` — unauthenticated landing page
   - `Home` — dashboard with greeting, daily challenge, and recent recordings
-  - `Record` — record audio with sentence text input; supports `?phrase=` URL param for pre-selection; shows "X recordings left today" + tier badge
+  - `Record` — record audio with sentence text input; supports `?phrase=` URL param for pre-selection; shows credit balance pill + cost preview (1 credit/char); 95%+ refund note
   - `LearnerPortal` — view your recordings and their feedback
   - `ReviewerPortal` — view pending recordings with Pro Waiting/Waiting/Completed tabs + sort toggle
   - `RecordingDetail` — view a specific recording with ability to leave feedback; reviewers can edit and delete their own feedback inline
-  - `CheckoutSuccess` — post-payment confirmation page shown after Stripe checkout
-  - `ManageSubscription` — internal subscription management (cancel, reactivate)
+  - `CheckoutSuccess` — post-payment confirmation page shown after Stripe checkout (shows credits added)
   - `PrivacyPolicy` — privacy policy page (accessible to all users)
   - `TermsOfService` — terms of service page (accessible to all users)
   - `ConsentGate` — consent screen shown to new users after login (age, terms, privacy, voice data)
   - `Onboarding` — 3-step onboarding wizard shown after consent for learners (Chinese level, native language, focus areas)
-  - `Profile` — user profile and account management
+  - `Profile` — user profile and account management; learners get 3 tabs: Profile | Settings | Credits; reviewers get 2: Profile | Settings
 
 ### Backend Architecture
 
@@ -93,13 +104,12 @@ The project uses a monorepo layout with three main directories:
 
 ### Stripe Integration
 
-- **Payments**: Stripe integration via `stripe` and `stripe-replit-sync` packages
-- **Stripe Files**: `server/stripe/stripeClient.ts` (client/sync), `server/stripe/webhookHandlers.ts`, `server/stripe/seedProducts.ts`
-- **Architecture**: Uses `stripe-replit-sync` to auto-sync Stripe data to PostgreSQL `stripe` schema. Products/prices queried from `stripe.*` tables, never inserted manually.
-- **Products**: Single "Pro Plan" tier ($7.99/mo, 3 recordings/day, priority feedback). Legacy Stripe products (Pro Starter, Pro Max) are treated as Pro tier. Free tier: 1 recording/day, 30-sec limit, standard feedback.
-- **Webhook**: Registered BEFORE `express.json()` in `server/index.ts` at `/api/stripe/webhook`
-- **Routes**: `/api/stripe/products`, `/api/stripe/checkout`, `/api/stripe/subscription`, `/api/stripe/portal`, `/api/stripe/publishable-key`, `/api/stripe/switch-plan`, `/api/stripe/cancel`, `/api/stripe/reactivate`, `/api/recordings/remaining` (daily limit info)
-- **User schema**: `stripeCustomerId` and `stripeSubscriptionId` fields added to users table
+- **Payments**: Stripe integration via `stripe` and `stripe-replit-sync` packages (one-time payment mode only)
+- **Stripe Files**: `server/stripe/stripeClient.ts` (client/sync), `server/stripe/webhookHandlers.ts`
+- **Architecture**: Uses `stripe-replit-sync` for webhook sync. Credit purchases use `payment` mode with `price_data` (no pre-created products).
+- **Webhook**: Registered BEFORE `express.json()` in `server/index.ts` at `/api/stripe/webhook`; handles `checkout.session.completed` (payment mode) to call `storage.addCredits()`
+- **Routes**: `/api/stripe/checkout` (POST, accepts `{usd}` for pack selection), `/api/stripe/publishable-key`
+- **User schema**: `stripeCustomerId` field on users table (stripeSubscriptionId kept for legacy but unused)
 
 ## External Dependencies
 

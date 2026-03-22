@@ -14,13 +14,16 @@ import { useUpload } from "@/hooks/use-upload";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Loader2, Crown, Shield, CheckCircle2 } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, Shield, Coins, TrendingUp, RotateCcw, ShoppingCart, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { NATIVE_LANGUAGES, FOCUS_AREA_OPTIONS } from "@/pages/Onboarding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { useDisplayPrefs } from "@/hooks/use-display-prefs";
+import { CREDIT_PACKS, REFUND_THRESHOLD, SIGNUP_BONUS, DAILY_REWARD } from "@shared/credits";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 const CHINESE_LEVELS = [
   "Absolute Beginner",
@@ -55,6 +58,17 @@ function sortedJson(arr: string[]) {
   return JSON.stringify([...arr].sort());
 }
 
+function txTypeLabel(type: string): { label: string; color: string; icon: typeof Coins } {
+  switch (type) {
+    case "signup_bonus":  return { label: "Signup bonus",   color: "text-emerald-600", icon: Star };
+    case "daily_reward":  return { label: "Daily reward",   color: "text-blue-600",    icon: TrendingUp };
+    case "purchase":      return { label: "Purchase",       color: "text-primary",     icon: ShoppingCart };
+    case "spend":         return { label: "Recording",      color: "text-amber-600",   icon: Coins };
+    case "refund":        return { label: "Refund",         color: "text-emerald-600", icon: RotateCcw };
+    default:              return { label: type,             color: "text-foreground",  icon: Coins };
+  }
+}
+
 export default function Profile() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
@@ -77,15 +91,23 @@ export default function Profile() {
 
   const [cityOpen, setCityOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<number | null>(null);
   const chineseLevelRef = useRef<HTMLDivElement>(null);
-  const subscriptionRef = useRef<HTMLDivElement>(null);
   const [highlightLevel, setHighlightLevel] = useState(false);
-  const [highlightSubscription, setHighlightSubscription] = useState(false);
+
+  const { data: creditData } = useQuery<{ creditBalance: number; freeCreditsBalance: number; isUnlimited: boolean }>({
+    queryKey: ['/api/credits/balance'],
+  });
+
+  const { data: transactions } = useQuery<any[]>({
+    queryKey: ['/api/credits/transactions'],
+    enabled: activeTab === "credits",
+  });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (tab === "settings" || tab === "subscription") {
+    if (tab === "settings" || tab === "credits") {
       setActiveTab(tab);
     } else if (params.get("highlight") === "chineseLevel") {
       setActiveTab("profile");
@@ -94,51 +116,8 @@ export default function Profile() {
         chineseLevelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 300);
       setTimeout(() => setHighlightLevel(false), 4000);
-    } else if (params.get("highlight") === "subscription") {
-      setActiveTab("subscription");
-      setHighlightSubscription(true);
-      setTimeout(() => {
-        subscriptionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 300);
-      setTimeout(() => setHighlightSubscription(false), 4000);
     }
   }, []);
-
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
-
-  const { data: products } = useQuery<any[]>({
-    queryKey: ['/api/stripe/products'],
-  });
-
-  const { data: subscriptionData } = useQuery<any>({
-    queryKey: ['/api/stripe/subscription'],
-  });
-
-  const hasSubscription = !!subscriptionData?.subscription;
-
-  const getProductPrice = (productName: string) => {
-    const product = products?.find((p: any) => p.name === productName);
-    return product?.prices?.[0];
-  };
-
-  const handleCheckout = async (priceId: string) => {
-    setCheckoutLoading(priceId);
-    try {
-      const res = await apiRequest("POST", "/api/stripe/checkout", { priceId });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (err) {
-      toast({ title: "Checkout failed", description: "Please try again.", variant: "destructive" });
-    } finally {
-      setCheckoutLoading(null);
-    }
-  };
-
-  const handleManageSubscription = () => {
-    navigate('/manage-subscription');
-  };
 
   useEffect(() => {
     if (user) {
@@ -212,7 +191,25 @@ export default function Profile() {
     }
   };
 
+  const handleBuyCredits = async (usd: number) => {
+    setCheckoutLoading(usd);
+    try {
+      const res = await apiRequest("POST", "/api/stripe/checkout", { usd });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      toast({ title: "Checkout failed", description: "Please try again.", variant: "destructive" });
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
+
   const isReviewer = user?.role === 'reviewer';
+  const balance = creditData?.creditBalance ?? 0;
+  const freeBalance = creditData?.freeCreditsBalance ?? 0;
+  const isUnlimited = creditData?.isUnlimited ?? false;
 
   return (
     <Layout>
@@ -223,7 +220,7 @@ export default function Profile() {
           <TabsList className={`grid w-full ${isReviewer ? 'grid-cols-2' : 'grid-cols-3'}`}>
             <TabsTrigger value="profile" data-testid="tab-profile">Profile</TabsTrigger>
             <TabsTrigger value="settings" data-testid="tab-settings">Settings</TabsTrigger>
-            {!isReviewer && <TabsTrigger value="subscription" data-testid="tab-subscription">Subscription</TabsTrigger>}
+            {!isReviewer && <TabsTrigger value="credits" data-testid="tab-credits">Credits</TabsTrigger>}
           </TabsList>
 
           {/* ── Profile Tab ── */}
@@ -475,125 +472,143 @@ export default function Profile() {
             </Card>
           </TabsContent>
 
-          {/* ── Subscription Tab (learners only) ── */}
+          {/* ── Credits Tab (learners only) ── */}
           {!isReviewer && (
-            <TabsContent value="subscription" className="mt-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <Card
-                  className={`relative overflow-hidden hover:shadow-xl transition-shadow ${
-                    !hasSubscription
-                      ? 'border-green-500/30 bg-gradient-to-br from-green-500/5 via-transparent to-transparent ring-2 ring-green-500/20'
-                      : 'border-border bg-muted/10'
-                  }`}
-                  data-testid="free-plan-card"
-                >
-                  <CardHeader>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Shield className={`w-5 h-5 ${!hasSubscription ? 'text-green-600' : 'text-muted-foreground'}`} />
-                      <span className={`${!hasSubscription ? 'text-green-600' : 'text-muted-foreground'} font-bold uppercase tracking-widest text-[10px]`}>
-                        {!hasSubscription ? 'Current Plan' : 'Free Tier'}
-                      </span>
+            <TabsContent value="credits" className="mt-6 space-y-6">
+              {/* Balance card */}
+              <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent" data-testid="credit-balance-card">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                        <Coins className="w-7 h-7 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your balance</p>
+                        <p className="text-4xl font-bold font-display text-foreground" data-testid="profile-credit-balance">
+                          {isUnlimited ? "∞" : balance}
+                        </p>
+                        <p className="text-sm text-muted-foreground">credits</p>
+                      </div>
                     </div>
-                    <CardTitle className="text-xl font-display">Free</CardTitle>
-                    <CardDescription className="text-sm">Get started with basic practice.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-3">
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className={`w-4 h-4 mt-1 ${!hasSubscription ? 'text-green-600' : 'text-muted-foreground'}`} />
-                      <p className="text-sm">1 recording / day</p>
+                    <div className="text-right space-y-1">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Shield className="w-3.5 h-3.5" />
+                        <span>{freeBalance} free</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">1 credit = 1 character</p>
+                      <p className="text-xs text-muted-foreground">{REFUND_THRESHOLD}%+ score → refunded</p>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className={`w-4 h-4 mt-1 ${!hasSubscription ? 'text-green-600' : 'text-muted-foreground'}`} />
-                      <p className="text-sm">Standard feedback</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </CardContent>
+              </Card>
 
-                <Card
-                  ref={subscriptionRef}
-                  className={`relative overflow-hidden hover:shadow-xl transition-all duration-500 ${
-                    highlightSubscription
-                      ? 'ring-2 ring-primary/60 shadow-lg shadow-primary/10 animate-pulse'
-                      : ''
-                  } ${
-                    hasSubscription
-                      ? subscriptionData?.subscription?.cancel_at_period_end
-                        ? 'border-yellow-500/30 bg-gradient-to-br from-yellow-500/5 via-transparent to-transparent ring-2 ring-yellow-500/20'
-                        : 'border-green-500/30 bg-gradient-to-br from-green-500/5 via-transparent to-transparent ring-2 ring-green-500/20'
-                      : 'border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent'
-                  }`}
-                  data-testid="pro-plan-card"
-                >
-                  <CardHeader>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Crown className={`w-5 h-5 ${
-                        hasSubscription
-                          ? subscriptionData?.subscription?.cancel_at_period_end
-                            ? 'text-yellow-600 fill-yellow-600'
-                            : 'text-green-600 fill-green-600'
-                          : 'text-primary fill-primary'
-                      }`} />
-                      <span className={`${
-                        hasSubscription
-                          ? subscriptionData?.subscription?.cancel_at_period_end
-                            ? 'text-yellow-600'
-                            : 'text-green-600'
-                          : 'text-primary'
-                      } font-bold uppercase tracking-widest text-[10px]`}>
-                        {hasSubscription
-                          ? subscriptionData?.subscription?.cancel_at_period_end ? 'Cancelled' : 'Active'
-                          : 'Upgrade'}
-                      </span>
-                    </div>
-                    <CardTitle className="text-xl font-display">Pro Plan</CardTitle>
-                    <CardDescription className="text-sm">
-                      {hasSubscription
-                        ? subscriptionData?.subscription?.cancel_at_period_end
-                          ? 'Cancelled — you still have access until the end of your billing period.'
-                          : 'Your subscription is active.'
-                        : 'For serious learners who want faster progress.'}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-3">
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 mt-1 text-green-600" />
-                      <p className="text-sm">3 recordings / day</p>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 mt-1 text-green-600" />
-                      <p className="text-sm">Priority feedback</p>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    {hasSubscription ? (
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={handleManageSubscription}
-                        data-testid="profile-manage-subscription-btn"
-                      >
-                        Manage Subscription
-                      </Button>
-                    ) : (
-                      <Button
-                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-sm"
-                        disabled={!!checkoutLoading}
-                        onClick={() => {
-                          const price = getProductPrice('Pro Plan') || getProductPrice('Pro Starter');
-                          if (price) { handleCheckout(price.id); }
-                          else { toast({ title: "Loading pricing", description: "Please wait a moment and try again.", variant: "destructive" }); }
-                        }}
-                        data-testid="profile-checkout-pro-btn"
-                      >
-                        {checkoutLoading ? (
-                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
-                        ) : (
-                          'Upgrade $7.99/mo'
-                        )}
-                      </Button>
-                    )}
-                  </CardFooter>
-                </Card>
+              {/* How credits work */}
+              <Card className="border-border/60">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">How credits work</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <Star className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <span>You received <strong>{SIGNUP_BONUS} free credits</strong> when you joined.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <TrendingUp className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                    <span><strong>+{DAILY_REWARD} free credit per day</strong> (up to 3 banked at a time).</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Coins className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                    <span>Recording a phrase costs <strong>1 credit per Chinese character</strong> (max {10} chars per session).</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <RotateCcw className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <span>Score <strong>{REFUND_THRESHOLD}% or higher</strong> on a recording and your credits are automatically refunded.</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Credit packs */}
+              <div>
+                <h2 className="text-lg font-semibold mb-3">Buy credits</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {CREDIT_PACKS.map(pack => (
+                    <Card
+                      key={pack.usd}
+                      className={`relative overflow-hidden hover:shadow-md transition-shadow ${
+                        pack.highlight === "most_popular"
+                          ? "border-primary/40 ring-2 ring-primary/20"
+                          : pack.highlight === "best_value"
+                            ? "border-secondary/40"
+                            : "border-border/60"
+                      }`}
+                      data-testid={`credit-pack-${pack.usd}`}
+                    >
+                      {pack.highlight && (
+                        <div className={`absolute top-2 right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                          pack.highlight === "most_popular"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary text-secondary-foreground"
+                        }`}>
+                          {pack.highlight === "most_popular" ? "Most Popular" : "Best Value"}
+                        </div>
+                      )}
+                      <CardContent className="pt-5 pb-4">
+                        <div className="mb-3">
+                          <p className="text-2xl font-bold font-display">{pack.credits}</p>
+                          <p className="text-sm text-muted-foreground">credits</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-4">
+                          ≈ ${(pack.usd / pack.credits * 100).toFixed(1)}¢ per credit
+                        </p>
+                        <Button
+                          className="w-full"
+                          variant={pack.highlight === "most_popular" ? "default" : "outline"}
+                          disabled={checkoutLoading === pack.usd}
+                          onClick={() => handleBuyCredits(pack.usd)}
+                          data-testid={`buy-pack-${pack.usd}`}
+                        >
+                          {checkoutLoading === pack.usd ? (
+                            <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Processing...</>
+                          ) : (
+                            `$${pack.usd}`
+                          )}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              {/* Transaction history */}
+              <div>
+                <h2 className="text-lg font-semibold mb-3">Transaction history</h2>
+                {!transactions || transactions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-6 text-center">No transactions yet.</p>
+                ) : (
+                  <Card className="border-border/60 divide-y divide-border/50">
+                    {transactions.slice(0, 20).map((tx: any) => {
+                      const { label, color, icon: Icon } = txTypeLabel(tx.type);
+                      const isPositive = tx.amount > 0;
+                      return (
+                        <div key={tx.id} className="flex items-center justify-between px-4 py-3" data-testid={`tx-row-${tx.id}`}>
+                          <div className="flex items-center gap-3">
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center bg-muted/50 ${color}`}>
+                              <Icon className="w-3.5 h-3.5" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{label}</p>
+                              <p className="text-xs text-muted-foreground">{format(new Date(tx.createdAt), "MMM d, yyyy")}</p>
+                            </div>
+                          </div>
+                          <span className={`text-sm font-bold ${isPositive ? "text-emerald-600" : "text-amber-600"}`}>
+                            {isPositive ? "+" : ""}{tx.amount}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </Card>
+                )}
               </div>
             </TabsContent>
           )}
