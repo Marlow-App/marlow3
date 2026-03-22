@@ -287,14 +287,14 @@ export async function registerRoutes(
 
       // Validate re-record parent if provided
       let parentRecordingId: number | undefined;
-      let rerecordDiscount: "free" | "twenty_pct" | null = null;
+      let rerecordDiscount: "free" | "thirty_pct" | null = null;
       if (rerecordOf) {
         const parent = await storage.getRecording(rerecordOf);
         if (!parent || parent.userId !== userId) {
           return res.status(403).json({ message: "Invalid parent recording." });
         }
         parentRecordingId = parent.id;
-        rerecordDiscount = parent.status === "pending" ? "free" : "twenty_pct";
+        rerecordDiscount = parent.status === "pending" ? "free" : "thirty_pct";
       }
 
       if (!isUnlimited) {
@@ -312,8 +312,8 @@ export async function registerRoutes(
 
         const discountedCost = rerecordDiscount === "free"
           ? 0
-          : rerecordDiscount === "twenty_pct"
-            ? Math.ceil(charCount * 0.8)
+          : rerecordDiscount === "thirty_pct"
+            ? Math.ceil(charCount * 0.7)
             : charCount;
 
         const user = await storage.getUser(userId);
@@ -330,7 +330,7 @@ export async function registerRoutes(
       const fullCost = isUnlimited ? 0 : charCount;
       const creditCost = isUnlimited ? 0
         : rerecordDiscount === "free" ? 0
-        : rerecordDiscount === "twenty_pct" ? Math.ceil(fullCost * 0.8)
+        : rerecordDiscount === "thirty_pct" ? Math.ceil(fullCost * 0.7)
         : fullCost;
 
       const recording = await storage.createRecording(userId, recordingData, creditCost, parentRecordingId);

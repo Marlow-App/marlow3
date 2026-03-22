@@ -605,7 +605,7 @@ export default function RecordingDetail() {
   const rerecordLabel = isOwner
     ? recording?.status === "pending"
       ? "Free redo"
-      : `Re-record (20% off, ${Math.ceil(charCount * 0.8)} credit${Math.ceil(charCount * 0.8) !== 1 ? "s" : ""})`
+      : `Re-record (30% off, ${Math.ceil(charCount * 0.7)} credit${Math.ceil(charCount * 0.7) !== 1 ? "s" : ""})`
     : null;
   const rerecordUrl = recording
     ? `/record?rerecordOf=${recordingId}&sentenceText=${encodeURIComponent(recording.sentenceText)}&redo=${recording.status === "pending" ? "free" : "discount"}`

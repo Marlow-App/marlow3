@@ -182,7 +182,7 @@ export default function RecordPage() {
   const activeText = rerecordOf ? text : (selectedPhrase ? phraseToText(selectedPhrase) : text);
   const charCost = countChineseChars(activeText);
   const discountedCost = rerecordOf
-    ? (redoType === "free" ? 0 : Math.ceil(charCost * 0.8))
+    ? (redoType === "free" ? 0 : Math.ceil(charCost * 0.7))
     : charCost;
   const balance = creditData?.creditBalance ?? 0;
   const isUnlimited = creditData?.isUnlimited ?? false;
@@ -288,7 +288,7 @@ export default function RecordPage() {
             <X className="w-4 h-4 shrink-0 opacity-0 pointer-events-none" aria-hidden />
             {redoType === "free"
               ? "Free redo — no credits deducted"
-              : `20% off — costs ${discountedCost} credit${discountedCost !== 1 ? "s" : ""} instead of ${charCost}`}
+              : `30% off — costs ${discountedCost} credit${discountedCost !== 1 ? "s" : ""} instead of ${charCost}`}
           </div>
         )}
 
