@@ -449,6 +449,12 @@ export async function registerRoutes(
       updateData.overallScore = overallScore;
 
       const updated = await storage.updateFeedback(feedbackId, updateData);
+
+      // Refund credits if score >= REFUND_THRESHOLD (idempotent — won't double-refund)
+      if (overallScore !== null && overallScore >= REFUND_THRESHOLD) {
+        storage.refundCredits(existing.recordingId).catch(console.error);
+      }
+
       res.json(updated);
     } catch (err) {
       if (err instanceof z.ZodError) {
