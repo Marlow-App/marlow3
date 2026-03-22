@@ -546,15 +546,17 @@ export default function Profile() {
                         <tr key={pack.usd} className="hover:bg-muted/20 transition-colors" data-testid={`credit-pack-${pack.usd}`}>
                           <td className="px-4 py-3.5 font-semibold">${pack.usd}</td>
                           <td className="px-4 py-3.5">
-                            <span className="font-semibold">{pack.credits}</span>
+                            <div className="font-semibold">{pack.credits}</div>
                             {pack.highlight && (
-                              <span className={`ml-2 text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${
-                                pack.highlight === "most_popular"
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-amber-400 text-amber-950"
-                              }`}>
-                                {pack.highlight === "most_popular" ? "Most Popular" : "Best Value"}
-                              </span>
+                              <div className="mt-1.5">
+                                <span className={`text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${
+                                  pack.highlight === "most_popular"
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-amber-400 text-amber-950"
+                                }`}>
+                                  {pack.highlight === "most_popular" ? "Most Popular" : "Best Value"}
+                                </span>
+                              </div>
                             )}
                           </td>
                           <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
