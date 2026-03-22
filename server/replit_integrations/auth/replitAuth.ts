@@ -153,6 +153,19 @@ export async function setupAuth(app: Express) {
       );
     });
   });
+
+  // Logs out of both our app and Replit, then starts a fresh login
+  app.get("/api/switch-account", (req, res) => {
+    const role = (req.query.role as string) || "learner";
+    req.logout(() => {
+      res.redirect(
+        client.buildEndSessionUrl(config, {
+          client_id: process.env.REPL_ID!,
+          post_logout_redirect_uri: `${req.protocol}://${req.hostname}/api/login?role=${role}`,
+        }).href
+      );
+    });
+  });
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {

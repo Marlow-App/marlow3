@@ -22,6 +22,9 @@ export default function Landing() {
           <span className="font-display font-bold text-2xl tracking-tight">Marlow</span>
         </div>
         <div className="flex items-center gap-4">
+          <a href="/api/switch-account" className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors hidden sm:block">
+            Use a different account
+          </a>
           <a href="/api/login?role=reviewer" className="text-xs text-muted-foreground hover:text-primary transition-colors">
             Reviewer Login
           </a>
