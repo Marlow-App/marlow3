@@ -51,15 +51,18 @@ const CITIES = [
   "Xuzhou", "Yantai", "Yinchuan", "Zhengzhou", "Zhongshan", "Zhuhai"
 ];
 
+function sortedJson(arr: string[]) {
+  return JSON.stringify([...arr].sort());
+}
+
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { uploadFile, isUploading } = useUpload();
   const { showPinyin, showSandhi, setShowPinyin, setShowSandhi } = useDisplayPrefs();
 
   const [activeTab, setActiveTab] = useState<string>("profile");
-  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
@@ -87,7 +90,6 @@ export default function Profile() {
     } else if (params.get("highlight") === "chineseLevel") {
       setActiveTab("profile");
       setHighlightLevel(true);
-      setIsEditing(true);
       setTimeout(() => {
         chineseLevelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 300);
@@ -154,6 +156,34 @@ export default function Profile() {
     }
   }, [user]);
 
+  const isDirty = user ? (
+    formData.firstName !== (user.firstName || "") ||
+    formData.lastName !== (user.lastName || "") ||
+    formData.profileImageUrl !== (user.profileImageUrl || "") ||
+    formData.chineseLevel !== (user.chineseLevel || "") ||
+    formData.nativeLanguage !== (user.nativeLanguage || "") ||
+    formData.city !== (user.city || "") ||
+    formData.teachingExperience !== (user.teachingExperience || 0) ||
+    sortedJson(formData.focusAreas) !== sortedJson(user.focusAreas || []) ||
+    sortedJson(formData.dialects) !== sortedJson(user.dialects || [])
+  ) : false;
+
+  const handleDiscard = () => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        profileImageUrl: user.profileImageUrl || "",
+        chineseLevel: user.chineseLevel || "",
+        nativeLanguage: user.nativeLanguage || "",
+        focusAreas: user.focusAreas || [],
+        city: user.city || "",
+        teachingExperience: user.teachingExperience || 0,
+        dialects: user.dialects || []
+      });
+    }
+  };
+
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -174,7 +204,6 @@ export default function Profile() {
       const res = await apiRequest("PATCH", "/api/auth/user", formData);
       const updatedUser = await res.json();
       queryClient.setQueryData(["/api/auth/user"], updatedUser);
-      setIsEditing(false);
       toast({ title: "Profile updated", description: "Your changes have been saved." });
     } catch (err) {
       toast({ title: "Save failed", description: "Please try again.", variant: "destructive" });
@@ -187,7 +216,7 @@ export default function Profile() {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto space-y-6 animate-in">
+      <div className="max-w-3xl mx-auto space-y-6 animate-in pb-24">
         <h1 className="text-3xl font-bold font-display">Your Profile</h1>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -199,43 +228,27 @@ export default function Profile() {
 
           {/* ── Profile Tab ── */}
           <TabsContent value="profile" className="space-y-6 mt-6">
-            <div className="flex items-center justify-end gap-2">
-              {!isEditing ? (
-                <Button onClick={() => setIsEditing(true)} data-testid="btn-edit-profile">Edit Profile</Button>
-              ) : (
-                <>
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                  <Button onClick={handleSave} disabled={isSaving}>
-                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Changes
-                  </Button>
-                </>
-              )}
-            </div>
-
             <Card>
               <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
-                <CardDescription>Manage your public identity on Marlow.</CardDescription>
+                <CardDescription>Click any field to edit it.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex flex-col md:flex-row items-center gap-6 pb-6 border-b border-border/50">
-                  <div className="relative group">
+                  <div className="relative group cursor-pointer">
                     <Avatar className="w-24 h-24 border-4 border-primary/10">
                       <AvatarImage src={formData.profileImageUrl} />
                       <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
                         {formData.firstName?.[0] || "U"}
                       </AvatarFallback>
                     </Avatar>
-                    {isEditing && (
-                      <Label
-                        htmlFor="photo-upload"
-                        className="absolute inset-0 flex items-center justify-center bg-black/40 text-white rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium"
-                      >
-                        {isUploading ? "Uploading..." : "Change"}
-                        <Input id="photo-upload" type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} disabled={isUploading} />
-                      </Label>
-                    )}
+                    <Label
+                      htmlFor="photo-upload"
+                      className="absolute inset-0 flex items-center justify-center bg-black/40 text-white rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium"
+                    >
+                      {isUploading ? "Uploading..." : "Change"}
+                      <Input id="photo-upload" type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} disabled={isUploading} />
+                    </Label>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 w-full">
@@ -245,7 +258,6 @@ export default function Profile() {
                         id="firstName"
                         value={formData.firstName}
                         onChange={e => setFormData(p => ({ ...p, firstName: e.target.value }))}
-                        disabled={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -254,7 +266,6 @@ export default function Profile() {
                         id="lastName"
                         value={formData.lastName}
                         onChange={e => setFormData(p => ({ ...p, lastName: e.target.value }))}
-                        disabled={!isEditing}
                       />
                     </div>
                   </div>
@@ -268,7 +279,6 @@ export default function Profile() {
                     >
                       <Label className={highlightLevel ? "text-primary font-bold" : ""}>Chinese Level</Label>
                       <Select
-                        disabled={!isEditing}
                         value={formData.chineseLevel}
                         onValueChange={v => setFormData(p => ({ ...p, chineseLevel: v }))}
                       >
@@ -286,7 +296,6 @@ export default function Profile() {
                     <div className="space-y-2">
                       <Label>Native Language</Label>
                       <Select
-                        disabled={!isEditing}
                         value={formData.nativeLanguage}
                         onValueChange={v => setFormData(p => ({ ...p, nativeLanguage: v }))}
                       >
@@ -309,7 +318,6 @@ export default function Profile() {
                             <Checkbox
                               id={`focus-${area.value}`}
                               checked={formData.focusAreas.includes(area.value)}
-                              disabled={!isEditing}
                               onCheckedChange={(checked) => {
                                 setFormData(prev => {
                                   const focusAreas = checked
@@ -332,14 +340,13 @@ export default function Profile() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label>Hometown City</Label>
-                        <Popover open={cityOpen && isEditing} onOpenChange={setCityOpen}>
+                        <Popover open={cityOpen} onOpenChange={setCityOpen}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
                               role="combobox"
                               aria-expanded={cityOpen}
                               className="w-full justify-between"
-                              disabled={!isEditing}
                             >
                               {formData.city || "Select city..."}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -384,7 +391,6 @@ export default function Profile() {
                           min="0"
                           value={formData.teachingExperience}
                           onChange={e => setFormData(p => ({ ...p, teachingExperience: parseInt(e.target.value) || 0 }))}
-                          disabled={!isEditing}
                         />
                       </div>
                     </div>
@@ -397,7 +403,6 @@ export default function Profile() {
                             <Checkbox
                               id={`dialect-${dialect}`}
                               checked={formData.dialects.includes(dialect)}
-                              disabled={!isEditing}
                               onCheckedChange={(checked) => {
                                 setFormData(prev => {
                                   const dialects = checked
@@ -593,6 +598,40 @@ export default function Profile() {
             </TabsContent>
           )}
         </Tabs>
+      </div>
+
+      {/* Fixed save bar — slides in when form is dirty */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-out ${
+          isDirty ? "translate-y-0" : "translate-y-full"
+        }`}
+        data-testid="profile-save-bar"
+      >
+        <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-t border-border shadow-lg">
+          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">You have unsaved changes.</p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDiscard}
+                disabled={isSaving}
+                data-testid="btn-discard-profile"
+              >
+                Discard
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={isSaving}
+                data-testid="btn-save-profile"
+              >
+                {isSaving && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </Layout>
   );
