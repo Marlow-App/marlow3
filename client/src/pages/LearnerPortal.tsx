@@ -106,7 +106,7 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
     if (ratio >= 0.75) return "bg-primary text-primary-foreground";
     if (ratio >= 0.5) return "bg-primary/70 text-primary-foreground";
     if (ratio >= 0.25) return "bg-primary/40 text-primary-foreground";
-    return "bg-primary/20 text-foreground";
+    return "bg-primary/20 text-primary font-bold";
   };
 
   return (
@@ -131,7 +131,7 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </Button>
-            <span className="text-xs font-medium min-w-[100px] text-center" data-testid="calendar-month-label">
+            <span className="text-sm font-normal min-w-[100px] text-center" data-testid="calendar-month-label">
               {format(currentMonth, "MMM yyyy")}
             </span>
             <Button
@@ -148,16 +148,16 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
         </div>
       </CardHeader>
       <CardContent className="pt-0 px-4 pb-3">
-        <div className="grid grid-cols-7 gap-0.5 mb-0.5">
+        <div className="grid grid-cols-7 gap-0.5 mb-1">
           {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
-            <div key={d} className="text-[11px] text-center font-medium text-muted-foreground py-0.5">
+            <div key={d} className="text-xs text-center font-normal text-muted-foreground py-0.5">
               {d}
             </div>
           ))}
         </div>
         <div className="grid grid-cols-7 gap-0.5">
           {Array.from({ length: startDayOfWeek }).map((_, i) => (
-            <div key={`empty-${i}`} className="h-7" />
+            <div key={`empty-${i}`} className="h-9" />
           ))}
           {days.map((day) => {
             const key = format(day, "yyyy-MM-dd");
@@ -168,7 +168,7 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
 
             const dayCell = (
               <div
-                className={`h-7 rounded flex items-center justify-center text-xs relative transition-colors ${
+                className={`h-9 rounded flex items-center justify-center relative transition-colors ${
                   count > 0 ? "cursor-pointer" : ""
                 } ${
                   future
@@ -179,7 +179,7 @@ function JournalCalendar({ recordings }: { recordings: any[] }) {
                 } ${today ? "ring-1.5 ring-primary ring-offset-1 ring-offset-background" : ""}`}
                 data-testid={`calendar-day-${key}`}
               >
-                <span className="text-xs font-medium leading-none">{format(day, "d")}</span>
+                <span className="text-sm font-normal leading-none">{format(day, "d")}</span>
                 {count > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 bg-foreground text-background text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">
                     {count}
