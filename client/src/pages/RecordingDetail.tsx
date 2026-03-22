@@ -304,6 +304,8 @@ function EditableFeedbackCard({
   pinyinData,
   recordingId,
   characters,
+  rerecordUrl,
+  rerecordLabel,
 }: {
   item: any;
   isOwner: boolean;
@@ -311,6 +313,8 @@ function EditableFeedbackCard({
   pinyinData: PinyinChar[];
   recordingId: number;
   characters: string[];
+  rerecordUrl?: string | null;
+  rerecordLabel?: string | null;
 }) {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
@@ -527,6 +531,22 @@ function EditableFeedbackCard({
                     >
                       <source src={item.audioFeedbackUrl} />
                     </audio>
+                  </div>
+                )}
+
+                {rerecordUrl && rerecordLabel && (
+                  <div className="mt-4 pt-4 border-t border-border/50">
+                    <Link href={rerecordUrl}>
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="w-full gap-2 h-12 text-base border-2 border-primary/40 hover:border-primary hover:bg-primary/5 transition-all"
+                        data-testid="rerecord-btn"
+                      >
+                        <RotateCcw className="w-5 h-5" />
+                        {rerecordLabel}
+                      </Button>
+                    </Link>
                   </div>
                 )}
               </>
@@ -840,7 +860,7 @@ export default function RecordingDetail() {
               </h3>
               
               {recording.feedback && recording.feedback.length > 0 ? (
-                recording.feedback.map((item: any) => (
+                recording.feedback.map((item: any, idx: number) => (
                   <EditableFeedbackCard
                     key={item.id}
                     item={item}
@@ -849,26 +869,14 @@ export default function RecordingDetail() {
                     pinyinData={pinyinData}
                     recordingId={recordingId}
                     characters={characters}
+                    rerecordUrl={isOwner && idx === 0 ? rerecordUrl : null}
+                    rerecordLabel={isOwner && idx === 0 ? rerecordLabel : null}
                   />
                 ))
               ) : (
                 <div className="text-center py-8 text-muted-foreground italic bg-muted/20 rounded-xl">
                   No feedback provided yet.
                 </div>
-              )}
-
-              {isOwner && rerecordLabel && rerecordUrl && (
-                <Link href={rerecordUrl}>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full gap-2 h-14 text-base border-2 border-primary/40 hover:border-primary hover:bg-primary/5 transition-all"
-                    data-testid="rerecord-btn"
-                  >
-                    <RotateCcw className="w-5 h-5" />
-                    {rerecordLabel}
-                  </Button>
-                </Link>
               )}
             </div>
           </div>
