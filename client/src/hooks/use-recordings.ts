@@ -55,7 +55,7 @@ export function useRecording(id: number) {
 export function useCreateRecording() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: InsertRecording) => {
+    mutationFn: async (data: InsertRecording & { rerecordOf?: number }) => {
       const res = await fetch(api.recordings.create.path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -277,15 +277,27 @@ export async function registerRoutes(
   app.post(api.recordings.create.path, isAuthenticated, async (req, res) => {
     try {
       const input = api.recordings.create.input.parse(req.body);
+      const { rerecordOf, ...recordingData } = input;
       const userId = (req.user as any).claims.sub;
       const userEmail = (req.user as any).claims.email;
 
       const isUnlimited = userEmail === UNLIMITED_EMAIL;
 
-      const charCount = countChineseChars(input.sentenceText);
+      const charCount = countChineseChars(recordingData.sentenceText);
+
+      // Validate re-record parent if provided
+      let parentRecordingId: number | undefined;
+      let rerecordDiscount: "free" | "twenty_pct" | null = null;
+      if (rerecordOf) {
+        const parent = await storage.getRecording(rerecordOf);
+        if (!parent || parent.userId !== userId) {
+          return res.status(403).json({ message: "Invalid parent recording." });
+        }
+        parentRecordingId = parent.id;
+        rerecordDiscount = parent.status === "pending" ? "free" : "twenty_pct";
+      }
 
       if (!isUnlimited) {
-        // Validate char count
         if (charCount > MAX_CHARS) {
           return res.status(400).json({
             message: `Recording text too long. Maximum ${MAX_CHARS} Chinese characters allowed.`,
@@ -298,20 +310,30 @@ export async function registerRoutes(
           return res.status(400).json({ message: "Please include at least one Chinese character." });
         }
 
-        // Check credit balance
+        const discountedCost = rerecordDiscount === "free"
+          ? 0
+          : rerecordDiscount === "twenty_pct"
+            ? Math.ceil(charCount * 0.8)
+            : charCount;
+
         const user = await storage.getUser(userId);
         const balance = user?.creditBalance ?? 0;
-        if (balance < charCount) {
+        if (balance < discountedCost) {
           return res.status(402).json({
-            message: `Not enough credits. This recording costs ${charCount} credit${charCount > 1 ? 's' : ''} but you only have ${balance}.`,
-            required: charCount,
+            message: `Not enough credits. This recording costs ${discountedCost} credit${discountedCost > 1 ? 's' : ''} but you only have ${balance}.`,
+            required: discountedCost,
             balance,
           });
         }
       }
 
-      const creditCost = isUnlimited ? 0 : charCount;
-      const recording = await storage.createRecording(userId, input, creditCost);
+      const fullCost = isUnlimited ? 0 : charCount;
+      const creditCost = isUnlimited ? 0
+        : rerecordDiscount === "free" ? 0
+        : rerecordDiscount === "twenty_pct" ? Math.ceil(fullCost * 0.8)
+        : fullCost;
+
+      const recording = await storage.createRecording(userId, recordingData, creditCost, parentRecordingId);
 
       if (!isUnlimited && creditCost > 0) {
         await storage.spendCredits(userId, recording.id, creditCost);

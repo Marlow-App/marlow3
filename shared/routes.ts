@@ -41,7 +41,7 @@ export const api = {
     create: {
       method: 'POST' as const,
       path: '/api/recordings' as const,
-      input: insertRecordingSchema,
+      input: insertRecordingSchema.extend({ rerecordOf: z.number().optional() }),
       responses: {
         201: z.any(),
         400: errorSchemas.validation,

@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star } from "lucide-react";
+import { ChevronLeft, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star, RotateCcw } from "lucide-react";
+import { countChineseChars } from "@shared/credits";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useState, useMemo, useRef, useLayoutEffect } from "react";
 import { format } from "date-fns";
@@ -579,6 +580,17 @@ export default function RecordingDetail() {
     recording.userId === user.id || user.role === "reviewer"
   );
 
+  const isOwner = user && recording && recording.userId === user.id && user.role !== "reviewer";
+  const charCount = recording ? countChineseChars(recording.sentenceText) : 0;
+  const rerecordLabel = isOwner
+    ? recording?.status === "pending"
+      ? "Free redo"
+      : `Re-record (20% off, ${Math.ceil(charCount * 0.8)} credit${Math.ceil(charCount * 0.8) !== 1 ? "s" : ""})`
+    : null;
+  const rerecordUrl = recording
+    ? `/record?rerecordOf=${recordingId}&sentenceText=${encodeURIComponent(recording.sentenceText)}&redo=${recording.status === "pending" ? "free" : "discount"}`
+    : null;
+
   const mainCardRef = useRef<HTMLDivElement>(null);
   const [showMiniBar, setShowMiniBar] = useState(false);
   const [miniBarReady, setMiniBarReady] = useState(false);
@@ -722,6 +734,15 @@ export default function RecordingDetail() {
                Recording #{id} by {recording.user?.firstName || recording.user?.email || "Unknown User"}
              </h1>
           </div>
+          <div className="flex items-center gap-2">
+          {isOwner && rerecordLabel && rerecordUrl && (
+            <Link href={rerecordUrl}>
+              <Button variant="outline" size="sm" className="gap-1.5" data-testid="rerecord-btn">
+                <RotateCcw className="w-3.5 h-3.5" />
+                {rerecordLabel}
+              </Button>
+            </Link>
+          )}
           {canDelete && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -750,6 +771,7 @@ export default function RecordingDetail() {
               </AlertDialogContent>
             </AlertDialog>
           )}
+          </div>
         </div>
 
         <div className={`grid grid-cols-1 ${user?.role === 'reviewer' ? 'lg:grid-cols-3' : ''} gap-8`}>

@@ -125,6 +125,9 @@ export default function RecordPage() {
   const { user } = useAuth();
   const userLevel = user?.chineseLevel || "Beginner";
 
+  const [rerecordOf, setRerecordOf] = useState<number | null>(null);
+  const [redoType, setRedoType] = useState<"free" | "discount" | null>(null);
+
   const { data: creditData } = useQuery<{ creditBalance: number; freeCreditsBalance: number; isUnlimited: boolean }>({
     queryKey: ['/api/credits/balance'],
   });
@@ -134,6 +137,20 @@ export default function RecordPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const phraseParam = params.get("phrase");
+    const rerecordOfParam = params.get("rerecordOf");
+    const sentenceTextParam = params.get("sentenceText");
+    const redoParam = params.get("redo");
+
+    if (rerecordOfParam && sentenceTextParam) {
+      const id = parseInt(rerecordOfParam);
+      if (!isNaN(id)) {
+        setRerecordOf(id);
+        setRedoType(redoParam === "free" ? "free" : redoParam === "discount" ? "discount" : null);
+        setText(sentenceTextParam);
+        return;
+      }
+    }
+
     if (phraseParam) {
       const matchedPhrase = PHRASE_BANK.find(p => phraseToText(p) === phraseParam);
       if (matchedPhrase) {
@@ -162,11 +179,14 @@ export default function RecordPage() {
     setText("");
   };
 
-  const activeText = selectedPhrase ? phraseToText(selectedPhrase) : text;
+  const activeText = rerecordOf ? text : (selectedPhrase ? phraseToText(selectedPhrase) : text);
   const charCost = countChineseChars(activeText);
+  const discountedCost = rerecordOf
+    ? (redoType === "free" ? 0 : Math.ceil(charCost * 0.8))
+    : charCost;
   const balance = creditData?.creditBalance ?? 0;
   const isUnlimited = creditData?.isUnlimited ?? false;
-  const canAfford = isUnlimited || balance >= charCost;
+  const canAfford = isUnlimited || balance >= discountedCost;
   const tooLong = !isUnlimited && charCost > MAX_CHARS;
 
   const handleRecordingComplete = async (file: File) => {
@@ -191,7 +211,7 @@ export default function RecordPage() {
     if (!canAfford) {
       toast({
         title: "Not enough credits",
-        description: `This recording costs ${charCost} credit${charCost > 1 ? "s" : ""} but you only have ${balance}. Buy more credits in your profile.`,
+        description: `This recording costs ${discountedCost} credit${discountedCost > 1 ? "s" : ""} but you only have ${balance}. Buy more credits in your profile.`,
         variant: "destructive",
       });
       return;
@@ -204,6 +224,7 @@ export default function RecordPage() {
       await createRecording.mutateAsync({
         audioUrl: uploadRes.objectPath,
         sentenceText: activeText,
+        ...(rerecordOf ? { rerecordOf } : {}),
       });
 
       toast({
@@ -227,10 +248,10 @@ export default function RecordPage() {
       <div className="max-w-2xl mx-auto space-y-3 animate-in">
         <div className="space-y-4">
           <div className="flex items-center gap-1">
-            <button onClick={() => setLocation("/")} className="p-1 -ml-1 rounded-md hover:bg-muted transition-colors" data-testid="back-btn">
+            <button onClick={() => setLocation(-1 as any)} className="p-1 -ml-1 rounded-md hover:bg-muted transition-colors" data-testid="back-btn">
               <ChevronLeft className="w-9 h-9 text-foreground" strokeWidth={3} />
             </button>
-            <h1 className="text-3xl font-bold font-display">New Recording</h1>
+            <h1 className="text-3xl font-bold font-display">{rerecordOf ? "Re-record" : "New Recording"}</h1>
           </div>
 
           <div className="flex items-center justify-between gap-2">
@@ -258,8 +279,21 @@ export default function RecordPage() {
           </div>
         </div>
 
+        {rerecordOf && (
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium ${
+            redoType === "free"
+              ? "bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
+              : "bg-primary/5 border-primary/20 text-primary"
+          }`} data-testid="rerecord-banner">
+            <X className="w-4 h-4 shrink-0 opacity-0 pointer-events-none" aria-hidden />
+            {redoType === "free"
+              ? "Free redo — no credits deducted"
+              : `20% off — costs ${discountedCost} credit${discountedCost !== 1 ? "s" : ""} instead of ${charCost}`}
+          </div>
+        )}
+
         <div className="space-y-4">
-          <div className="space-y-3">
+          {!rerecordOf && <div className="space-y-3">
             <div className="space-y-2">
               <div>
                 <h2 className="text-base font-semibold">{userLevel} Phrases</h2>
@@ -294,8 +328,9 @@ export default function RecordPage() {
                 </ScrollRow>
               ))}
             </div>
-          </div>
+          </div>}
 
+          {!rerecordOf && (
           <div className="space-y-2">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Or type your own sentence
@@ -320,6 +355,7 @@ export default function RecordPage() {
               </span>
             </div>
           </div>
+          )}
 
           {(selectedPhrase || text.trim()) && (
             <Card className={`border-primary/30 bg-primary/5 shadow-sm sticky top-0 z-10 ${tooLong ? "border-destructive/50 bg-destructive/5" : ""}`} data-testid="active-phrase-display">
@@ -351,12 +387,14 @@ export default function RecordPage() {
                             {tooLong
                               ? `${charCost} chars — max ${MAX_CHARS}`
                               : canAfford
-                                ? `Costs ${charCost} credit${charCost > 1 ? "s" : ""}`
-                                : `Need ${charCost} credits (you have ${balance})`
+                                ? (redoType === "free"
+                                    ? "Free redo"
+                                    : `Costs ${discountedCost} credit${discountedCost > 1 ? "s" : ""}`)
+                                : `Need ${discountedCost} credits (you have ${balance})`
                             }
                           </span>
                         </div>
-                        {canAfford && !tooLong && charCost > 0 && (
+                        {canAfford && !tooLong && redoType !== "free" && (
                           <span className="text-[10px] text-muted-foreground">
                             95%+ score → credits refunded
                           </span>

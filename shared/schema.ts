@@ -14,6 +14,7 @@ export const recordings = pgTable("recordings", {
   status: text("status", { enum: ["pending", "reviewed"] }).default("pending").notNull(),
   creditCost: integer("credit_cost").default(0).notNull(),
   creditsRefunded: boolean("credits_refunded").default(false).notNull(),
+  parentRecordingId: integer("parent_recording_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -84,6 +85,7 @@ export const insertRecordingSchema = createInsertSchema(recordings).omit({
   status: true,
   creditCost: true,
   creditsRefunded: true,
+  parentRecordingId: true,
   createdAt: true 
 });
 

@@ -73,7 +73,7 @@ The project uses a monorepo layout with three main directories:
 - **Schema** (in `shared/schema.ts` and `shared/models/auth.ts`):
   - `users` — user accounts (required for Replit Auth); includes `focusAreas` (text[]), `nativeLanguage` (text), `onboardingComplete` (boolean, default false)
   - `sessions` — session storage (required for Replit Auth)
-  - `recordings` — audio recordings submitted by learners (fields: audioUrl, sentenceText, status pending/reviewed)
+  - `recordings` — audio recordings submitted by learners (fields: audioUrl, sentenceText, status pending/reviewed, parentRecordingId nullable FK for re-records)
   - `feedback` — reviewer feedback on recordings (fields: textFeedback, corrections, audioFeedbackUrl, rating (legacy 1-3), characterRatings (JSONB per-character ratings), fluencyScore (integer 1-5, nullable), overallScore (computed percentage 0-100: 80% character + 20% fluency when fluency present), reviewerId)
   - `userConsents` — consent records (consentType, policyVersion, ipAddress, consentedAt)
 - **Relations**: recordings belong to users, feedback belongs to recordings and reviewers, userConsents belong to users

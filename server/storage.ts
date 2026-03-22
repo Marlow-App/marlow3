@@ -18,7 +18,7 @@ import { ObjectStorageService } from "./replit_integrations/object_storage";
 import { SIGNUP_BONUS, DAILY_REWARD, MAX_FREE_BANK } from "@shared/credits";
 
 export interface IStorage {
-  createRecording(userId: string, recording: InsertRecording, creditCost?: number): Promise<Recording>;
+  createRecording(userId: string, recording: InsertRecording, creditCost?: number, parentRecordingId?: number): Promise<Recording>;
   getRecording(id: number): Promise<Recording | undefined>;
   getRecordingsByUser(userId: string): Promise<Recording[]>;
   getAllPendingRecordings(): Promise<(Recording & { user: User | null })[]>;
@@ -46,10 +46,10 @@ export class DatabaseStorage implements IStorage {
     return authStorage.getUser(id);
   }
 
-  async createRecording(userId: string, recording: InsertRecording, creditCost = 0): Promise<Recording> {
+  async createRecording(userId: string, recording: InsertRecording, creditCost = 0, parentRecordingId?: number): Promise<Recording> {
     const [newRecording] = await db
       .insert(recordings)
-      .values({ ...recording, userId, creditCost })
+      .values({ ...recording, userId, creditCost, ...(parentRecordingId ? { parentRecordingId } : {}) })
       .returning();
     return newRecording;
   }

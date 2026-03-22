@@ -46,7 +46,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row gap-4">
               <a href="/api/login?role=learner">
                 <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-primary hover:bg-primary/90 shadow-xl shadow-primary/30 transition-all hover:-translate-y-1">
-                  Start Free — {SIGNUP_BONUS} Credits Included
+                  Start Free
                 </Button>
               </a>
               <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2" onClick={scrollToHowItWorks} data-testid="how-it-works-btn">
