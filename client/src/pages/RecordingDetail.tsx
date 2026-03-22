@@ -880,20 +880,20 @@ export default function RecordingDetail() {
                         characters={characters}
                       />
                     ))}
-                    <div className="border border-border/50 rounded-xl overflow-hidden">
+                    <div className="border border-orange-300 dark:border-orange-800 rounded-xl overflow-hidden">
                       <button
-                        className="w-full flex items-center justify-between px-4 py-3 bg-secondary/5 hover:bg-secondary/10 transition-colors text-left"
+                        className="w-full flex items-center justify-between px-4 py-3 bg-orange-50 dark:bg-orange-950/40 hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors text-left"
                         onClick={() => setShowRerecordFeedback(v => !v)}
                         data-testid="toggle-rerecord-feedback"
                       >
-                        <span className="text-sm font-semibold flex items-center gap-2">
-                          <RotateCcw className="w-4 h-4 text-secondary" />
+                        <span className="text-sm font-semibold flex items-center gap-2 text-orange-700 dark:text-orange-400">
+                          <RotateCcw className="w-4 h-4" />
                           Feedback on Re-recording
                         </span>
-                        {showRerecordFeedback ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                        {showRerecordFeedback ? <ChevronUp className="w-4 h-4 text-orange-500" /> : <ChevronDown className="w-4 h-4 text-orange-500" />}
                       </button>
                       {showRerecordFeedback && (
-                        <div className="p-3 space-y-3 border-t border-border/30">
+                        <div className="p-3 space-y-3 border-t border-orange-200 dark:border-orange-800/60 bg-orange-50/50 dark:bg-orange-950/20">
                           {recording.feedback.map((item: any, idx: number) => (
                             <EditableFeedbackCard
                               key={item.id}
