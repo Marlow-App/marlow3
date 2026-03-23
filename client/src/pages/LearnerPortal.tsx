@@ -335,11 +335,22 @@ function RecordingCard({ recording }: { recording: any }) {
 
   const isRefunded = recording.creditsRefunded && recording.creditCost > 0;
   const isReviewed = recording.status === "reviewed";
+  const score = recording.feedback?.[0]?.overallScore ?? null;
 
   return (
     <>
     <Link href={`/recordings/${recording.id}`}>
-    <Card className="hover:shadow-md transition-shadow duration-200 border-border/50 cursor-pointer" data-testid={`recording-card-${recording.id}`}>
+    <Card className="hover:shadow-md transition-shadow duration-200 border-border/50 cursor-pointer overflow-hidden" data-testid={`recording-card-${recording.id}`}>
+      <div className="h-1.5 w-full bg-muted/40">
+        <div
+          className={`h-full transition-all duration-700 ${
+            isReviewed && score !== null
+              ? score >= 70 ? "bg-emerald-500" : score >= 40 ? "bg-amber-500" : "bg-red-500"
+              : "bg-primary/30 w-full"
+          }`}
+          style={isReviewed && score !== null ? { width: `${score}%` } : undefined}
+        />
+      </div>
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row gap-5 justify-between items-start md:items-center">
           <div className="flex items-start gap-4 flex-1 min-w-0">

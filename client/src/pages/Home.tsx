@@ -391,7 +391,17 @@ export default function Home() {
                 const score = recording.feedback?.[0]?.overallScore;
                 return (
                   <Link key={recording.id} href={`/recordings/${recording.id}`}>
-                    <Card className="hover:shadow-md transition-shadow duration-200 cursor-pointer">
+                    <Card className="hover:shadow-md transition-shadow duration-200 cursor-pointer overflow-hidden">
+                      <div className="h-1.5 w-full bg-muted/40">
+                        <div
+                          className={`h-full transition-all duration-700 ${
+                            isReviewed && score !== null && score !== undefined
+                              ? score >= 70 ? "bg-emerald-500" : score >= 40 ? "bg-amber-500" : "bg-red-500"
+                              : "bg-primary/30 w-full"
+                          }`}
+                          style={isReviewed && score !== null && score !== undefined ? { width: `${score}%` } : undefined}
+                        />
+                      </div>
                       <CardContent className="p-6">
                         <div className="flex flex-col sm:flex-row gap-5 justify-between items-start sm:items-center">
                           <div className="flex items-start gap-4 flex-1 min-w-0">
