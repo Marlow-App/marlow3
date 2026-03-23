@@ -138,7 +138,9 @@ function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => 
                     <p className="text-[12px] font-black uppercase tracking-widest text-primary mb-2">Today's practice words</p>
                     <div className="flex flex-wrap gap-2">
                       {getDailyWords(error.practiceWords).map((word, i) => {
-                        const py = pinyin(word, { toneType: "symbol", type: "string" });
+                        const py = (error.id === "T005" && word === "东西")
+                          ? "dōng xi"
+                          : pinyin(word, { toneType: "symbol", type: "string" });
                         return (
                           <div key={i} className="flex flex-col items-center bg-muted/30 rounded-lg px-3 py-2 min-w-[52px] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-150 cursor-default">
                             <span className="text-sm text-muted-foreground">{py}</span>
