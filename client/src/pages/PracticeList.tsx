@@ -33,6 +33,24 @@ function speakText(text: string) {
   window.speechSynthesis.speak(utt);
 }
 
+function getDailyWords(words: string[], count = 3): string[] {
+  if (!words || words.length === 0) return [];
+  if (words.length <= count) return words;
+  const today = new Date();
+  const dayOfYear = Math.floor(
+    (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
+  );
+  const seed = dayOfYear + today.getFullYear() * 366;
+  const shuffled = [...words];
+  let h = seed;
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    h = ((h * 1103515245) + 12345) & 0x7fffffff;
+    const j = h % (i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, count);
+}
+
 function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const { error } = item;
@@ -101,9 +119,9 @@ function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => 
                 )}
                 {error.practiceWords && error.practiceWords.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Practice words</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Today's practice words</p>
                     <div className="flex flex-wrap gap-2">
-                      {error.practiceWords.map((word, i) => {
+                      {getDailyWords(error.practiceWords).map((word, i) => {
                         const py = pinyin(word, { toneType: "symbol", type: "string" });
                         return (
                           <div key={i} className="flex flex-col items-center bg-muted/30 rounded-lg px-2.5 py-1.5 min-w-[44px]">

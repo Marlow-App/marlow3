@@ -132,6 +132,8 @@ function useAllErrors() {
   return useQuery<PronunciationError[]>({ queryKey: ["/api/errors"] });
 }
 
+type PracticeListItem = { id: number; errorId: string; character?: string | null };
+
 function ErrorDetailDialog({
   error,
   open,
@@ -144,6 +146,13 @@ function ErrorDetailDialog({
   character?: string;
 }) {
   const { toast } = useToast();
+
+  const { data: practiceList = [] } = useQuery<PracticeListItem[]>({
+    queryKey: ["/api/practice-list"],
+  });
+
+  const savedItem = error ? practiceList.find(i => i.errorId === error.id) : undefined;
+  const isInList = !!savedItem;
 
   const addToList = useMutation({
     mutationFn: async () => {
@@ -161,6 +170,20 @@ function ErrorDetailDialog({
       toast({ title: "Error", description: "Failed to add to Practice List.", variant: "destructive" });
     },
   });
+
+  const removeFromList = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/practice-list/${savedItem!.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/practice-list"] });
+      toast({ title: "Removed from Practice List" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to remove from Practice List.", variant: "destructive" });
+    },
+  });
+
   if (!error) return null;
 
   const categoryLabel = error.category === "tone" ? "Tone" : error.category === "initial" ? "Initial" : "Final";
@@ -237,16 +260,29 @@ function ErrorDetailDialog({
         </div>
 
         <DialogFooter className="mt-5">
-          <Button
-            variant="outline"
-            className="w-full gap-2"
-            onClick={() => addToList.mutate()}
-            disabled={addToList.isPending}
-            data-testid="add-to-practice-list-btn"
-          >
-            <BookOpen className="w-4 h-4" />
-            {addToList.isPending ? "Saving…" : "Add to Practice List"}
-          </Button>
+          {isInList ? (
+            <Button
+              variant="outline"
+              className="w-full gap-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => removeFromList.mutate()}
+              disabled={removeFromList.isPending}
+              data-testid="remove-from-practice-list-btn"
+            >
+              <BookOpen className="w-4 h-4" />
+              {removeFromList.isPending ? "Removing…" : "Remove from Practice List"}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={() => addToList.mutate()}
+              disabled={addToList.isPending}
+              data-testid="add-to-practice-list-btn"
+            >
+              <BookOpen className="w-4 h-4" />
+              {addToList.isPending ? "Saving…" : "Add to Practice List"}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
