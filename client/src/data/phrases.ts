@@ -384,7 +384,7 @@ const COMPACT_PHRASES: CompactPhrase[] = [
   { words: "这 件事 需要 慎重 处理", english: "This matter needs to be handled carefully.", level: "Advanced" },
   { words: "请 不要 打断 我", english: "Please don't interrupt me.", level: "Advanced" },
   { words: "我 对这件事 有 不同的 看法", english: "I have a different view on this matter.", level: "Advanced" },
-  { words: "我们 应该 互相 尊重", english: "We should respect each other.", level: "Advanced" },
+  { words: "我们 应该 彼此 尊重", english: "We should respect each other.", level: "Advanced" },
   { words: "这个 观点 很 有 道理", english: "This point of view makes a lot of sense.", level: "Advanced" },
   { words: "你 说得 有道理 ， 我 同意", english: "You make a good point, I agree.", level: "Advanced" },
   { words: "我们 应该 换个 角度 来看", english: "We should look at it from a different angle.", level: "Advanced" },
