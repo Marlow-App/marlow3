@@ -727,11 +727,11 @@ export async function registerRoutes(
   app.post("/api/practice-list", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).claims.sub;
-      const { errorId, character } = req.body;
+      const { errorId, character, recordingId } = req.body;
       if (!errorId || typeof errorId !== "string") {
         return res.status(400).json({ message: "errorId is required" });
       }
-      const item = await storage.addToPracticeList(userId, errorId, character || undefined);
+      const item = await storage.addToPracticeList(userId, errorId, character || undefined, recordingId ? Number(recordingId) : undefined);
       res.status(201).json(item);
     } catch (err) {
       console.error("Error adding to practice list:", err);

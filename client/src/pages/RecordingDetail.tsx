@@ -146,6 +146,8 @@ function ErrorDetailDialog({
   character?: string;
 }) {
   const { toast } = useToast();
+  const params = useParams<{ id: string }>();
+  const recordingId = params.id ? parseInt(params.id) : undefined;
 
   const { data: practiceList = [] } = useQuery<PracticeListItem[]>({
     queryKey: ["/api/practice-list"],
@@ -159,6 +161,7 @@ function ErrorDetailDialog({
       const res = await apiRequest("POST", "/api/practice-list", {
         errorId: error!.id,
         character: character || undefined,
+        recordingId: recordingId,
       });
       return res.json();
     },

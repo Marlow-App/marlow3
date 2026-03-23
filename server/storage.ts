@@ -50,7 +50,7 @@ export interface IStorage {
   createError(data: { id: string; category: "tone" | "initial" | "final"; commonError: string; simpleExplanation?: string; howToFix?: string; practiceWords?: string[]; createdBy: string }): Promise<PronunciationError>;
   // Practice list methods
   getPracticeList(userId: string): Promise<(PracticeListItem & { error: PronunciationError })[]>;
-  addToPracticeList(userId: string, errorId: string, character?: string): Promise<PracticeListItem>;
+  addToPracticeList(userId: string, errorId: string, character?: string, recordingId?: number): Promise<PracticeListItem>;
   removeFromPracticeList(id: number, userId: string): Promise<boolean>;
   isPracticeListItem(userId: string, errorId: string): Promise<boolean>;
 }
@@ -464,7 +464,7 @@ export class DatabaseStorage implements IStorage {
     return rows.map(r => ({ ...r.item, error: r.error }));
   }
 
-  async addToPracticeList(userId: string, errorId: string, character?: string): Promise<PracticeListItem> {
+  async addToPracticeList(userId: string, errorId: string, character?: string, recordingId?: number): Promise<PracticeListItem> {
     // Upsert: if same userId+errorId+character exists, return it
     const existing = await db
       .select()
@@ -481,7 +481,7 @@ export class DatabaseStorage implements IStorage {
 
     const [item] = await db
       .insert(practiceListItems)
-      .values({ userId, errorId, character: character ?? null })
+      .values({ userId, errorId, character: character ?? null, recordingId: recordingId ?? null })
       .returning();
     return item;
   }

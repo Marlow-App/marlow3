@@ -5,9 +5,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Trash2, Volume2, ChevronDown, ChevronUp } from "lucide-react";
+import { BookOpen, Trash2, Volume2, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { pinyin } from "pinyin-pro";
 import { useState } from "react";
+import { Link } from "wouter";
+import { formatDistanceToNow } from "date-fns";
 import { type PronunciationError, type PracticeListItem } from "@shared/schema";
 
 type PracticeItem = PracticeListItem & { error: PronunciationError };
@@ -90,6 +92,20 @@ function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => 
               <span className="text-xs font-mono text-muted-foreground">{error.id}</span>
             </div>
             <p className="font-semibold text-sm leading-snug">{error.commonError}</p>
+
+            <div className="flex items-center gap-3 mt-1.5">
+              <span className="text-xs text-muted-foreground">
+                Saved {formatDistanceToNow(new Date(item.addedAt), { addSuffix: true })}
+              </span>
+              {item.recordingId && (
+                <Link href={`/recordings/${item.recordingId}`}>
+                  <span className="flex items-center gap-0.5 text-xs text-primary hover:underline cursor-pointer" data-testid={`view-recording-${item.id}`}>
+                    <ExternalLink className="w-3 h-3" />
+                    View recording
+                  </span>
+                </Link>
+              )}
+            </div>
 
             {error.simpleExplanation && (
               <button

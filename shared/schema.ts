@@ -66,6 +66,7 @@ export const practiceListItems = pgTable("practice_list_items", {
   userId: varchar("user_id").notNull().references(() => users.id),
   errorId: text("error_id").notNull().references(() => pronunciationErrors.id),
   character: text("character"),
+  recordingId: integer("recording_id").references(() => recordings.id),
   addedAt: timestamp("added_at").defaultNow().notNull(),
 });
 
