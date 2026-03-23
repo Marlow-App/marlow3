@@ -140,9 +140,9 @@ function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => 
                       {getDailyWords(error.practiceWords).map((word, i) => {
                         const py = pinyin(word, { toneType: "symbol", type: "string" });
                         return (
-                          <div key={i} className="flex flex-col items-center bg-muted/30 rounded-lg px-2.5 py-1.5 min-w-[44px]">
-                            <span className="text-xs text-muted-foreground">{py}</span>
-                            <span className="text-base font-bold">{word}</span>
+                          <div key={i} className="flex flex-col items-center bg-muted/30 rounded-lg px-3 py-2 min-w-[52px] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-150 cursor-default">
+                            <span className="text-sm text-muted-foreground">{py}</span>
+                            <span className="text-lg font-bold">{word}</span>
                             <button
                               type="button"
                               onClick={() => speakText(word)}
