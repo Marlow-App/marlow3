@@ -282,7 +282,7 @@ export default function Home() {
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20" data-testid="daily-challenge-card">
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                <div className="space-y-3">
+                <div className="flex-1 min-w-0 space-y-3">
                   <div className="flex items-center gap-2">
                     <Link href="/profile?highlight=chineseLevel">
                       <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10 hover:border-primary/40 transition-colors" data-testid="daily-challenge-level">
@@ -302,7 +302,7 @@ export default function Home() {
                       )}
                     </button>
                   </div>
-                  <div data-testid="daily-challenge-characters">
+                  <div data-testid="daily-challenge-characters" className="overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
                     <SandhiPhraseDisplay characters={dailyChallenge.characters} charSize="text-2xl" pinyinSize="text-xs" />
                   </div>
                   <p className="text-sm text-muted-foreground" data-testid="daily-challenge-english">
@@ -311,7 +311,7 @@ export default function Home() {
                 </div>
                 <Button
                   size="lg"
-                  className="rounded-full shadow-md"
+                  className="rounded-full shadow-md shrink-0"
                   data-testid="daily-challenge-record-btn"
                   onClick={() => setDrawerOpen(true)}
                 >

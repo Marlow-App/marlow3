@@ -245,7 +245,7 @@ export default function RecordPage() {
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto space-y-3 animate-in">
+      <div className="max-w-3xl mx-auto space-y-3 animate-in">
         <div className="space-y-4">
           <div className="flex items-center gap-1">
             <button onClick={() => window.history.back()} className="p-1 -ml-1 rounded-md hover:bg-muted transition-colors" data-testid="back-btn">
