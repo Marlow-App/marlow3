@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { House, Mic2, BarChart2, BookOpen, UserCircle, FileAudio, X, Menu, LogOut, CircleDollarSign } from "lucide-react";
+import { House, Mic2, BarChart2, BookOpen, UserCircle, FileAudio, X, Menu, LogOut, Disc } from "lucide-react";
 import pandaLogo from "@assets/panda_head_1774174364595.png";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -108,14 +108,14 @@ export function Layout({ children }: LayoutProps) {
 
         <div className="p-4 border-t border-border/50 bg-muted/10">
           <Link href="/profile">
-            <div className="flex items-center gap-3 mb-4 px-2 cursor-pointer rounded-lg hover:bg-muted/50 transition-colors py-2 -my-1" data-testid="sidebar-profile-link">
-              <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold">
+            <div className="flex items-center gap-4 mb-4 px-2 cursor-pointer rounded-xl hover:bg-muted/50 transition-colors py-3 -my-1" data-testid="sidebar-profile-link">
+              <div className="w-14 h-14 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xl shrink-0">
                 {user?.firstName?.[0] || (user as any)?.username?.[0] || "U"}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user?.firstName || (user as any)?.username || "Learner"}</p>
-                <p className="text-xs text-muted-foreground truncate flex items-center gap-1" data-testid="sidebar-credit-label">
-                  {user?.role === "learner" && <CircleDollarSign className="w-3 h-3 shrink-0" />}
+                <p className="text-base font-semibold truncate">{user?.firstName || (user as any)?.username || "Learner"}</p>
+                <p className="text-sm text-muted-foreground truncate flex items-center gap-1.5 mt-0.5" data-testid="sidebar-credit-label">
+                  {user?.role === "learner" && <Disc className="w-4 h-4 shrink-0 text-primary" />}
                   {subLabel}
                 </p>
               </div>

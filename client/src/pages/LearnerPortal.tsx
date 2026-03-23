@@ -4,7 +4,7 @@ import { Link, useLocation, useSearch } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mic2, MessageCircle, Clock, CheckCircle2, ChevronRight, ChevronLeft, Loader2, MapPin, Calendar, Trash2, RotateCcw } from "lucide-react";
+import { Mic2, Mic, PlayCircle, MessageCircle, Clock, CheckCircle2, AlertCircle, ChevronRight, ChevronLeft, Loader2, MapPin, Calendar, Trash2, RotateCcw, ArrowRight } from "lucide-react";
 import { format, formatDistanceToNow, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, isToday, isBefore, startOfDay, isThisWeek, isThisMonth, differenceInMonths } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -334,95 +334,102 @@ function RecordingCard({ recording }: { recording: any }) {
   });
 
   const isRefunded = recording.creditsRefunded && recording.creditCost > 0;
+  const isReviewed = recording.status === "reviewed";
 
   return (
     <>
-    <Link href={`/recordings/${recording.id}`}>
-    <Card className="overflow-hidden border-border/50 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer" data-testid={`recording-card-${recording.id}`}>
-      <CardContent className="p-4 space-y-2.5">
-        <div className="flex justify-between items-start gap-2">
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm truncate">{recording.sentenceText}</p>
-            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-              <Clock className="w-3 h-3" />
-              {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}
-            </p>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            {isRefunded && (
-              <Badge variant="secondary" className="rounded-full px-2 text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200" data-testid={`refunded-badge-${recording.id}`}>
-                <RotateCcw className="w-2.5 h-2.5 mr-1" />
-                Refunded
-              </Badge>
-            )}
-            <Badge
-              variant={recording.status === "reviewed" ? "default" : "secondary"}
-              className="rounded-full px-2 text-[10px]"
-            >
-              {recording.status === "reviewed" ? (
-                <span className="flex items-center gap-1"><CheckCircle2 className="w-2.5 h-2.5" /> Reviewed</span>
-              ) : recording.parentRecordingId ? (
-                "Re-recording pending"
-              ) : (
-                "Pending"
+    <Card className="hover:shadow-md transition-shadow duration-200 border-border/50" data-testid={`recording-card-${recording.id}`}>
+      <CardContent className="p-6">
+        <div className="flex flex-col md:flex-row gap-5 justify-between items-start md:items-center">
+          <div className="flex items-start gap-4 flex-1 min-w-0">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isReviewed ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"}`}>
+              {isReviewed ? <PlayCircle className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-xl font-medium mb-1">{recording.sentenceText}</h3>
+              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}
+                </span>
+                {isReviewed ? (
+                  <Badge variant="outline" className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800">
+                    <CheckCircle2 className="w-3 h-3 mr-1" /> Reviewed
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    {recording.parentRecordingId ? "Re-recording pending" : "Waiting review"}
+                  </Badge>
+                )}
+                {isRefunded && (
+                  <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800" data-testid={`refunded-badge-${recording.id}`}>
+                    <RotateCcw className="w-3 h-3 mr-1" /> Refunded
+                  </Badge>
+                )}
+                {isReviewed && recording.feedback?.[0] && (
+                  <RatingBadge rating={recording.feedback[0].rating} overallScore={recording.feedback[0].overallScore} />
+                )}
+              </div>
+              <div className="mt-3 bg-muted/30 px-3 py-2 rounded-lg border border-border/50" onClick={(e) => e.stopPropagation()}>
+                <audio
+                  key={recording.audioUrl}
+                  src={recording.audioUrl}
+                  controls
+                  className="w-full h-7"
+                  preload="metadata"
+                />
+              </div>
+              {isReviewed && recording.feedback?.[0] && (
+                <div className="mt-2 bg-primary/5 rounded-lg p-2.5 border border-primary/10">
+                  <div className="flex items-start gap-2">
+                    <MessageCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-xs font-medium text-primary">
+                          {recording.feedback[0].reviewer
+                            ? `${recording.feedback[0].reviewer.firstName || ""} ${recording.feedback[0].reviewer.lastName || ""}`.trim() || "Reviewer"
+                            : "Native Speaker Feedback"}
+                        </p>
+                        {recording.feedback[0].reviewer?.city && (
+                          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                            <MapPin className="w-2.5 h-2.5" />
+                            {recording.feedback[0].reviewer.city}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-foreground/80 mt-1 italic line-clamp-2">
+                        &ldquo;{recording.feedback[0].textFeedback}&rdquo;
+                      </p>
+                    </div>
+                  </div>
+                </div>
               )}
-            </Badge>
+              {!isReviewed && (
+                <p className="text-xs text-muted-foreground italic mt-2">Waiting for native speaker review…</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Link href={`/recordings/${recording.id}`}>
+              <Button variant={isReviewed ? "default" : "outline"} size="sm">
+                {isReviewed ? <>View Feedback <ArrowRight className="ml-1.5 w-3.5 h-3.5" /></> : <>View Details <ArrowRight className="ml-1.5 w-3.5 h-3.5" /></>}
+              </Button>
+            </Link>
             <Button
               variant="ghost"
               size="icon"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowDeleteDialog(true); }}
-              className="h-6 w-6 text-muted-foreground"
+              className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               data-testid={`delete-recording-${recording.id}`}
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         </div>
-        <div className="bg-muted/30 px-2.5 py-1.5 rounded-lg border border-border/50" onClick={(e) => e.stopPropagation()}>
-          <audio
-            key={recording.audioUrl}
-            src={recording.audioUrl}
-            controls
-            className="w-full h-7"
-            preload="metadata"
-          />
-        </div>
-        {recording.status === "reviewed" && recording.feedback?.[0] ? (
-          <div className="bg-primary/5 rounded-lg p-2.5 border border-primary/10">
-            <div className="flex items-start gap-2">
-              <MessageCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-xs font-medium text-primary">
-                    {recording.feedback[0].reviewer
-                      ? `${recording.feedback[0].reviewer.firstName || ""} ${recording.feedback[0].reviewer.lastName || ""}`.trim() || "Reviewer"
-                      : "Native Speaker Feedback"}
-                  </p>
-                  {recording.feedback[0].reviewer?.city && (
-                    <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                      <MapPin className="w-2.5 h-2.5" />
-                      {recording.feedback[0].reviewer.city}
-                    </span>
-                  )}
-                </div>
-                <RatingBadge rating={recording.feedback[0].rating} overallScore={recording.feedback[0].overallScore} />
-                <p className="text-xs text-foreground/80 mt-1 italic truncate">
-                  &ldquo;{recording.feedback[0].textFeedback}&rdquo;
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 py-1 justify-center">
-            <Clock className="w-4 h-4 text-muted-foreground/30" />
-            <p className="text-xs text-muted-foreground italic">
-              Waiting for review...
-            </p>
-          </div>
-        )}
       </CardContent>
     </Card>
-    </Link>
     <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
       <AlertDialogContent>
         <AlertDialogHeader>
