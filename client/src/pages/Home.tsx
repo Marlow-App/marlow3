@@ -392,7 +392,7 @@ export default function Home() {
                 return (
                   <Link key={recording.id} href={`/recordings/${recording.id}`}>
                     <Card className="hover:shadow-md transition-shadow duration-200 cursor-pointer overflow-hidden">
-                      <div className="h-1.5 w-full bg-muted/40">
+                      <div className="h-1 w-full bg-muted/40">
                         <div
                           className={`h-full transition-all duration-700 ${
                             isReviewed && score !== null && score !== undefined

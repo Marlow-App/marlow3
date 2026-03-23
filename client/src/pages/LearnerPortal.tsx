@@ -341,7 +341,7 @@ function RecordingCard({ recording }: { recording: any }) {
     <>
     <Link href={`/recordings/${recording.id}`}>
     <Card className="hover:shadow-md transition-shadow duration-200 border-border/50 cursor-pointer overflow-hidden" data-testid={`recording-card-${recording.id}`}>
-      <div className="h-1.5 w-full bg-muted/40">
+      <div className="h-1 w-full bg-muted/40">
         <div
           className={`h-full transition-all duration-700 ${
             isReviewed && score !== null
