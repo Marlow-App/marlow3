@@ -14,7 +14,7 @@ const CHINESE_LEVELS = [
   { value: "Absolute Beginner", label: "Absolute Beginner", description: "No prior experience with Chinese" },
   { value: "Beginner", label: "Beginner", description: "Know some basic words and phrases" },
   { value: "Intermediate", label: "Intermediate", description: "Can hold simple conversations" },
-  { value: "Advanced", label: "Advanced", description: "Comfortable with most daily interactions" },
+  { value: "Difficult", label: "Difficult", description: "Comfortable with most daily interactions" },
 ];
 
 export const NATIVE_LANGUAGES = [

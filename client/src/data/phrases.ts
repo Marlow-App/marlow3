@@ -499,8 +499,9 @@ export function getDailyPhrases(count: number = 10): Phrase[] {
 
 export function getPhrasesForLevel(level: string, count: number = 10): Phrase[] {
   const validLevels: PhraseLevel[] = ["Absolute Beginner", "Beginner", "Intermediate", "Difficult"];
-  const effectiveLevel: PhraseLevel = validLevels.includes(level as PhraseLevel)
-    ? (level as PhraseLevel)
+  const mapped = level === "Advanced" ? "Difficult" : level;
+  const effectiveLevel: PhraseLevel = validLevels.includes(mapped as PhraseLevel)
+    ? (mapped as PhraseLevel)
     : "Beginner";
 
   const levelPhrases = PHRASE_BANK.filter(p => p.level === effectiveLevel);
@@ -540,8 +541,9 @@ export function phraseToPinyinText(phrase: Phrase): string {
 
 export function getDailyChallenge(level: string): Phrase {
   const validLevels: PhraseLevel[] = ["Absolute Beginner", "Beginner", "Intermediate", "Difficult"];
-  const effectiveLevel: PhraseLevel = validLevels.includes(level as PhraseLevel)
-    ? (level as PhraseLevel)
+  const mapped = level === "Advanced" ? "Difficult" : level;
+  const effectiveLevel: PhraseLevel = validLevels.includes(mapped as PhraseLevel)
+    ? (mapped as PhraseLevel)
     : "Beginner";
 
   const levelPhrases = PHRASE_BANK.filter(p => p.level === effectiveLevel);

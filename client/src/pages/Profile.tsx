@@ -29,7 +29,7 @@ const CHINESE_LEVELS = [
   "Absolute Beginner",
   "Beginner",
   "Intermediate",
-  "Advanced"
+  "Difficult"
 ];
 
 const DIALECTS = [
