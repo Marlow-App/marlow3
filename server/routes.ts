@@ -644,6 +644,9 @@ export async function registerRoutes(
   app.get("/api/errors", isAuthenticated, async (req, res) => {
     try {
       const category = req.query.category as string | undefined;
+      if (category && !["tone", "initial", "final"].includes(category)) {
+        return res.status(400).json({ message: "Invalid category. Must be tone, initial, or final." });
+      }
       const errors = await storage.getErrors(category);
       res.json(errors);
     } catch (error) {

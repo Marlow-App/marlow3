@@ -122,7 +122,7 @@ app.use((req, res, next) => {
 
 (async () => {
   // Seed pronunciation errors on startup (idempotent)
-  seedPronunciationErrors().catch(err => console.error("Error seeding pronunciation errors:", err));
+  await seedPronunciationErrors().catch(err => console.error("Error seeding pronunciation errors:", err));
 
   await registerRoutes(httpServer, app);
 
