@@ -1023,6 +1023,12 @@ export default function RecordingDetail() {
     }
   }, [characters]);
 
+  const latestScore = useMemo(() => {
+    if (!recording?.feedback?.length) return null;
+    const scores = (recording.feedback as any[]).map((f: any) => f.overallScore).filter((s: any) => s !== null && s !== undefined);
+    return scores.length > 0 ? scores[0] : null;
+  }, [recording?.feedback]);
+
   const canDelete = user && recording && (
     recording.userId === user.id || user.role === "reviewer"
   );
@@ -1219,7 +1225,17 @@ export default function RecordingDetail() {
           <div className={`${user?.role === 'reviewer' && !reviewerHasFeedback ? 'lg:col-span-2' : ''} space-y-6`}>
             <div ref={mainCardRef}>
             <Card className="border-border shadow-md overflow-hidden bg-card">
-              <div className="h-2 bg-primary w-full"></div>
+              <div className="h-2 w-full bg-muted/40 relative" data-testid="score-progress-bar">
+                <div
+                  className={`h-full transition-all duration-700 ${
+                    latestScore === null ? "bg-primary w-full" :
+                    latestScore >= 70 ? "bg-emerald-500" :
+                    latestScore >= 40 ? "bg-amber-500" :
+                    "bg-red-500"
+                  }`}
+                  style={latestScore !== null ? { width: `${latestScore}%` } : undefined}
+                />
+              </div>
               <CardContent className="p-8">
                 <div className="mb-8">
                   {pinyinData.length > 0 ? (

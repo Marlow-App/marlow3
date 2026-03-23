@@ -91,7 +91,7 @@ function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => 
               <span className={`text-xs font-bold px-2 py-0.5 rounded ${categoryColor}`}>{categoryLabel}</span>
               <span className="text-xs font-mono text-muted-foreground">{error.id}</span>
             </div>
-            <p className="font-semibold text-sm leading-snug">{error.commonError}</p>
+            <p className="font-semibold text-base leading-snug">{error.commonError}</p>
 
             <div className="flex items-center gap-3 mt-1.5">
               <span className="text-xs text-muted-foreground">
@@ -124,13 +124,13 @@ function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => 
                 {error.simpleExplanation && (
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">What's happening</p>
-                    <p className="text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed">{error.simpleExplanation}</p>
+                    <p className="text-base text-foreground/80 whitespace-pre-wrap leading-relaxed">{error.simpleExplanation}</p>
                   </div>
                 )}
                 {error.howToFix && (
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">How to fix it</p>
-                    <p className="text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed">{error.howToFix}</p>
+                    <p className="text-base text-foreground/80 whitespace-pre-wrap leading-relaxed">{error.howToFix}</p>
                   </div>
                 )}
                 {error.practiceWords && error.practiceWords.length > 0 && (

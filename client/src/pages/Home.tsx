@@ -315,7 +315,7 @@ export default function Home() {
                 <div data-testid="daily-challenge-characters" className="overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
                   <SandhiPhraseDisplay characters={dailyChallenge.characters} charSize="text-2xl" pinyinSize="text-xs" />
                 </div>
-                <p className="text-sm text-muted-foreground" data-testid="daily-challenge-english">
+                <p className="text-base text-muted-foreground" data-testid="daily-challenge-english">
                   {dailyChallenge.english}
                 </p>
               </div>

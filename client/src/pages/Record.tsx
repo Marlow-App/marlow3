@@ -373,7 +373,7 @@ export default function RecordPage() {
                     {selectedPhrase ? (
                       <div>
                         <SandhiPhraseDisplay characters={selectedPhrase.characters} charSize="text-3xl" pinyinSize="text-base" />
-                        <p className="text-sm text-muted-foreground mt-2">{selectedPhrase.english}</p>
+                        <p className="text-base text-muted-foreground mt-2">{selectedPhrase.english}</p>
                       </div>
                     ) : typedToneChars.length > 0 ? (
                       <SandhiPhraseDisplay characters={typedToneChars} charSize="text-3xl" pinyinSize="text-base" />
