@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronDown, ChevronUp, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star, RotateCcw, BookOpen, Plus, X } from "lucide-react";
+import { ChevronLeft, ChevronDown, ChevronUp, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star, RotateCcw, BookOpen, Plus, X, Volume2 } from "lucide-react";
 import { countChineseChars } from "@shared/credits";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -152,55 +152,79 @@ function ErrorDetailDialog({
       ? "bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300"
       : "bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300";
 
+  const speakWord = (word: string) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(word);
+    utt.lang = "zh-CN";
+    utt.rate = 0.85;
+    window.speechSynthesis.speak(utt);
+  };
+
+  const sectionLabel = "text-[10px] font-black uppercase tracking-widest text-primary mb-1.5";
+  const sectionBody = "text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed";
+
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" data-testid="error-detail-dialog">
         <DialogHeader>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-2">
             <span className={`text-xs font-bold px-2 py-0.5 rounded ${categoryColor}`}>{categoryLabel}</span>
             <span className="text-xs font-mono text-muted-foreground">{error.id}</span>
           </div>
-          <DialogTitle className="text-base leading-snug">{error.commonError}</DialogTitle>
-          {error.example && (
-            <p className="text-2xl font-bold text-primary mt-1">{error.example}</p>
-          )}
+          <DialogTitle className="text-xl leading-snug font-bold">{error.commonError}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 mt-2">
+        <div className="space-y-5 mt-3">
           {error.simpleExplanation && (
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">What's happening</p>
-              <p className="text-sm text-foreground/90 whitespace-pre-wrap">{error.simpleExplanation}</p>
+              <p className={sectionLabel}>What's happening</p>
+              <p className={sectionBody}>{error.simpleExplanation}</p>
             </div>
           )}
 
           {error.howToFix && (
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">How to fix it</p>
-              <p className="text-sm text-foreground/90 whitespace-pre-wrap">{error.howToFix}</p>
+              <p className={sectionLabel}>How to fix it</p>
+              <p className={sectionBody}>{error.howToFix}</p>
             </div>
           )}
 
           {error.minimalPairs && (
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">Compare</p>
+              <p className={sectionLabel}>Compare</p>
               <p className="text-sm font-mono text-foreground/90 whitespace-pre-wrap bg-muted/30 rounded px-3 py-2">{error.minimalPairs}</p>
             </div>
           )}
 
           {error.practiceWords && error.practiceWords.length > 0 && (
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">Practice words</p>
-              <div className="flex flex-wrap gap-2">
-                {error.practiceWords.map((word, i) => (
-                  <span key={i} className="text-lg font-bold bg-muted/30 rounded px-2 py-1">{word}</span>
-                ))}
+              <p className={sectionLabel}>Practice words</p>
+              <div className="flex flex-wrap gap-3">
+                {error.practiceWords.map((word, i) => {
+                  const py = pinyin(word, { toneType: "symbol", type: "string" });
+                  return (
+                    <div key={i} className="flex flex-col items-center gap-0.5 bg-muted/30 rounded-lg px-3 py-2 min-w-[56px]">
+                      <span className="text-xs text-muted-foreground font-medium tracking-wide">{py}</span>
+                      <span className="text-xl font-bold leading-tight">{word}</span>
+                      <button
+                        type="button"
+                        onClick={() => speakWord(word)}
+                        className="mt-0.5 text-muted-foreground hover:text-primary transition-colors"
+                        aria-label={`Pronounce ${word}`}
+                        data-testid={`speak-word-${i}`}
+                      >
+                        <Volume2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
         </div>
 
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-5">
           <Button
             variant="outline"
             className="w-full gap-2"
