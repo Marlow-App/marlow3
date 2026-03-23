@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { BookOpen, Trash2, Volume2, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { pinyin } from "pinyin-pro";
 import { useState } from "react";
+import { getPracticeWordTranslation } from "@/lib/practiceWordTranslations";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { type PronunciationError, type PracticeListItem } from "@shared/schema";
@@ -145,6 +146,9 @@ function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => 
                           <div key={i} className="flex flex-col items-center bg-muted/30 rounded-lg px-3 py-2 min-w-[52px] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-150 cursor-default">
                             <span className="text-sm text-muted-foreground">{py}</span>
                             <span className="text-lg font-bold">{word}</span>
+                            {getPracticeWordTranslation(word) && (
+                              <span className="text-[11px] text-muted-foreground/70 mt-0.5 text-center leading-tight">{getPracticeWordTranslation(word)}</span>
+                            )}
                             <button
                               type="button"
                               onClick={() => speakText(word)}
