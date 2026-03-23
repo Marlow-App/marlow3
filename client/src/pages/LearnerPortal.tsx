@@ -508,7 +508,7 @@ export default function LearnerPortal() {
 
   return (
     <Layout>
-      <div className="space-y-5 animate-in">
+      <div className="max-w-3xl mx-auto space-y-5 animate-in">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold font-display">My Progress</h1>

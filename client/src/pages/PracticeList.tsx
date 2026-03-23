@@ -204,7 +204,7 @@ export default function PracticeList() {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
           <BookOpen className="w-6 h-6 text-primary" />
           <div>
