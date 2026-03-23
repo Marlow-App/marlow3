@@ -20,7 +20,7 @@ import {
 import { Link } from "wouter";
 import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Volume2, Loader2, X, Compass } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { getDailyChallenge, phraseToText } from "@/data/phrases";
+import { getDailyChallenge, phraseToText, getPhraseEnglish } from "@/data/phrases";
 import { apiRequest } from "@/lib/queryClient";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 
@@ -411,6 +411,9 @@ export default function Home() {
                             </div>
                             <div>
                               <h3 className="text-xl font-medium mb-1">{recording.sentenceText}</h3>
+                              {getPhraseEnglish(recording.sentenceText) && (
+                                <p className="text-base text-muted-foreground mb-1">{getPhraseEnglish(recording.sentenceText)}</p>
+                              )}
                               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <Clock className="w-3.5 h-3.5" />

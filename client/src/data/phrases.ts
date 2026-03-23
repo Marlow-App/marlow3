@@ -533,6 +533,16 @@ export function phraseToText(phrase: Phrase): string {
   return phrase.characters.map(c => c.char).join("");
 }
 
+const _phraseEnglishMap = new Map<string, string>();
+export function getPhraseEnglish(sentenceText: string): string | undefined {
+  if (_phraseEnglishMap.size === 0) {
+    for (const phrase of PHRASE_BANK) {
+      _phraseEnglishMap.set(phraseToText(phrase), phrase.english);
+    }
+  }
+  return _phraseEnglishMap.get(sentenceText);
+}
+
 export function phraseToPinyinText(phrase: Phrase): string {
   return phrase.characters
     .filter(c => c.pinyin)

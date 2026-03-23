@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronDown, ChevronUp, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star, RotateCcw, BookOpen, Plus, X, Volume2 } from "lucide-react";
+import { getPhraseEnglish } from "@/data/phrases";
 import { countChineseChars } from "@shared/credits";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1240,9 +1241,14 @@ export default function RecordingDetail() {
                       )}
                     </div>
                   ) : (
-                    <h2 className="text-3xl font-display font-bold text-foreground mb-4 leading-tight">
-                      {recording.sentenceText}
-                    </h2>
+                    <>
+                      <h2 className="text-3xl font-display font-bold text-foreground mb-1 leading-tight">
+                        {recording.sentenceText}
+                      </h2>
+                      {getPhraseEnglish(recording.sentenceText) && (
+                        <p className="text-base text-muted-foreground mb-4">{getPhraseEnglish(recording.sentenceText)}</p>
+                      )}
+                    </>
                   )}
                   <div className="flex flex-wrap items-center gap-3">
                     <Badge variant={recording.status === 'reviewed' ? 'default' : 'secondary'} className="px-3 py-1">

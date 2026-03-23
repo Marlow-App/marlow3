@@ -13,6 +13,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useMutation } from "@tanstack/react-query";
+import { getPhraseEnglish } from "@/data/phrases";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -357,6 +358,9 @@ function RecordingCard({ recording }: { recording: any }) {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-xl font-medium mb-1">{recording.sentenceText}</h3>
+              {getPhraseEnglish(recording.sentenceText) && (
+                <p className="text-base text-muted-foreground mb-1">{getPhraseEnglish(recording.sentenceText)}</p>
+              )}
               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" />
