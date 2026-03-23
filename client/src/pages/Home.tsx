@@ -17,7 +17,7 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { Link } from "wouter";
-import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Volume2, Loader2, X, Compass, ArrowRight } from "lucide-react";
+import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Volume2, Loader2, X, Compass } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDailyChallenge, phraseToText } from "@/data/phrases";
 import { apiRequest } from "@/lib/queryClient";
@@ -421,12 +421,6 @@ export default function Home() {
                             </div>
                           </div>
                         </div>
-                        <Link href={`/recordings/${recording.id}`}>
-                          <Button variant={isReviewed ? "default" : "outline"} size="sm" className="shrink-0">
-                            {isReviewed ? "View Feedback" : "View Details"}
-                            <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
-                          </Button>
-                        </Link>
                       </div>
                     </CardContent>
                   </Card>

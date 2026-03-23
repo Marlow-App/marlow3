@@ -4,7 +4,7 @@ import { Link, useLocation, useSearch } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mic2, Mic, PlayCircle, MessageCircle, Clock, CheckCircle2, AlertCircle, ChevronRight, ChevronLeft, Loader2, MapPin, Calendar, Trash2, RotateCcw, ArrowRight } from "lucide-react";
+import { Mic2, Mic, PlayCircle, MessageCircle, Clock, CheckCircle2, AlertCircle, ChevronRight, ChevronLeft, Loader2, MapPin, Calendar, Trash2, RotateCcw } from "lucide-react";
 import { format, formatDistanceToNow, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, isToday, isBefore, startOfDay, isThisWeek, isThisMonth, differenceInMonths } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -338,7 +338,8 @@ function RecordingCard({ recording }: { recording: any }) {
 
   return (
     <>
-    <Card className="hover:shadow-md transition-shadow duration-200 border-border/50" data-testid={`recording-card-${recording.id}`}>
+    <Link href={`/recordings/${recording.id}`}>
+    <Card className="hover:shadow-md transition-shadow duration-200 border-border/50 cursor-pointer" data-testid={`recording-card-${recording.id}`}>
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row gap-5 justify-between items-start md:items-center">
           <div className="flex items-start gap-4 flex-1 min-w-0">
@@ -412,11 +413,6 @@ function RecordingCard({ recording }: { recording: any }) {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <Link href={`/recordings/${recording.id}`}>
-              <Button variant={isReviewed ? "default" : "outline"} size="sm">
-                {isReviewed ? <>View Feedback <ArrowRight className="ml-1.5 w-3.5 h-3.5" /></> : <>View Details <ArrowRight className="ml-1.5 w-3.5 h-3.5" /></>}
-              </Button>
-            </Link>
             <Button
               variant="ghost"
               size="icon"
@@ -430,6 +426,7 @@ function RecordingCard({ recording }: { recording: any }) {
         </div>
       </CardContent>
     </Card>
+    </Link>
     <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
       <AlertDialogContent>
         <AlertDialogHeader>
