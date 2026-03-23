@@ -441,7 +441,7 @@ export default function RecordPage() {
               <div className="bg-muted/30 p-3 border-b border-border/50 flex gap-2 items-center">
                 <Info className="w-4 h-4 text-primary shrink-0" />
                 <p className="text-sm text-muted-foreground">
-                  {isUnlimited || charCost === 0
+                  {charCost === 0
                     ? <>Speak naturally and clearly with your microphone close. Score {REFUND_THRESHOLD}%+ and your credits are refunded.</>
                     : redoType === "free"
                       ? <>Free re-record — no credits will be used.</>
