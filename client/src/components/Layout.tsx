@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { House, Mic2, BarChart2, BookOpen, UserCircle, FileAudio, X, Menu, LogOut, Disc } from "lucide-react";
+import { House, Mic2, BarChart2, BookOpen, UserCircle, FileAudio, X, Menu, LogOut, CircleDollarSign } from "lucide-react";
 import pandaLogo from "@assets/panda_head_1774174364595.png";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -115,7 +115,7 @@ export function Layout({ children }: LayoutProps) {
               <div className="flex-1 min-w-0">
                 <p className="text-base font-semibold truncate">{user?.firstName || (user as any)?.username || "Learner"}</p>
                 <p className="text-sm text-muted-foreground truncate flex items-center gap-1.5 mt-0.5" data-testid="sidebar-credit-label">
-                  {user?.role === "learner" && <Disc className="w-4 h-4 shrink-0 text-primary" />}
+                  {user?.role === "learner" && <CircleDollarSign className="w-4 h-4 shrink-0 text-primary" />}
                   {subLabel}
                 </p>
               </div>
