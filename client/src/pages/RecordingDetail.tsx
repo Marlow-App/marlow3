@@ -204,7 +204,7 @@ function ErrorDetailDialog({
     window.speechSynthesis.speak(utt);
   };
 
-  const sectionLabel = "text-[10px] font-black uppercase tracking-widest text-primary mb-1.5";
+  const sectionLabel = "text-[12px] font-black uppercase tracking-widest text-primary mb-1.5";
   const sectionBody = "text-base text-foreground/80 whitespace-pre-wrap leading-relaxed";
 
   return (

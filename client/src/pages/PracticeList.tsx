@@ -123,19 +123,19 @@ function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => 
               <div className="mt-3 space-y-3">
                 {error.simpleExplanation && (
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">What's happening</p>
+                    <p className="text-[12px] font-black uppercase tracking-widest text-primary mb-1">What's happening</p>
                     <p className="text-base text-foreground/80 whitespace-pre-wrap leading-relaxed">{error.simpleExplanation}</p>
                   </div>
                 )}
                 {error.howToFix && (
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">How to fix it</p>
+                    <p className="text-[12px] font-black uppercase tracking-widest text-primary mb-1">How to fix it</p>
                     <p className="text-base text-foreground/80 whitespace-pre-wrap leading-relaxed">{error.howToFix}</p>
                   </div>
                 )}
                 {error.practiceWords && error.practiceWords.length > 0 && (
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Today's practice words</p>
+                    <p className="text-[12px] font-black uppercase tracking-widest text-primary mb-2">Today's practice words</p>
                     <div className="flex flex-wrap gap-2">
                       {getDailyWords(error.practiceWords).map((word, i) => {
                         const py = pinyin(word, { toneType: "symbol", type: "string" });
