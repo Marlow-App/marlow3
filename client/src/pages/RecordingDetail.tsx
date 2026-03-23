@@ -172,8 +172,8 @@ function ErrorDetailDialog({
   });
 
   const removeFromList = useMutation({
-    mutationFn: async () => {
-      await apiRequest("DELETE", `/api/practice-list/${savedItem!.id}`);
+    mutationFn: async (itemId: number) => {
+      await apiRequest("DELETE", `/api/practice-list/${itemId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/practice-list"] });
@@ -260,11 +260,11 @@ function ErrorDetailDialog({
         </div>
 
         <DialogFooter className="mt-5">
-          {isInList ? (
+          {isInList && savedItem ? (
             <Button
               variant="outline"
               className="w-full gap-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => removeFromList.mutate()}
+              onClick={() => removeFromList.mutate(savedItem.id)}
               disabled={removeFromList.isPending}
               data-testid="remove-from-practice-list-btn"
             >
