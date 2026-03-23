@@ -190,13 +190,6 @@ function ErrorDetailDialog({
             </div>
           )}
 
-          {error.minimalPairs && (
-            <div>
-              <p className={sectionLabel}>Compare</p>
-              <p className="text-sm font-mono text-foreground/90 whitespace-pre-wrap bg-muted/30 rounded px-3 py-2">{error.minimalPairs}</p>
-            </div>
-          )}
-
           {error.practiceWords && error.practiceWords.length > 0 && (
             <div>
               <p className={sectionLabel}>Practice words</p>
