@@ -84,7 +84,7 @@ function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoading }: 
           <div className="whitespace-nowrap">
             <SandhiPhraseDisplay characters={phrase.characters} charSize="text-lg" pinyinSize="text-sm" />
           </div>
-          <p className="text-[22px] text-muted-foreground mt-0.5 whitespace-nowrap overflow-x-auto scrollbar-none">{phrase.english}</p>
+          <p className="text-[15px] text-muted-foreground mt-0.5 whitespace-nowrap overflow-x-auto scrollbar-none">{phrase.english}</p>
         </div>
         <button
           onClick={handlePlay}
