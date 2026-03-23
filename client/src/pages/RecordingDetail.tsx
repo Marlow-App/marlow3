@@ -136,12 +136,31 @@ function ErrorDetailDialog({
   error,
   open,
   onClose,
+  character,
 }: {
   error: PronunciationError | null;
   open: boolean;
   onClose: () => void;
+  character?: string;
 }) {
   const { toast } = useToast();
+
+  const addToList = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/practice-list", {
+        errorId: error!.id,
+        character: character || undefined,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/practice-list"] });
+      toast({ title: "Added to Practice List", description: "Find it under Practice List in the sidebar." });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to add to Practice List.", variant: "destructive" });
+    },
+  });
   if (!error) return null;
 
   const categoryLabel = error.category === "tone" ? "Tone" : error.category === "initial" ? "Initial" : "Final";
@@ -221,13 +240,12 @@ function ErrorDetailDialog({
           <Button
             variant="outline"
             className="w-full gap-2"
-            onClick={() => {
-              toast({ title: "Coming soon", description: "Practice List will be available shortly." });
-            }}
+            onClick={() => addToList.mutate()}
+            disabled={addToList.isPending}
             data-testid="add-to-practice-list-btn"
           >
             <BookOpen className="w-4 h-4" />
-            Add to Practice List
+            {addToList.isPending ? "Saving…" : "Add to Practice List"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -235,7 +253,7 @@ function ErrorDetailDialog({
   );
 }
 
-function ErrorBadge({ errorId, errors, className }: { errorId: string; errors: PronunciationError[]; className?: string }) {
+function ErrorBadge({ errorId, errors, character, className }: { errorId: string; errors: PronunciationError[]; character?: string; className?: string }) {
   const [open, setOpen] = useState(false);
   const error = errors.find(e => e.id === errorId);
   if (!error) return null;
@@ -258,7 +276,7 @@ function ErrorBadge({ errorId, errors, className }: { errorId: string; errors: P
       >
         {errorId}
       </button>
-      <ErrorDetailDialog error={error} open={open} onClose={() => setOpen(false)} />
+      <ErrorDetailDialog error={error} open={open} onClose={() => setOpen(false)} character={character} />
     </>
   );
 }
@@ -453,7 +471,7 @@ function CharacterRatingDisplay({ ratings, isReviewer, pinyinData, fluencyScore,
                             {opt?.label || val}
                           </span>
                           {errorId && errors.length > 0 && (
-                            <ErrorBadge errorId={errorId} errors={errors} />
+                            <ErrorBadge errorId={errorId} errors={errors} character={cr.character} />
                           )}
                         </div>
                       </div>

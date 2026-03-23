@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
 import pandaLogo from "@assets/panda_head_1774174364595.png";
 import { Link, useLocation } from "wouter";
-import { Mic2, House, BarChart2, UserCircle, LogOut, FileAudio, Menu, X, Coins } from "lucide-react";
+import { Mic2, House, BarChart2, UserCircle, LogOut, FileAudio, Menu, X, Coins, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/", label: "Home", icon: House },
     { href: "/record", label: "Record New", icon: Mic2 },
     { href: "/learner-portal", label: "My Progress", icon: BarChart2 },
+    { href: "/practice-list", label: "Practice List", icon: BookOpen },
     { href: "/profile", label: "Profile", icon: UserCircle },
   ];
 

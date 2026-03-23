@@ -6,6 +6,7 @@ import {
   userConsents,
   creditTransactions,
   pronunciationErrors,
+  practiceListItems,
   type InsertRecording,
   type InsertFeedback,
   type Recording,
@@ -13,6 +14,7 @@ import {
   type User,
   type CreditTransaction,
   type PronunciationError,
+  type PracticeListItem,
 } from "@shared/schema";
 import { eq, desc, and, like, sql } from "drizzle-orm";
 import { authStorage } from "./replit_integrations/auth/storage";
@@ -46,6 +48,11 @@ export interface IStorage {
   getErrors(category?: string): Promise<PronunciationError[]>;
   getError(id: string): Promise<PronunciationError | undefined>;
   createError(data: { id: string; category: "tone" | "initial" | "final"; commonError: string; simpleExplanation?: string; howToFix?: string; practiceWords?: string[]; createdBy: string }): Promise<PronunciationError>;
+  // Practice list methods
+  getPracticeList(userId: string): Promise<(PracticeListItem & { error: PronunciationError })[]>;
+  addToPracticeList(userId: string, errorId: string, character?: string): Promise<PracticeListItem>;
+  removeFromPracticeList(id: number, userId: string): Promise<boolean>;
+  isPracticeListItem(userId: string, errorId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -443,6 +450,57 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return created;
+  }
+
+  // ─── Practice List ─────────────────────────────────────────────────────────
+
+  async getPracticeList(userId: string): Promise<(PracticeListItem & { error: PronunciationError })[]> {
+    const rows = await db
+      .select({ item: practiceListItems, error: pronunciationErrors })
+      .from(practiceListItems)
+      .innerJoin(pronunciationErrors, eq(practiceListItems.errorId, pronunciationErrors.id))
+      .where(eq(practiceListItems.userId, userId))
+      .orderBy(desc(practiceListItems.addedAt));
+    return rows.map(r => ({ ...r.item, error: r.error }));
+  }
+
+  async addToPracticeList(userId: string, errorId: string, character?: string): Promise<PracticeListItem> {
+    // Upsert: if same userId+errorId+character exists, return it
+    const existing = await db
+      .select()
+      .from(practiceListItems)
+      .where(
+        and(
+          eq(practiceListItems.userId, userId),
+          eq(practiceListItems.errorId, errorId),
+          character ? eq(practiceListItems.character, character) : sql`character IS NULL`
+        )
+      )
+      .limit(1);
+    if (existing.length > 0) return existing[0];
+
+    const [item] = await db
+      .insert(practiceListItems)
+      .values({ userId, errorId, character: character ?? null })
+      .returning();
+    return item;
+  }
+
+  async removeFromPracticeList(id: number, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(practiceListItems)
+      .where(and(eq(practiceListItems.id, id), eq(practiceListItems.userId, userId)))
+      .returning();
+    return result.length > 0;
+  }
+
+  async isPracticeListItem(userId: string, errorId: string): Promise<boolean> {
+    const rows = await db
+      .select()
+      .from(practiceListItems)
+      .where(and(eq(practiceListItems.userId, userId), eq(practiceListItems.errorId, errorId)))
+      .limit(1);
+    return rows.length > 0;
   }
 }
 

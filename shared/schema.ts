@@ -61,6 +61,16 @@ export const feedback = pgTable("feedback", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const practiceListItems = pgTable("practice_list_items", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  errorId: text("error_id").notNull().references(() => pronunciationErrors.id),
+  character: text("character"),
+  addedAt: timestamp("added_at").defaultNow().notNull(),
+});
+
+export type PracticeListItem = typeof practiceListItems.$inferSelect;
+
 export const creditTransactions = pgTable("credit_transactions", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").notNull().references(() => users.id),

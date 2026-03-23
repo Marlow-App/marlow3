@@ -18,6 +18,7 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import ConsentGate from "@/pages/ConsentGate";
 import Onboarding from "@/pages/Onboarding";
+import PracticeList from "@/pages/PracticeList";
 import NotFound from "@/pages/not-found";
 
 const PUBLIC_PATHS = ["/privacy-policy", "/terms"];
@@ -61,6 +62,7 @@ function Router() {
       <Route path="/recordings/:id">
         {(params: { id: string }) => <RecordingDetail key={params.id} />}
       </Route>
+      <Route path="/practice-list" component={PracticeList} />
       <Route path="/profile" component={Profile} />
       <Route path="/checkout/success" component={CheckoutSuccess} />
       <Route component={NotFound} />

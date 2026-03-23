@@ -50,6 +50,7 @@ The project uses a monorepo layout with three main directories:
   - `ReviewerPortal` — view pending recordings with Waiting/Completed tabs + sort toggle
   - `RecordingDetail` — view a specific recording with ability to leave feedback; reviewers can edit and delete their own feedback inline
   - `CheckoutSuccess` — post-payment confirmation page shown after Stripe checkout (shows credits added)
+  - `PracticeList` — learner's saved error list; grouped by category (tone/initial/final); shows character with pinyin + TTS, expandable error detail, remove button
   - `PrivacyPolicy` — privacy policy page (accessible to all users)
   - `TermsOfService` — terms of service page (accessible to all users)
   - `ConsentGate` — consent screen shown to new users after login (age, terms, privacy, voice data)

@@ -711,6 +711,48 @@ export async function registerRoutes(
     }
   });
 
+  // === Practice List ===
+
+  app.get("/api/practice-list", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const items = await storage.getPracticeList(userId);
+      res.json(items);
+    } catch (err) {
+      console.error("Error getting practice list:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/practice-list", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const { errorId, character } = req.body;
+      if (!errorId || typeof errorId !== "string") {
+        return res.status(400).json({ message: "errorId is required" });
+      }
+      const item = await storage.addToPracticeList(userId, errorId, character || undefined);
+      res.status(201).json(item);
+    } catch (err) {
+      console.error("Error adding to practice list:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/practice-list/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const id = parseInt(req.params.id as string);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid id" });
+      const ok = await storage.removeFromPracticeList(id, userId);
+      if (!ok) return res.status(404).json({ message: "Item not found" });
+      res.json({ message: "Removed" });
+    } catch (err) {
+      console.error("Error removing from practice list:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // === Phrase Audio ===
 
   app.post("/api/phrase-audio/generate", isAuthenticated, async (req, res) => {
