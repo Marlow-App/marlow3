@@ -229,7 +229,13 @@ export default function RecordPage() {
 
       toast({
         title: "Success!",
-        description: "Your recording has been submitted for review.",
+        description: isUnlimited
+          ? "Your recording has been submitted for review."
+          : discountedCost === 0
+            ? "Submitted for review — no credits used."
+            : rerecordOf && redoType === "discounted"
+              ? `Used ${discountedCost} credit${discountedCost !== 1 ? "s" : ""} (30% off) — submitted for review.`
+              : `Used ${discountedCost} credit${discountedCost !== 1 ? "s" : ""} — submitted for review.`,
       });
 
       setLocation("/");
