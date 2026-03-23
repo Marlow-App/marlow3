@@ -639,6 +639,75 @@ export async function registerRoutes(
     }
   });
 
+  // === Pronunciation Errors ===
+
+  app.get("/api/errors", isAuthenticated, async (req, res) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const errors = await storage.getErrors(category);
+      res.json(errors);
+    } catch (error) {
+      console.error("Error getting pronunciation errors:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/errors/:id", isAuthenticated, async (req, res) => {
+    try {
+      const found = await storage.getError(String(req.params.id));
+      if (!found) return res.status(404).json({ message: "Error not found" });
+      res.json(found);
+    } catch (err) {
+      console.error("Error getting pronunciation error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  const createErrorSchema = z.object({
+    category: z.enum(["tone", "initial", "final"]),
+    commonError: z.string().min(1).max(200),
+    simpleExplanation: z.string().max(500).optional(),
+    howToFix: z.string().max(1000).optional(),
+    practiceWords: z.array(z.string()).max(20).optional(),
+  });
+
+  app.post("/api/errors", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const dbUser = await storage.getUser(userId);
+      if (dbUser?.role !== "reviewer") {
+        return res.status(403).json({ message: "Reviewers only" });
+      }
+
+      const parsed = createErrorSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: parsed.error.errors[0].message });
+      }
+
+      const { category, ...rest } = parsed.data;
+      const prefix = category === "tone" ? "T" : category === "initial" ? "I" : "F";
+
+      const existing = await storage.getErrors(category);
+      const customIds = existing
+        .map(e => parseInt(e.id.slice(1)))
+        .filter(n => !isNaN(n));
+      const nextNum = customIds.length > 0 ? Math.max(...customIds) + 1 : 1;
+      const newId = `${prefix}${String(nextNum).padStart(3, "0")}`;
+
+      const created = await storage.createError({
+        id: newId,
+        category,
+        createdBy: userId,
+        ...rest,
+      });
+
+      res.status(201).json(created);
+    } catch (error) {
+      console.error("Error creating pronunciation error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // === Phrase Audio ===
 
   app.post("/api/phrase-audio/generate", isAuthenticated, async (req, res) => {

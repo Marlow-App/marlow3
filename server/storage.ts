@@ -5,14 +5,16 @@ import {
   users,
   userConsents,
   creditTransactions,
+  pronunciationErrors,
   type InsertRecording,
   type InsertFeedback,
   type Recording,
   type Feedback,
   type User,
-  type CreditTransaction
+  type CreditTransaction,
+  type PronunciationError,
 } from "@shared/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, like, sql } from "drizzle-orm";
 import { authStorage } from "./replit_integrations/auth/storage";
 import { ObjectStorageService } from "./replit_integrations/object_storage";
 import { SIGNUP_BONUS, DAILY_REWARD, MAX_FREE_BANK } from "@shared/credits";
@@ -40,6 +42,10 @@ export interface IStorage {
   spendCredits(userId: string, recordingId: number, amount: number): Promise<void>;
   refundCredits(recordingId: number): Promise<void>;
   getCreditTransactions(userId: string): Promise<CreditTransaction[]>;
+  // Error methods
+  getErrors(category?: string): Promise<PronunciationError[]>;
+  getError(id: string): Promise<PronunciationError | undefined>;
+  createError(data: { id: string; category: "tone" | "initial" | "final"; commonError: string; simpleExplanation?: string; howToFix?: string; practiceWords?: string[]; createdBy: string }): Promise<PronunciationError>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -391,6 +397,52 @@ export class DatabaseStorage implements IStorage {
       .from(creditTransactions)
       .where(eq(creditTransactions.userId, userId))
       .orderBy(desc(creditTransactions.createdAt));
+  }
+
+  // ─── Error Methods ─────────────────────────────────────────────────────────
+
+  async getErrors(category?: string): Promise<PronunciationError[]> {
+    if (category) {
+      return db
+        .select()
+        .from(pronunciationErrors)
+        .where(eq(pronunciationErrors.category, category as "tone" | "initial" | "final"))
+        .orderBy(pronunciationErrors.id);
+    }
+    return db.select().from(pronunciationErrors).orderBy(pronunciationErrors.id);
+  }
+
+  async getError(id: string): Promise<PronunciationError | undefined> {
+    const [err] = await db
+      .select()
+      .from(pronunciationErrors)
+      .where(eq(pronunciationErrors.id, id));
+    return err;
+  }
+
+  async createError(data: {
+    id: string;
+    category: "tone" | "initial" | "final";
+    commonError: string;
+    simpleExplanation?: string;
+    howToFix?: string;
+    practiceWords?: string[];
+    createdBy: string;
+  }): Promise<PronunciationError> {
+    const [created] = await db
+      .insert(pronunciationErrors)
+      .values({
+        id: data.id,
+        category: data.category,
+        commonError: data.commonError,
+        simpleExplanation: data.simpleExplanation ?? null,
+        howToFix: data.howToFix ?? null,
+        practiceWords: data.practiceWords ?? [],
+        isCustom: true,
+        createdBy: data.createdBy,
+      })
+      .returning();
+    return created;
   }
 }
 

@@ -10,13 +10,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, ChevronDown, ChevronUp, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ChevronLeft, ChevronDown, ChevronUp, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star, RotateCcw, BookOpen, Plus, X } from "lucide-react";
 import { countChineseChars } from "@shared/credits";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useState, useMemo, useRef, useLayoutEffect } from "react";
 import { format } from "date-fns";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { type User as SharedUser, type CharacterRating } from "@shared/schema";
+import { type User as SharedUser, type CharacterRating, type PronunciationError } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { pinyin } from "pinyin-pro";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
@@ -123,38 +126,323 @@ function FluencyDisplay({ score }: { score: number }) {
   );
 }
 
-function CharacterRatingDisplay({ ratings, isReviewer, pinyinData, fluencyScore }: { ratings: CharacterRating[]; isReviewer?: boolean; pinyinData?: PinyinChar[]; fluencyScore?: number | null }) {
+// ─── Error Components ──────────────────────────────────────────────────────
+
+function useAllErrors() {
+  return useQuery<PronunciationError[]>({ queryKey: ["/api/errors"] });
+}
+
+function ErrorDetailDialog({
+  error,
+  open,
+  onClose,
+}: {
+  error: PronunciationError | null;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const { toast } = useToast();
+  if (!error) return null;
+
+  const categoryLabel = error.category === "tone" ? "Tone" : error.category === "initial" ? "Initial" : "Final";
+  const categoryColor =
+    error.category === "tone"
+      ? "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300"
+      : error.category === "initial"
+      ? "bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300"
+      : "bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300";
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" data-testid="error-detail-dialog">
+        <DialogHeader>
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`text-xs font-bold px-2 py-0.5 rounded ${categoryColor}`}>{categoryLabel}</span>
+            <span className="text-xs font-mono text-muted-foreground">{error.id}</span>
+          </div>
+          <DialogTitle className="text-base leading-snug">{error.commonError}</DialogTitle>
+          {error.example && (
+            <p className="text-2xl font-bold text-primary mt-1">{error.example}</p>
+          )}
+        </DialogHeader>
+
+        <div className="space-y-4 mt-2">
+          {error.simpleExplanation && (
+            <div>
+              <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">What's happening</p>
+              <p className="text-sm text-foreground/90 whitespace-pre-wrap">{error.simpleExplanation}</p>
+            </div>
+          )}
+
+          {error.howToFix && (
+            <div>
+              <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">How to fix it</p>
+              <p className="text-sm text-foreground/90 whitespace-pre-wrap">{error.howToFix}</p>
+            </div>
+          )}
+
+          {error.minimalPairs && (
+            <div>
+              <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">Compare</p>
+              <p className="text-sm font-mono text-foreground/90 whitespace-pre-wrap bg-muted/30 rounded px-3 py-2">{error.minimalPairs}</p>
+            </div>
+          )}
+
+          {error.practiceWords && error.practiceWords.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">Practice words</p>
+              <div className="flex flex-wrap gap-2">
+                {error.practiceWords.map((word, i) => (
+                  <span key={i} className="text-lg font-bold bg-muted/30 rounded px-2 py-1">{word}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="mt-4">
+          <Button
+            variant="outline"
+            className="w-full gap-2"
+            onClick={() => {
+              toast({ title: "Coming soon", description: "Practice List will be available shortly." });
+            }}
+            data-testid="add-to-practice-list-btn"
+          >
+            <BookOpen className="w-4 h-4" />
+            Add to Practice List
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ErrorBadge({ errorId, errors, className }: { errorId: string; errors: PronunciationError[]; className?: string }) {
+  const [open, setOpen] = useState(false);
+  const error = errors.find(e => e.id === errorId);
+  if (!error) return null;
+
+  const categoryColor =
+    error.category === "tone"
+      ? "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-200 dark:hover:bg-blue-900"
+      : error.category === "initial"
+      ? "bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800 hover:bg-violet-200 dark:hover:bg-violet-900"
+      : "bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800 hover:bg-orange-200 dark:hover:bg-orange-900";
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={`inline-flex items-center gap-0.5 text-xs font-bold px-1.5 py-0.5 rounded border transition-colors cursor-pointer ${categoryColor} ${className ?? ""}`}
+        data-testid={`error-badge-${errorId}`}
+        title={error.commonError}
+      >
+        {errorId}
+      </button>
+      <ErrorDetailDialog error={error} open={open} onClose={() => setOpen(false)} />
+    </>
+  );
+}
+
+function NewErrorForm({
+  category,
+  onCreated,
+  onCancel,
+}: {
+  category: "tone" | "initial" | "final";
+  onCreated: (error: PronunciationError) => void;
+  onCancel: () => void;
+}) {
+  const { toast } = useToast();
+  const [name, setName] = useState("");
+  const [simple, setSimple] = useState("");
+  const [fix, setFix] = useState("");
+  const [words, setWords] = useState("");
+
+  const createError = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/errors", {
+        category,
+        commonError: name.trim(),
+        simpleExplanation: simple.trim() || undefined,
+        howToFix: fix.trim() || undefined,
+        practiceWords: words.trim() ? words.split(",").map(w => w.trim()).filter(Boolean) : undefined,
+      });
+      return res.json();
+    },
+    onSuccess: (data: PronunciationError) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/errors"] });
+      onCreated(data);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to create error. Try again.", variant: "destructive" });
+    },
+  });
+
+  return (
+    <div className="mt-1.5 p-2.5 border border-dashed border-border rounded-lg bg-muted/20 space-y-2" data-testid="new-error-form">
+      <p className="text-xs font-semibold text-muted-foreground">New {category} error</p>
+      <Input
+        placeholder="Error name (required)"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        className="h-8 text-xs"
+        data-testid="new-error-name"
+      />
+      <Textarea
+        placeholder="Simple explanation (optional)"
+        value={simple}
+        onChange={e => setSimple(e.target.value)}
+        className="min-h-[56px] text-xs resize-none"
+        data-testid="new-error-simple"
+      />
+      <Textarea
+        placeholder="How to fix (optional)"
+        value={fix}
+        onChange={e => setFix(e.target.value)}
+        className="min-h-[56px] text-xs resize-none"
+        data-testid="new-error-fix"
+      />
+      <Input
+        placeholder="Practice words (comma-separated, optional)"
+        value={words}
+        onChange={e => setWords(e.target.value)}
+        className="h-8 text-xs"
+        data-testid="new-error-words"
+      />
+      <div className="flex gap-1.5">
+        <Button
+          size="sm"
+          className="h-7 text-xs px-3"
+          disabled={!name.trim() || createError.isPending}
+          onClick={() => createError.mutate()}
+          data-testid="new-error-submit"
+        >
+          {createError.isPending ? "Adding..." : "Add error"}
+        </Button>
+        <Button size="sm" variant="ghost" className="h-7 text-xs px-2" onClick={onCancel} data-testid="new-error-cancel">
+          Cancel
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ErrorSelect({
+  category,
+  value,
+  onChange,
+  errors,
+}: {
+  category: "tone" | "initial" | "final";
+  value?: string;
+  onChange: (id: string | undefined) => void;
+  errors: PronunciationError[];
+}) {
+  const [showNewForm, setShowNewForm] = useState(false);
+  const categoryErrors = errors.filter(e => e.category === category);
+
+  if (showNewForm) {
+    return (
+      <NewErrorForm
+        category={category}
+        onCreated={(err) => {
+          onChange(err.id);
+          setShowNewForm(false);
+        }}
+        onCancel={() => setShowNewForm(false)}
+      />
+    );
+  }
+
+  return (
+    <div className="mt-1" data-testid={`error-select-${category}`}>
+      <Select
+        value={value ?? "__none__"}
+        onValueChange={(v) => {
+          if (v === "__add_new__") {
+            setShowNewForm(true);
+          } else if (v === "__none__") {
+            onChange(undefined);
+          } else {
+            onChange(v);
+          }
+        }}
+      >
+        <SelectTrigger className="h-7 text-xs border-border/50 bg-muted/20" data-testid={`error-select-trigger-${category}`}>
+          <SelectValue placeholder="Link an error (optional)" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__none__">
+            <span className="text-muted-foreground">No specific error</span>
+          </SelectItem>
+          {categoryErrors.map(e => (
+            <SelectItem key={e.id} value={e.id} data-testid={`error-option-${e.id}`}>
+              <span className="font-mono text-xs mr-1.5 text-muted-foreground">{e.id}</span>
+              {e.commonError}
+            </SelectItem>
+          ))}
+          <SelectItem value="__add_new__" className="text-primary font-medium">
+            <Plus className="w-3 h-3 inline mr-1" />
+            Add new error…
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+// ─── End Error Components ──────────────────────────────────────────────────
+
+function CharacterRatingDisplay({ ratings, isReviewer, pinyinData, fluencyScore, errors = [] }: { ratings: CharacterRating[]; isReviewer?: boolean; pinyinData?: PinyinChar[]; fluencyScore?: number | null; errors?: PronunciationError[] }) {
   const chinesePinyinOnly = pinyinData?.filter(p => p.py) || [];
+
+  const dimToErrorKey: Record<string, keyof CharacterRating> = {
+    initial: "initialError",
+    final: "finalError",
+    tone: "toneError",
+  };
+
   return (
     <div className="space-y-2 mt-2" data-testid="character-ratings-display">
       <div className="grid gap-2">
         {ratings.map((cr, idx) => {
           const charPy = !isReviewer && chinesePinyinOnly[idx] ? chinesePinyinOnly[idx] : null;
           return (
-            <div key={idx} className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2">
-              <div className="flex flex-col items-center w-10" data-testid={`char-display-${idx}`}>
-                {charPy && (
-                  <span className={`text-sm font-medium leading-tight ${TONE_COLORS[charPy.tone]}`}>{charPy.py}</span>
-                )}
-                <span className="text-lg font-bold">{cr.character}</span>
-              </div>
-              <div className="flex gap-2 flex-1 flex-wrap">
-                {DIMENSIONS.map((dim) => {
-                  const val = cr[dim.key];
-                  const opt = RATING_OPTIONS.find(o => o.value === val);
-                  return (
-                    <div key={dim.key} className="flex items-center gap-1">
-                      <span className="text-sm text-muted-foreground">{isReviewer ? dim.chinese : dim.english}</span>
-                      <span className={`text-sm font-semibold px-2 py-0.5 rounded ${
-                        val === 100 ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
-                        val === 50 ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
-                        "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
-                      }`} data-testid={`char-rating-${idx}-${dim.key}`}>
-                        {opt?.label || val}
-                      </span>
-                    </div>
-                  );
-                })}
+            <div key={idx} className="bg-muted/30 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col items-center w-10 shrink-0" data-testid={`char-display-${idx}`}>
+                  {charPy && (
+                    <span className={`text-sm font-medium leading-tight ${TONE_COLORS[charPy.tone]}`}>{charPy.py}</span>
+                  )}
+                  <span className="text-lg font-bold">{cr.character}</span>
+                </div>
+                <div className="flex gap-2 flex-1 flex-wrap">
+                  {DIMENSIONS.map((dim) => {
+                    const val = cr[dim.key];
+                    const opt = RATING_OPTIONS.find(o => o.value === val);
+                    const errorId = cr[dimToErrorKey[dim.key]] as string | undefined;
+                    return (
+                      <div key={dim.key} className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm text-muted-foreground">{isReviewer ? dim.chinese : dim.english}</span>
+                          <span className={`text-sm font-semibold px-2 py-0.5 rounded ${
+                            val === 100 ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
+                            val === 50 ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
+                            "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
+                          }`} data-testid={`char-rating-${idx}-${dim.key}`}>
+                            {opt?.label || val}
+                          </span>
+                          {errorId && errors.length > 0 && (
+                            <ErrorBadge errorId={errorId} errors={errors} />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           );
@@ -202,22 +490,42 @@ function FluencyStarPicker({ value, onChange }: { value: number | null; onChange
   );
 }
 
+const DIM_ERROR_KEY: Record<"initial" | "final" | "tone", "initialError" | "finalError" | "toneError"> = {
+  initial: "initialError",
+  final: "finalError",
+  tone: "toneError",
+};
+
 function CharacterRatingInput({
   characters,
   ratings,
   onChange,
   fluency,
   onFluencyChange,
+  errors = [],
 }: {
   characters: string[];
   ratings: CharacterRating[];
   onChange: (ratings: CharacterRating[]) => void;
   fluency: number | null;
   onFluencyChange: (v: number | null) => void;
+  errors?: PronunciationError[];
 }) {
   const handleChange = (charIdx: number, dim: "initial" | "final" | "tone", value: number) => {
     const updated = [...ratings];
-    updated[charIdx] = { ...updated[charIdx], [dim]: value };
+    const existing = updated[charIdx] ?? {};
+    const patch: Partial<CharacterRating> = { [dim]: value };
+    // Clear linked error when rating improves to Great
+    if (value === 100) {
+      patch[DIM_ERROR_KEY[dim]] = undefined;
+    }
+    updated[charIdx] = { ...existing, ...patch } as CharacterRating;
+    onChange(updated);
+  };
+
+  const handleErrorChange = (charIdx: number, dim: "initial" | "final" | "tone", errorId: string | undefined) => {
+    const updated = [...ratings];
+    updated[charIdx] = { ...updated[charIdx], [DIM_ERROR_KEY[dim]]: errorId };
     onChange(updated);
   };
 
@@ -264,26 +572,38 @@ function CharacterRatingInput({
             <div className="space-y-2">
               {DIMENSIONS.map((dim) => {
                 const currentVal = ratings[charIdx]?.[dim.key] ?? -1;
+                const showError = currentVal === 0 || currentVal === 50;
+                const linkedError = ratings[charIdx]?.[DIM_ERROR_KEY[dim.key]] as string | undefined;
                 return (
-                  <div key={dim.key} className="flex items-center gap-2">
-                    <span className="text-sm font-medium shrink-0">
-                      {dim.chinese}
-                    </span>
-                    <div className="flex gap-1 flex-1">
-                      {RATING_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => handleChange(charIdx, dim.key, opt.value)}
-                          className={`flex-1 text-xs font-medium py-1.5 px-1 rounded border transition-all ${
-                            currentVal === opt.value ? opt.activeColor : opt.color
-                          } hover:opacity-80`}
-                          data-testid={`rate-${charIdx}-${dim.key}-${opt.value}`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                  <div key={dim.key}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium shrink-0">
+                        {dim.chinese}
+                      </span>
+                      <div className="flex gap-1 flex-1">
+                        {RATING_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => handleChange(charIdx, dim.key, opt.value)}
+                            className={`flex-1 text-xs font-medium py-1.5 px-1 rounded border transition-all ${
+                              currentVal === opt.value ? opt.activeColor : opt.color
+                            } hover:opacity-80`}
+                            data-testid={`rate-${charIdx}-${dim.key}-${opt.value}`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
+                    {showError && errors.length > 0 && (
+                      <ErrorSelect
+                        category={dim.key}
+                        value={linkedError}
+                        onChange={(id) => handleErrorChange(charIdx, dim.key, id)}
+                        errors={errors}
+                      />
+                    )}
                   </div>
                 );
               })}
@@ -317,6 +637,7 @@ function EditableFeedbackCard({
   rerecordLabel?: string | null;
 }) {
   const { toast } = useToast();
+  const { data: errors = [] } = useAllErrors();
   const [isEditing, setIsEditing] = useState(false);
   const [editCorrections, setEditCorrections] = useState((item as any).corrections || "");
   const [editTextFeedback, setEditTextFeedback] = useState(item.textFeedback || "");
@@ -461,6 +782,7 @@ function EditableFeedbackCard({
                   onChange={setEditCharRatings}
                   fluency={editFluency}
                   onFluencyChange={setEditFluency}
+                  errors={errors}
                 />
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Corrections</label>
@@ -496,7 +818,7 @@ function EditableFeedbackCard({
             ) : (
               <>
                 {item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0 && (
-                  <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={isReviewer} pinyinData={pinyinData} fluencyScore={item.fluencyScore} />
+                  <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={isReviewer} pinyinData={pinyinData} fluencyScore={item.fluencyScore} errors={errors} />
                 )}
                 {!(item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0) && item.fluencyScore != null && (
                   <FluencyDisplay score={item.fluencyScore} />
@@ -568,6 +890,7 @@ export default function RecordingDetail() {
   const createFeedback = useCreateFeedback(recordingId);
   const { uploadFile, isUploading } = useUpload();
   const { toast } = useToast();
+  const { data: errors = [] } = useAllErrors();
   
   const { showPinyin } = useDisplayPrefs();
 
@@ -981,6 +1304,7 @@ export default function RecordingDetail() {
                         onChange={setCharRatings}
                         fluency={fluency}
                         onFluencyChange={setFluency}
+                        errors={errors}
                       />
                       <div className="space-y-2">
                         <label className="text-sm font-medium">Corrections</label>
@@ -1154,6 +1478,7 @@ export default function RecordingDetail() {
                     onChange={setCharRatings}
                     fluency={fluency}
                     onFluencyChange={setFluency}
+                    errors={errors}
                   />
 
                   <div className="space-y-2">

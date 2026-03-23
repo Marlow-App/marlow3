@@ -4,6 +4,20 @@ import { z } from "zod";
 import { relations } from "drizzle-orm";
 import { users } from "./models/auth";
 
+export const pronunciationErrors = pgTable("pronunciation_errors", {
+  id: text("id").primaryKey(),
+  category: text("category", { enum: ["tone", "initial", "final"] }).notNull(),
+  commonError: text("common_error").notNull(),
+  example: text("example"),
+  scientificExplanation: text("scientific_explanation"),
+  simpleExplanation: text("simple_explanation"),
+  howToFix: text("how_to_fix"),
+  minimalPairs: text("minimal_pairs"),
+  practiceWords: text("practice_words").array(),
+  isCustom: boolean("is_custom").default(false).notNull(),
+  createdBy: varchar("created_by").references(() => users.id),
+});
+
 export * from "./models/auth";
 
 export const recordings = pgTable("recordings", {
@@ -23,9 +37,15 @@ export const characterRatingSchema = z.object({
   initial: z.number().refine(v => [0, 50, 100].includes(v)),
   final: z.number().refine(v => [0, 50, 100].includes(v)),
   tone: z.number().refine(v => [0, 50, 100].includes(v)),
+  initialError: z.string().optional(),
+  finalError: z.string().optional(),
+  toneError: z.string().optional(),
 });
 
 export type CharacterRating = z.infer<typeof characterRatingSchema>;
+export type PronunciationError = typeof pronunciationErrors.$inferSelect;
+export const insertPronunciationErrorSchema = createInsertSchema(pronunciationErrors).omit({ isCustom: true, createdBy: true });
+export type InsertPronunciationError = z.infer<typeof insertPronunciationErrorSchema>;
 
 export const feedback = pgTable("feedback", {
   id: serial("id").primaryKey(),
