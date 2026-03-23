@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Layout } from "@/components/Layout";
 import { AudioRecorder } from "@/components/AudioRecorder";
 import { useUpload } from "@/hooks/use-upload";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation, Link } from "wouter";
 import { ChevronLeft, Info, Volume2, X, Loader2, CircleDollarSign } from "lucide-react";
-import { getPhrasesForLevel, phraseToText, PHRASE_BANK, type Phrase } from "@/data/phrases";
+import { getPhrasesForLevel, phraseToText, toToneChars, PHRASE_BANK, type Phrase } from "@/data/phrases";
 import { apiRequest } from "@/lib/queryClient";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 import { useQuery } from "@tanstack/react-query";
@@ -180,6 +180,7 @@ export default function RecordPage() {
   };
 
   const activeText = rerecordOf ? text : (selectedPhrase ? phraseToText(selectedPhrase) : text);
+  const typedToneChars = useMemo(() => (!selectedPhrase && text.trim()) ? toToneChars(text.trim()) : [], [text, selectedPhrase]);
   const charCost = countChineseChars(activeText);
   const discountedCost = rerecordOf
     ? (redoType === "free" ? 0 : Math.ceil(charCost * 0.7))
@@ -374,6 +375,8 @@ export default function RecordPage() {
                         <SandhiPhraseDisplay characters={selectedPhrase.characters} charSize="text-3xl" pinyinSize="text-base" />
                         <p className="text-sm text-muted-foreground mt-2">{selectedPhrase.english}</p>
                       </div>
+                    ) : typedToneChars.length > 0 ? (
+                      <SandhiPhraseDisplay characters={typedToneChars} charSize="text-3xl" pinyinSize="text-base" />
                     ) : (
                       <p className="text-2xl font-medium text-foreground">{text}</p>
                     )}
