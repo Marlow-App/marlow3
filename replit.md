@@ -42,6 +42,7 @@ The project uses a monorepo layout with three main directories:
 - **Pinyin**: `pinyin-pro` library generates pinyin for learner views on RecordingDetail (sentence header + character rating breakdown); tone-colored display
 - **Tone Sandhi**: `client/src/lib/toneSandhi.ts` implements T3 sandhi (word-aware via dictionary-based segmentation), 不 sandhi (bù→bú before T4), and 一 sandhi (yī→yí before T4, yī→yì before T1/T2/T3) with neutral-tone underlying-tone resolution. `SandhiPhraseDisplay` component shows "Original" and "As spoken" rows side by side. Phrases in `phrases.ts` store canonical/dictionary tones (一=T1/yī, 不=T4/bù); sandhi is computed at render time.
 - **Daily Challenge**: Level-based daily phrase on Home page; `getDailyChallenge(level)` in `client/src/data/phrases.ts` uses date-seeded selection; defaults to "Beginner" when user has no chineseLevel set
+- **Phrase Bank**: 400 phrases total (100 per level) stored in compact format `{ words, english, level }` where `words` is space-separated tokens. `toToneChars(words)` computes `ToneChar[]` at runtime using `pinyin-pro` for context-aware tone detection. `PhraseLevel` = `"Absolute Beginner" | "Beginner" | "Intermediate" | "Difficult"` (note: user.chineseLevel still uses "Advanced")
 - **Key Pages**:
   - `Landing` — unauthenticated landing page
   - `Home` — dashboard with greeting, daily challenge, and recent recordings
