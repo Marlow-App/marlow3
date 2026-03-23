@@ -91,7 +91,7 @@ function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => 
               <span className={`text-xs font-bold px-2 py-0.5 rounded ${categoryColor}`}>{categoryLabel}</span>
               <span className="text-xs font-mono text-muted-foreground">{error.id}</span>
             </div>
-            <p className="font-semibold text-base leading-snug">{error.commonError}</p>
+            <p className="font-semibold text-[19px] leading-snug">{error.commonError}</p>
 
             <div className="flex items-center gap-3 mt-1.5">
               <span className="text-xs text-muted-foreground">
