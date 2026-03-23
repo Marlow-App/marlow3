@@ -205,7 +205,7 @@ function ErrorDetailDialog({
   };
 
   const sectionLabel = "text-[10px] font-black uppercase tracking-widest text-primary mb-1.5";
-  const sectionBody = "text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed";
+  const sectionBody = "text-base text-foreground/80 whitespace-pre-wrap leading-relaxed";
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
