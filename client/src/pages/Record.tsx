@@ -273,7 +273,7 @@ export default function RecordPage() {
                 <span className="text-sm font-semibold text-foreground" data-testid="credit-balance-count">
                   {isUnlimited ? "∞" : balance}
                 </span>
-                <span className="text-xs font-bold text-foreground">credits</span>
+                <span className="text-xs font-normal text-foreground">credits</span>
               </div>
             </Link>
           </div>
