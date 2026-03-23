@@ -148,6 +148,8 @@ function ErrorDetailDialog({
   const { toast } = useToast();
   const params = useParams<{ id: string }>();
   const recordingId = params.id ? parseInt(params.id) : undefined;
+  const { data: recordingData } = useRecording(recordingId ?? 0);
+  const sentenceText = recordingData?.sentenceText;
 
   const { data: practiceList = [] } = useQuery<PracticeListItem[]>({
     queryKey: ["/api/practice-list"],
@@ -219,6 +221,29 @@ function ErrorDetailDialog({
           </div>
           <DialogTitle className="text-xl leading-snug font-bold">{error.commonError}</DialogTitle>
         </DialogHeader>
+
+        {sentenceText && (
+          <div className="bg-muted/40 rounded-xl px-4 py-3 mt-2">
+            <p className={sectionLabel}>From your recording</p>
+            <div className="flex flex-wrap gap-x-2 gap-y-1 items-end">
+              {Array.from(sentenceText).map((ch, i) => {
+                const isHighlighted = !!character && ch === character;
+                const isChinese = /[\u4e00-\u9fff]/.test(ch);
+                const py = isChinese ? pinyin(ch, { toneType: "symbol", type: "string" }) : "";
+                return (
+                  <div key={i} className="flex flex-col items-center min-w-[1.5rem]">
+                    <span className="text-[11px] text-muted-foreground leading-none mb-0.5">{py}</span>
+                    <span className={`text-2xl font-bold leading-none px-0.5 rounded ${
+                      isHighlighted
+                        ? "text-primary bg-primary/15 ring-1 ring-primary/30"
+                        : "text-foreground"
+                    }`}>{ch}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="space-y-5 mt-3">
           {error.simpleExplanation && (
