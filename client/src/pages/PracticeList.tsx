@@ -39,7 +39,7 @@ function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => 
   const categoryColor = CATEGORY_COLORS[error.category] ?? "";
   const categoryLabel = CATEGORY_LABELS[error.category] ?? error.category;
 
-  const displayChar = item.character || error.practiceWords?.[0] || null;
+  const displayChar = error.practiceWords?.[0] || null;
   const charPinyin = displayChar ? pinyin(displayChar, { toneType: "symbol", type: "string" }) : null;
 
   return (
