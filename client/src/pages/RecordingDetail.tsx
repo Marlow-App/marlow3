@@ -1215,8 +1215,8 @@ export default function RecordingDetail() {
           </div>
         </div>
 
-        <div className={`grid grid-cols-1 ${user?.role === 'reviewer' ? 'lg:grid-cols-3' : ''} gap-8`}>
-          <div className={`${user?.role === 'reviewer' ? 'lg:col-span-2' : ''} space-y-6`}>
+        <div className={`grid grid-cols-1 ${user?.role === 'reviewer' && !reviewerHasFeedback ? 'lg:grid-cols-3' : ''} gap-8`}>
+          <div className={`${user?.role === 'reviewer' && !reviewerHasFeedback ? 'lg:col-span-2' : ''} space-y-6`}>
             <div ref={mainCardRef}>
             <Card className="border-border shadow-md overflow-hidden bg-card">
               <div className="h-2 bg-primary w-full"></div>
