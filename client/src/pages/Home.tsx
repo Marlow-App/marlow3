@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { getScoreBgColor, getScoreTextColor } from "@/lib/scoreColor";
 import { useAuth } from "@/hooks/use-auth";
 import { useRecordings, usePendingRecordings, useCreateRecording } from "@/hooks/use-recordings";
 import { useUpload } from "@/hooks/use-upload";
@@ -396,7 +397,7 @@ export default function Home() {
                         <div
                           className={`h-full transition-all duration-700 ${
                             isReviewed && score !== null && score !== undefined
-                              ? score >= 70 ? "bg-emerald-500" : score >= 40 ? "bg-amber-500" : "bg-red-500"
+                              ? getScoreBgColor(score)
                               : "bg-primary/30 w-full"
                           }`}
                           style={isReviewed && score !== null && score !== undefined ? { width: `${score}%` } : undefined}
@@ -425,7 +426,7 @@ export default function Home() {
                                   </Badge>
                                 )}
                                 {isReviewed && score !== null && score !== undefined && (
-                                  <span className={`text-xs font-bold ${score >= 70 ? "text-emerald-600 dark:text-emerald-400" : score >= 40 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400"}`}>
+                                  <span className={`text-xs font-bold ${getScoreTextColor(score)}`}>
                                     {score}%
                                   </span>
                                 )}

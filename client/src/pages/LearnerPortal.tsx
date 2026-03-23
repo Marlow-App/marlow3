@@ -1,4 +1,5 @@
 import { Layout } from "@/components/Layout";
+import { getScoreBgColor, getScoreTextColor } from "@/lib/scoreColor";
 import { useRecordings } from "@/hooks/use-recordings";
 import { Link, useLocation, useSearch } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,12 +26,9 @@ import {
 
 function RatingBadge({ rating, overallScore }: { rating?: number | null; overallScore?: number | null }) {
   if (overallScore !== null && overallScore !== undefined) {
-    let color = "text-red-600 dark:text-red-400";
-    if (overallScore >= 70) color = "text-emerald-600 dark:text-emerald-400";
-    else if (overallScore >= 40) color = "text-amber-600 dark:text-amber-400";
     return (
       <div className="flex items-center gap-1" data-testid={`score-badge-${overallScore}`}>
-        <span className={`text-xs font-bold ${color}`}>{overallScore}%</span>
+        <span className={`text-xs font-bold ${getScoreTextColor(overallScore)}`}>{overallScore}%</span>
       </div>
     );
   }
@@ -345,7 +343,7 @@ function RecordingCard({ recording }: { recording: any }) {
         <div
           className={`h-full transition-all duration-700 ${
             isReviewed && score !== null
-              ? score >= 70 ? "bg-emerald-500" : score >= 40 ? "bg-amber-500" : "bg-red-500"
+              ? getScoreBgColor(score)
               : "bg-primary/30 w-full"
           }`}
           style={isReviewed && score !== null ? { width: `${score}%` } : undefined}

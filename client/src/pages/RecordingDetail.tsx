@@ -1,4 +1,5 @@
 import { useParams, Link, useLocation } from "wouter";
+import { getScoreBgColor, getScoreTextColor } from "@/lib/scoreColor";
 import { Layout } from "@/components/Layout";
 import { useRecording, useChildRecordings } from "@/hooks/use-recordings";
 import { useCreateFeedback } from "@/hooks/use-feedback";
@@ -89,11 +90,8 @@ const DIMENSIONS = [
 
 function ScoreBadge({ score }: { score: number | null | undefined }) {
   if (score === null || score === undefined) return null;
-  let color = "text-red-600 dark:text-red-400";
-  if (score >= 70) color = "text-emerald-600 dark:text-emerald-400";
-  else if (score >= 40) color = "text-amber-600 dark:text-amber-400";
   return (
-    <span className={`text-lg font-bold ${color}`} data-testid={`score-badge-${score}`}>
+    <span className={`text-lg font-bold ${getScoreTextColor(score)}`} data-testid={`score-badge-${score}`}>
       {score}%
     </span>
   );
@@ -108,9 +106,7 @@ function OldRatingDisplay({ rating }: { rating: number | null | undefined }) {
 
 function FluencyDisplay({ score }: { score: number }) {
   const pct = score * 20;
-  const color = pct >= 70 ? "text-emerald-600 dark:text-emerald-400" :
-    pct >= 40 ? "text-amber-600 dark:text-amber-400" :
-    "text-red-600 dark:text-red-400";
+  const color = getScoreTextColor(pct);
   return (
     <div className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2 mt-2" data-testid="fluency-display">
       <div className="flex items-center gap-1.5">
@@ -655,11 +651,7 @@ function CharacterRatingInput({
         {overallScore !== null && (
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground">Overall:</span>
-            <span className={`text-sm font-bold ${
-              overallScore >= 70 ? "text-emerald-600 dark:text-emerald-400" :
-              overallScore >= 40 ? "text-amber-600 dark:text-amber-400" :
-              "text-red-600 dark:text-red-400"
-            }`} data-testid="overall-score-live">{overallScore}%</span>
+            <span className={`text-sm font-bold ${getScoreTextColor(overallScore)}`} data-testid="overall-score-live">{overallScore}%</span>
           </div>
         )}
       </div>
@@ -1227,12 +1219,7 @@ export default function RecordingDetail() {
             <Card className="border-border shadow-md overflow-hidden bg-card">
               <div className="h-2 w-full bg-muted/40 relative" data-testid="score-progress-bar">
                 <div
-                  className={`h-full transition-all duration-700 ${
-                    latestScore === null ? "bg-primary w-full" :
-                    latestScore >= 70 ? "bg-emerald-500" :
-                    latestScore >= 40 ? "bg-amber-500" :
-                    "bg-red-500"
-                  }`}
+                  className={`h-full transition-all duration-700 ${latestScore === null ? "bg-primary w-full" : getScoreBgColor(latestScore)}`}
                   style={latestScore !== null ? { width: `${latestScore}%` } : undefined}
                 />
               </div>
