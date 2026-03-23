@@ -39,24 +39,25 @@ function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => 
   const categoryColor = CATEGORY_COLORS[error.category] ?? "";
   const categoryLabel = CATEGORY_LABELS[error.category] ?? error.category;
 
-  const charPinyin = item.character ? pinyin(item.character, { toneType: "symbol", type: "string" }) : null;
+  const displayChar = item.character || error.practiceWords?.[0] || null;
+  const charPinyin = displayChar ? pinyin(displayChar, { toneType: "symbol", type: "string" }) : null;
 
   return (
     <Card className="border border-border/60 shadow-sm" data-testid={`practice-card-${item.id}`}>
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           {/* Character display */}
-          {item.character && (
+          {displayChar && (
             <div className="flex flex-col items-center shrink-0 bg-muted/30 rounded-lg px-3 py-2 min-w-[52px]">
               {charPinyin && (
                 <span className="text-xs text-muted-foreground font-medium">{charPinyin}</span>
               )}
-              <span className="text-2xl font-bold leading-tight">{item.character}</span>
+              <span className="text-2xl font-bold leading-tight">{displayChar}</span>
               <button
                 type="button"
-                onClick={() => speakText(item.character!)}
+                onClick={() => speakText(displayChar)}
                 className="mt-0.5 text-muted-foreground hover:text-primary transition-colors"
-                aria-label={`Pronounce ${item.character}`}
+                aria-label={`Pronounce ${displayChar}`}
                 data-testid={`speak-char-${item.id}`}
               >
                 <Volume2 className="w-3.5 h-3.5" />
