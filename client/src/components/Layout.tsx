@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react";
+import { House, Mic2, BarChart2, BookOpen, UserCircle, FileAudio, X, Menu, LogOut, CircleDollarSign } from "lucide-react";
 import pandaLogo from "@assets/panda_head_1774174364595.png";
 import { Link, useLocation } from "wouter";
-import { Mic2, House, BarChart2, UserCircle, LogOut, FileAudio, Menu, X, Coins, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -115,7 +115,7 @@ export function Layout({ children }: LayoutProps) {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{user?.firstName || (user as any)?.username || "Learner"}</p>
                 <p className="text-xs text-muted-foreground truncate flex items-center gap-1" data-testid="sidebar-credit-label">
-                  {user?.role === "learner" && <Coins className="w-3 h-3 shrink-0" />}
+                  {user?.role === "learner" && <CircleDollarSign className="w-3 h-3 shrink-0" />}
                   {subLabel}
                 </p>
               </div>

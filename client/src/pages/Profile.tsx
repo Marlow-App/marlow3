@@ -14,7 +14,7 @@ import { useUpload } from "@/hooks/use-upload";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Loader2, Shield, Coins, TrendingUp, RotateCcw, ShoppingCart, Star } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, Shield, CircleDollarSign, TrendingUp, RotateCcw, ShoppingCart, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { NATIVE_LANGUAGES, FOCUS_AREA_OPTIONS } from "@/pages/Onboarding";
@@ -29,7 +29,7 @@ const CHINESE_LEVELS = [
   "Absolute Beginner",
   "Beginner",
   "Intermediate",
-  "Difficult"
+  "Advanced"
 ];
 
 const DIALECTS = [
@@ -58,14 +58,14 @@ function sortedJson(arr: string[]) {
   return JSON.stringify([...arr].sort());
 }
 
-function txTypeLabel(type: string): { label: string; color: string; icon: typeof Coins } {
+function txTypeLabel(type: string): { label: string; color: string; icon: typeof CircleDollarSign } {
   switch (type) {
     case "signup_bonus":  return { label: "Signup bonus",   color: "text-emerald-600", icon: Star };
     case "daily_reward":  return { label: "Daily reward",   color: "text-blue-600",    icon: TrendingUp };
     case "purchase":      return { label: "Purchase",       color: "text-primary",     icon: ShoppingCart };
-    case "spend":         return { label: "Recording",      color: "text-amber-600",   icon: Coins };
+    case "spend":         return { label: "Recording",      color: "text-amber-600",   icon: CircleDollarSign };
     case "refund":        return { label: "Refund",         color: "text-emerald-600", icon: RotateCcw };
-    default:              return { label: type,             color: "text-foreground",  icon: Coins };
+    default:              return { label: type,             color: "text-foreground",  icon: CircleDollarSign };
   }
 }
 
@@ -481,7 +481,7 @@ export default function Profile() {
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                        <Coins className="w-9 h-9 text-primary" />
+                        <CircleDollarSign className="w-9 h-9 text-primary" />
                       </div>
                       <div>
                         <p className="text-base font-semibold uppercase tracking-wider text-muted-foreground">Your balance</p>
@@ -518,7 +518,7 @@ export default function Profile() {
                     <span><strong>+{DAILY_REWARD} free credit per day</strong> (up to 3 banked at a time).</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Coins className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+                    <CircleDollarSign className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
                     <span>Recording a phrase costs <strong>1 credit per Chinese character</strong> (max {10} chars per session).</span>
                   </div>
                   <div className="flex items-start gap-2">

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation, Link } from "wouter";
-import { ChevronLeft, Info, Volume2, X, Loader2, Coins } from "lucide-react";
+import { ChevronLeft, Info, Volume2, X, Loader2, CircleDollarSign } from "lucide-react";
 import { getPhrasesForLevel, phraseToText, PHRASE_BANK, type Phrase } from "@/data/phrases";
 import { apiRequest } from "@/lib/queryClient";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
@@ -269,7 +269,7 @@ export default function RecordPage() {
             {/* Credit balance pill */}
             <Link href="/profile?tab=credits">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer" data-testid="credit-balance-pill">
-                <Coins className="w-4 h-4 text-primary" />
+                <CircleDollarSign className="w-4 h-4 text-primary" />
                 <span className="text-sm font-semibold text-foreground" data-testid="credit-balance-count">
                   {isUnlimited ? "∞" : balance}
                 </span>
@@ -382,7 +382,7 @@ export default function RecordPage() {
                               ? "bg-primary/10 text-primary"
                               : "bg-destructive/10 text-destructive"
                         }`} data-testid="credit-cost-preview">
-                          <Coins className="w-3 h-3" />
+                          <CircleDollarSign className="w-3 h-3" />
                           <span>
                             {tooLong
                               ? `${charCost} chars — max ${MAX_CHARS}`

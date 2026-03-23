@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Mic2, MessageCircle, TrendingUp, ChevronRight, Coins, RotateCcw, Star } from "lucide-react";
+import { Mic2, MessageCircle, TrendingUp, ChevronRight, CircleDollarSign, RotateCcw, Star } from "lucide-react";
 import { useRef } from "react";
 import { CREDIT_PACKS, SIGNUP_BONUS, REFUND_THRESHOLD } from "@shared/credits";
 import pandaLogo from "@assets/panda_head_1774174364595.png";
@@ -403,7 +403,7 @@ export default function Landing() {
                   </div>
                 )}
                 <div className="flex items-center gap-1 text-primary mt-2">
-                  <Coins className="w-4 h-4" />
+                  <CircleDollarSign className="w-4 h-4" />
                   <span className="text-2xl font-bold font-display">{pack.credits}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">credits</p>

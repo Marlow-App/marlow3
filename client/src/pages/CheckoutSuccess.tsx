@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Coins, Mic, ArrowRight } from "lucide-react";
+import { CheckCircle2, CircleDollarSign, Mic, ArrowRight } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { Layout } from "@/components/Layout";
 
@@ -33,7 +33,7 @@ export default function CheckoutSuccess() {
           <Card className="w-full border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
             <CardContent className="pt-6 space-y-4">
               <div className="flex items-center justify-center gap-2">
-                <Coins className="w-6 h-6 text-primary" />
+                <CircleDollarSign className="w-6 h-6 text-primary" />
                 <span className="text-2xl font-bold font-display" data-testid="checkout-credits-added">+{credits} credits</span>
               </div>
               <div className="space-y-2 text-left">
