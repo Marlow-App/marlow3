@@ -488,7 +488,7 @@ export default function Profile() {
                         <p className="text-5xl font-bold font-display text-foreground" data-testid="profile-credit-balance">
                           {isUnlimited ? "∞" : balance}
                         </p>
-                        <p className="text-lg text-muted-foreground">credits</p>
+                        <p className="text-lg font-bold text-foreground">credits</p>
                       </div>
                     </div>
                     <div className="text-right space-y-1">

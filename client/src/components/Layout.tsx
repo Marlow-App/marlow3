@@ -114,7 +114,7 @@ export function Layout({ children }: LayoutProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-base font-semibold truncate">{user?.firstName || (user as any)?.username || "Learner"}</p>
-                <p className="text-sm text-muted-foreground truncate flex items-center gap-1.5 mt-0.5" data-testid="sidebar-credit-label">
+                <p className="text-sm font-bold text-foreground truncate flex items-center gap-1.5 mt-0.5" data-testid="sidebar-credit-label">
                   {user?.role === "learner" && <CircleDollarSign className="w-4 h-4 shrink-0 text-primary" />}
                   {subLabel}
                 </p>
