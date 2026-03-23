@@ -390,40 +390,42 @@ export default function Home() {
                 const isReviewed = recording.status === 'reviewed';
                 const score = recording.feedback?.[0]?.overallScore;
                 return (
-                  <Card key={recording.id} className="hover:shadow-md transition-shadow duration-200">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col sm:flex-row gap-5 justify-between items-start sm:items-center">
-                        <div className="flex items-start gap-4 flex-1 min-w-0">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isReviewed ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"}`}>
-                            {isReviewed ? <PlayCircle className="w-6 h-6" /> : <Mic2 className="w-6 h-6" />}
-                          </div>
-                          <div>
-                            <h3 className="text-xl font-medium mb-1">{recording.sentenceText}</h3>
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3.5 h-3.5" />
-                                {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}
-                              </span>
-                              {isReviewed ? (
-                                <Badge variant="outline" className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800">
-                                  <CheckCircle2 className="w-3 h-3 mr-1" /> Reviewed
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">
-                                  <AlertCircle className="w-3 h-3 mr-1" /> Waiting review
-                                </Badge>
-                              )}
-                              {isReviewed && score !== null && score !== undefined && (
-                                <span className={`text-xs font-bold ${score >= 70 ? "text-emerald-600 dark:text-emerald-400" : score >= 40 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400"}`}>
-                                  {score}%
+                  <Link key={recording.id} href={`/recordings/${recording.id}`}>
+                    <Card className="hover:shadow-md transition-shadow duration-200 cursor-pointer">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col sm:flex-row gap-5 justify-between items-start sm:items-center">
+                          <div className="flex items-start gap-4 flex-1 min-w-0">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isReviewed ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"}`}>
+                              {isReviewed ? <PlayCircle className="w-6 h-6" /> : <Mic2 className="w-6 h-6" />}
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-medium mb-1">{recording.sentenceText}</h3>
+                              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}
                                 </span>
-                              )}
+                                {isReviewed ? (
+                                  <Badge variant="outline" className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800">
+                                    <CheckCircle2 className="w-3 h-3 mr-1" /> Reviewed
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">
+                                    <AlertCircle className="w-3 h-3 mr-1" /> Waiting review
+                                  </Badge>
+                                )}
+                                {isReviewed && score !== null && score !== undefined && (
+                                  <span className={`text-xs font-bold ${score >= 70 ? "text-emerald-600 dark:text-emerald-400" : score >= 40 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400"}`}>
+                                    {score}%
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 );
               })
             ) : (
