@@ -326,14 +326,14 @@ export default function Home() {
 
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerContent className="md:left-1/4 md:right-1/4 md:rounded-[10px]" data-testid="recording-drawer">
-            <DrawerHeader className="text-center">
+            <DrawerHeader className="text-center px-8 pt-6">
               <DrawerTitle>Record Daily Challenge</DrawerTitle>
               <DrawerDescription>{dailyChallenge.english}</DrawerDescription>
               <div className="flex justify-center mt-3" data-testid="drawer-phrase-characters">
                 <SandhiPhraseDisplay characters={dailyChallenge.characters} charSize="text-2xl" pinyinSize="text-sm" />
               </div>
             </DrawerHeader>
-            <div className="px-4 pb-8">
+            <div className="px-8 pb-8">
               <AudioRecorder
                 onRecordingComplete={handleRecordingComplete}
                 isUploading={isUploading || createRecording.isPending}

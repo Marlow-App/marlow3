@@ -319,7 +319,7 @@ export default function PracticeList() {
 
       <Drawer open={!!activeRecordWord} onOpenChange={open => { if (!open) setActiveRecordWord(null); }}>
         <DrawerContent className="md:left-1/4 md:right-1/4 md:rounded-[10px]" data-testid="practice-word-recording-drawer">
-          <DrawerHeader className="text-center">
+          <DrawerHeader className="text-center px-8 pt-6">
             <DrawerTitle>Record Practice Word</DrawerTitle>
             {activeRecordWord && (
               <>
@@ -331,7 +331,7 @@ export default function PracticeList() {
               </>
             )}
           </DrawerHeader>
-          <div className="px-4 pb-8">
+          <div className="px-8 pb-8">
             <AudioRecorder
               onRecordingComplete={handleRecordingComplete}
               isUploading={isUploading || createRecording.isPending}
