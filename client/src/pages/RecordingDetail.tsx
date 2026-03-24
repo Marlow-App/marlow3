@@ -1227,7 +1227,7 @@ export default function RecordingDetail() {
               <CardContent className="p-8">
                 <div className="mb-8">
                   {pinyinData.length > 0 ? (
-                    <div className="mb-4 group/pinyin" data-testid="sentence-with-pinyin">
+                    <div className="mb-1 group/pinyin" data-testid="sentence-with-pinyin">
                       <SandhiPhraseDisplay pinyinChars={pinyinData} charSize="text-3xl" pinyinSize="text-base" />
                       {showPinyin && (
                         <div className="mt-2 h-5 opacity-0 group-hover/pinyin:opacity-100 transition-opacity duration-200">
@@ -1241,14 +1241,12 @@ export default function RecordingDetail() {
                       )}
                     </div>
                   ) : (
-                    <>
-                      <h2 className="text-3xl font-display font-bold text-foreground mb-1 leading-tight">
-                        {recording.sentenceText}
-                      </h2>
-                      {getPhraseEnglish(recording.sentenceText) && (
-                        <p className="text-base text-muted-foreground mb-4">{getPhraseEnglish(recording.sentenceText)}</p>
-                      )}
-                    </>
+                    <h2 className="text-3xl font-display font-bold text-foreground mb-1 leading-tight">
+                      {recording.sentenceText}
+                    </h2>
+                  )}
+                  {getPhraseEnglish(recording.sentenceText) && (
+                    <p className="text-base text-muted-foreground mb-4">{getPhraseEnglish(recording.sentenceText)}</p>
                   )}
                   <div className="flex flex-wrap items-center gap-3">
                     <Badge variant={recording.status === 'reviewed' ? 'default' : 'secondary'} className="px-3 py-1">
