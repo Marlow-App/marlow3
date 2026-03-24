@@ -1228,9 +1228,8 @@ export default function RecordingDetail() {
                 <div className="mb-8">
                   {pinyinData.length > 0 ? (
                     <div className="mb-1 group/pinyin" data-testid="sentence-with-pinyin">
-                      <SandhiPhraseDisplay pinyinChars={pinyinData} charSize="text-3xl" pinyinSize="text-base" />
                       {showPinyin && (
-                        <div className="mt-2 h-5 opacity-0 group-hover/pinyin:opacity-100 transition-opacity duration-200">
+                        <div className="mb-1 h-5 opacity-0 group-hover/pinyin:opacity-100 transition-opacity duration-200">
                           <p className="text-xs text-muted-foreground">
                             Pinyin is on —{" "}
                             <Link href="/profile?tab=settings" className="underline hover:text-foreground transition-colors">
@@ -1239,6 +1238,7 @@ export default function RecordingDetail() {
                           </p>
                         </div>
                       )}
+                      <SandhiPhraseDisplay pinyinChars={pinyinData} charSize="text-3xl" pinyinSize="text-base" />
                     </div>
                   ) : (
                     <h2 className="text-3xl font-display font-bold text-foreground mb-1 leading-tight">
