@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import { House, Mic2, BarChart2, BookOpen, UserCircle, FileAudio, X, Menu, LogOut, CircleDollarSign } from "lucide-react";
-import pandaLogo from "@assets/panda_head_1774174364595.png";
+import pandaLogo from "@assets/chow_chow_2_1774332948261.png";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";

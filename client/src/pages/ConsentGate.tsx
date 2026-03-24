@@ -1,5 +1,5 @@
 import { useState } from "react";
-import pandaLogoImg from "@assets/panda_head_1774174364595.png";
+import pandaLogoImg from "@assets/chow_chow_2_1774332948261.png";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";

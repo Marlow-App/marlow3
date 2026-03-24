@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Mic2, MessageCircle, TrendingUp, ChevronRight, CircleDollarSign, RotateCcw, Star } from "lucide-react";
 import { useRef } from "react";
 import { CREDIT_PACKS, SIGNUP_BONUS, REFUND_THRESHOLD } from "@shared/credits";
-import pandaLogo from "@assets/panda_head_1774174364595.png";
+import pandaLogo from "@assets/chow_chow_2_1774332948261.png";
 
 export default function Landing() {
   const howItWorksRef = useRef<HTMLElement>(null);
