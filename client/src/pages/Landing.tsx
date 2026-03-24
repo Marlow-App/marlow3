@@ -18,7 +18,7 @@ export default function Landing() {
       {/* Navigation */}
       <nav className="p-6 md:px-12 flex justify-between items-center z-10">
         <div className="flex items-center gap-2">
-          <img src={pandaLogo} alt="Marlow" className="w-16 h-16 object-contain" />
+          <img src={pandaLogo} alt="Marlow" className="w-12 h-12 object-contain" />
           <span className="font-display font-bold text-2xl tracking-tight">Marlow</span>
         </div>
         <div className="flex items-center gap-4">

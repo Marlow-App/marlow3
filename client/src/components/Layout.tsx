@@ -55,7 +55,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Mobile Header */}
       <header className="md:hidden border-b border-border px-4 h-16 flex justify-between items-center bg-card sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <img src={pandaLogo} alt="Marlow" className="w-[58px] h-[58px] object-contain" />
+          <img src={pandaLogo} alt="Marlow" className="w-[46px] h-[46px] object-contain" />
           <span className="font-display font-bold text-xl tracking-tight">Marlow</span>
         </div>
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
@@ -70,7 +70,7 @@ export function Layout({ children }: LayoutProps) {
       )}>
         <div className="p-6 border-b border-border/50">
           <div className="flex items-center gap-1">
-            <img src={pandaLogo} alt="Marlow" className="w-[67px] h-[67px] object-contain" />
+            <img src={pandaLogo} alt="Marlow" className="w-[54px] h-[54px] object-contain" />
             <span className="font-display font-bold text-2xl tracking-tight text-foreground">Marlow</span>
           </div>
           <p className="text-xs text-muted-foreground mt-2 pl-1">Master Chinese Tones</p>
