@@ -13,7 +13,7 @@ import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { type PronunciationError, type PracticeListItem } from "@shared/schema";
 
-type PracticeItem = PracticeListItem & { error: PronunciationError };
+type PracticeItem = PracticeListItem & { error: PronunciationError; sentenceText?: string };
 
 const CATEGORY_COLORS: Record<string, string> = {
   tone: "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300",
@@ -94,18 +94,19 @@ function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => 
             </div>
             <p className="font-semibold text-[19px] leading-snug">{error.commonError}</p>
 
+            {item.recordingId && item.sentenceText && (
+              <Link href={`/recordings/${item.recordingId}`}>
+                <p className="text-base font-medium text-primary hover:underline mt-1 flex items-center gap-1" data-testid={`sentence-link-${item.id}`}>
+                  {item.sentenceText}
+                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                </p>
+              </Link>
+            )}
+
             <div className="flex items-center gap-3 mt-1.5">
               <span className="text-xs text-muted-foreground">
                 Saved {formatDistanceToNow(new Date(item.addedAt), { addSuffix: true })}
               </span>
-              {item.recordingId && (
-                <Link href={`/recordings/${item.recordingId}`}>
-                  <span className="flex items-center gap-0.5 text-xs text-primary hover:underline cursor-pointer" data-testid={`view-recording-${item.id}`}>
-                    <ExternalLink className="w-3 h-3" />
-                    View recording
-                  </span>
-                </Link>
-              )}
             </div>
 
             {error.simpleExplanation && (

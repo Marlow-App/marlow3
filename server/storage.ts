@@ -49,7 +49,7 @@ export interface IStorage {
   getError(id: string): Promise<PronunciationError | undefined>;
   createError(data: { id: string; category: "tone" | "initial" | "final"; commonError: string; simpleExplanation?: string; howToFix?: string; practiceWords?: string[]; createdBy: string }): Promise<PronunciationError>;
   // Practice list methods
-  getPracticeList(userId: string): Promise<(PracticeListItem & { error: PronunciationError })[]>;
+  getPracticeList(userId: string): Promise<(PracticeListItem & { error: PronunciationError; sentenceText?: string })[]>;
   addToPracticeList(userId: string, errorId: string, character?: string, recordingId?: number): Promise<PracticeListItem>;
   removeFromPracticeList(id: number, userId: string): Promise<boolean>;
   isPracticeListItem(userId: string, errorId: string): Promise<boolean>;
@@ -454,14 +454,15 @@ export class DatabaseStorage implements IStorage {
 
   // ─── Practice List ─────────────────────────────────────────────────────────
 
-  async getPracticeList(userId: string): Promise<(PracticeListItem & { error: PronunciationError })[]> {
+  async getPracticeList(userId: string): Promise<(PracticeListItem & { error: PronunciationError; sentenceText?: string })[]> {
     const rows = await db
-      .select({ item: practiceListItems, error: pronunciationErrors })
+      .select({ item: practiceListItems, error: pronunciationErrors, sentenceText: recordings.sentenceText })
       .from(practiceListItems)
       .innerJoin(pronunciationErrors, eq(practiceListItems.errorId, pronunciationErrors.id))
+      .leftJoin(recordings, eq(practiceListItems.recordingId, recordings.id))
       .where(eq(practiceListItems.userId, userId))
       .orderBy(desc(practiceListItems.addedAt));
-    return rows.map(r => ({ ...r.item, error: r.error }));
+    return rows.map(r => ({ ...r.item, error: r.error, sentenceText: r.sentenceText ?? undefined }));
   }
 
   async addToPracticeList(userId: string, errorId: string, character?: string, recordingId?: number): Promise<PracticeListItem> {
