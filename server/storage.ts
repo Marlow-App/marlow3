@@ -478,7 +478,17 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .limit(1);
-    if (existing.length > 0) return existing[0];
+    if (existing.length > 0) {
+      if (recordingId && !existing[0].recordingId) {
+        const [updated] = await db
+          .update(practiceListItems)
+          .set({ recordingId })
+          .where(eq(practiceListItems.id, existing[0].id))
+          .returning();
+        return updated;
+      }
+      return existing[0];
+    }
 
     const [item] = await db
       .insert(practiceListItems)
