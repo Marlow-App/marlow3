@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Mic2, MessageCircle, TrendingUp, ChevronRight, CircleDollarSign, RotateCcw, Star } from "lucide-react";
+import { Mic2, MessageCircle, TrendingUp, ChevronRight, CircleDollarSign, RotateCcw, Star, GraduationCap, BookOpen } from "lucide-react";
 import { useRef } from "react";
 import { CREDIT_PACKS, SIGNUP_BONUS, REFUND_THRESHOLD } from "@shared/credits";
 import pandaLogo from "@assets/chow_chow_2_1774332948261.png";
@@ -248,7 +248,7 @@ export default function Landing() {
                   <h3 className="text-2xl font-bold font-display">Get Rated Character by Character</h3>
                 </div>
                 <p className="text-muted-foreground text-lg leading-relaxed">
-                  A native speaker rates every character across three dimensions: <strong>Initial</strong> (how you start the syllable), <strong>Final</strong> (how you end it), and <strong>Tone</strong> (the pitch pattern). Each gets a rating of Poor, OK, or Great, and you see an overall percentage score.
+                  A native speaker rates every character across three dimensions: <strong>Initial</strong> (how you start the syllable), <strong>Final</strong> (how you end it), and <strong>Tone</strong> (the pitch pattern).
                 </p>
               </div>
             </div>
@@ -349,8 +349,52 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Features Section */}
+      <section className="py-24 px-6 md:px-12 bg-muted/20">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Built for Real Progress</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Every feature is designed to help you improve faster and stay motivated.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-card rounded-2xl border border-border/50 p-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-5">
+                <GraduationCap className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold font-display mb-3">Four Levels, Hundreds of Phrases</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Choose from <strong>Absolute Beginner</strong>, <strong>Beginner</strong>, <strong>Intermediate</strong>, or <strong>Advanced</strong>. Each level has hundreds of real phrases and sentences so you never run out of material to practise.
+              </p>
+            </div>
+
+            <div className="bg-card rounded-2xl border border-border/50 p-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
+              <div className="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center text-secondary-foreground mb-5">
+                <BookOpen className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold font-display mb-3">Save Errors to Your Practice List</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                When a reviewer flags a mistake, save it straight to your <strong>Practice List</strong>. Drill those words on their own — and quickly spot if the same error keeps coming up.
+              </p>
+            </div>
+
+            <div className="bg-card rounded-2xl border border-border/50 p-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-5">
+                <TrendingUp className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold font-display mb-3">Track Your Progress Over Time</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                See your scores improve recording by recording. Every submission builds a history you can look back on to understand exactly where your pronunciation has grown.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
-      <section ref={pricingRef} className="py-24 px-6 md:px-12 bg-muted/20" data-testid="pricing-section">
+      <section ref={pricingRef} className="py-24 px-6 md:px-12" data-testid="pricing-section">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Simple, Pay-as-You-Learn</h2>
