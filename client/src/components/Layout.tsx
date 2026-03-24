@@ -69,7 +69,7 @@ export function Layout({ children }: LayoutProps) {
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="p-6 border-b border-border/50">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-3">
             <img src={pandaLogo} alt="Marlow" className="w-[54px] h-[54px] object-contain" />
             <span className="font-display font-bold text-2xl tracking-tight text-foreground">Marlow</span>
           </div>
