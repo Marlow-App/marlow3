@@ -5,13 +5,23 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, Trash2, Volume2, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
+import { BookOpen, Trash2, Volume2, ChevronDown, ChevronUp, ExternalLink, Mic2 } from "lucide-react";
 import { pinyin } from "pinyin-pro";
 import { useState } from "react";
 import { getPracticeWordTranslation } from "@/lib/practiceWordTranslations";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { type PronunciationError, type PracticeListItem } from "@shared/schema";
+import { AudioRecorder } from "@/components/AudioRecorder";
+import { useUpload } from "@/hooks/use-upload";
+import { useCreateRecording } from "@/hooks/use-recordings";
 
 type PracticeItem = PracticeListItem & { error: PronunciationError; sentenceText?: string };
 
@@ -54,7 +64,15 @@ function getDailyWords(words: string[], count = 3): string[] {
   return shuffled.slice(0, count);
 }
 
-function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => void }) {
+function PracticeCard({
+  item,
+  onRemove,
+  onRecordWord,
+}: {
+  item: PracticeItem;
+  onRemove: () => void;
+  onRecordWord: (word: string) => void;
+}) {
   const [expanded, setExpanded] = useState(false);
   const { error } = item;
   const categoryColor = CATEGORY_COLORS[error.category] ?? "";
@@ -137,27 +155,39 @@ function PracticeCard({ item, onRemove }: { item: PracticeItem; onRemove: () => 
                 )}
                 {error.practiceWords && error.practiceWords.length > 0 && (
                   <div>
-                    <p className="text-[12px] font-black uppercase tracking-widest text-primary mb-2">Today's practice words</p>
+                    <p className="text-[12px] font-black uppercase tracking-widest text-primary mb-2">Practice words</p>
                     <div className="flex flex-wrap gap-2">
                       {getDailyWords(error.practiceWords).map((word, i) => {
                         const py = (error.id === "T005" && word === "东西")
                           ? "dōng xi"
                           : pinyin(word, { toneType: "symbol", type: "string" });
                         return (
-                          <div key={i} className="flex flex-col items-center bg-muted/30 rounded-lg px-3 py-2 min-w-[52px] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-150 cursor-default">
+                          <div key={i} className="flex flex-col items-center bg-muted/30 rounded-lg px-3 py-2 min-w-[52px] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-150">
                             <span className="text-sm text-muted-foreground">{py}</span>
                             <span className="text-lg font-bold">{word}</span>
                             {getPracticeWordTranslation(word) && (
                               <span className="text-[11px] text-muted-foreground/70 mt-0.5 text-center leading-tight">{getPracticeWordTranslation(word)}</span>
                             )}
-                            <button
-                              type="button"
-                              onClick={() => speakText(word)}
-                              className="mt-0.5 text-muted-foreground hover:text-primary transition-colors"
-                              data-testid={`speak-word-${item.id}-${i}`}
-                            >
-                              <Volume2 className="w-3 h-3" />
-                            </button>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <button
+                                type="button"
+                                onClick={() => speakText(word)}
+                                className="text-muted-foreground hover:text-primary transition-colors"
+                                data-testid={`speak-word-${item.id}-${i}`}
+                                aria-label={`Hear ${word}`}
+                              >
+                                <Volume2 className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onRecordWord(word)}
+                                className="text-muted-foreground hover:text-primary transition-colors"
+                                data-testid={`record-word-${item.id}-${i}`}
+                                aria-label={`Record ${word}`}
+                              >
+                                <Mic2 className="w-3 h-3" />
+                              </button>
+                            </div>
                           </div>
                         );
                       })}
@@ -189,6 +219,9 @@ export default function PracticeList() {
   const { data: items = [], isLoading } = useQuery<PracticeItem[]>({
     queryKey: ["/api/practice-list"],
   });
+  const [activeRecordWord, setActiveRecordWord] = useState<string | null>(null);
+  const { uploadFile, isUploading } = useUpload();
+  const createRecording = useCreateRecording();
 
   const removeMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -202,6 +235,27 @@ export default function PracticeList() {
       toast({ title: "Error", description: "Failed to remove item.", variant: "destructive" });
     },
   });
+
+  const handleRecordingComplete = async (file: File) => {
+    if (!activeRecordWord) return;
+    try {
+      const uploadRes = await uploadFile(file);
+      if (!uploadRes) throw new Error("Upload failed");
+      await createRecording.mutateAsync({
+        audioUrl: uploadRes.objectPath,
+        sentenceText: activeRecordWord,
+      });
+      toast({ title: "Submitted!", description: "Your recording has been submitted for review." });
+      setActiveRecordWord(null);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to submit recording.";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+    }
+  };
+
+  const wordPinyin = activeRecordWord
+    ? pinyin(activeRecordWord, { toneType: "symbol", type: "string" })
+    : "";
 
   const grouped = {
     tone: items.filter(i => i.error.category === "tone"),
@@ -252,6 +306,7 @@ export default function PracticeList() {
                         key={item.id}
                         item={item}
                         onRemove={() => removeMutation.mutate(item.id)}
+                        onRecordWord={setActiveRecordWord}
                       />
                     ))}
                   </div>
@@ -261,6 +316,29 @@ export default function PracticeList() {
           </div>
         )}
       </div>
+
+      <Drawer open={!!activeRecordWord} onOpenChange={open => { if (!open) setActiveRecordWord(null); }}>
+        <DrawerContent data-testid="practice-word-recording-drawer">
+          <DrawerHeader className="text-center">
+            <DrawerTitle>Record Practice Word</DrawerTitle>
+            {activeRecordWord && (
+              <>
+                <DrawerDescription>{wordPinyin}</DrawerDescription>
+                <p className="text-4xl font-bold mt-2 font-display">{activeRecordWord}</p>
+                {getPracticeWordTranslation(activeRecordWord) && (
+                  <p className="text-base text-muted-foreground mt-1">{getPracticeWordTranslation(activeRecordWord)}</p>
+                )}
+              </>
+            )}
+          </DrawerHeader>
+          <div className="px-4 pb-8">
+            <AudioRecorder
+              onRecordingComplete={handleRecordingComplete}
+              isUploading={isUploading || createRecording.isPending}
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
     </Layout>
   );
 }
