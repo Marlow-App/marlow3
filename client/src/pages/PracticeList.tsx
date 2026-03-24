@@ -318,7 +318,7 @@ export default function PracticeList() {
       </div>
 
       <Drawer open={!!activeRecordWord} onOpenChange={open => { if (!open) setActiveRecordWord(null); }}>
-        <DrawerContent data-testid="practice-word-recording-drawer">
+        <DrawerContent className="md:left-1/4 md:right-1/4 md:rounded-[10px]" data-testid="practice-word-recording-drawer">
           <DrawerHeader className="text-center">
             <DrawerTitle>Record Practice Word</DrawerTitle>
             {activeRecordWord && (

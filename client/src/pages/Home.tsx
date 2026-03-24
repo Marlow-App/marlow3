@@ -325,7 +325,7 @@ export default function Home() {
         </section>
 
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <DrawerContent data-testid="recording-drawer">
+          <DrawerContent className="md:left-1/4 md:right-1/4 md:rounded-[10px]" data-testid="recording-drawer">
             <DrawerHeader className="text-center">
               <DrawerTitle>Record Daily Challenge</DrawerTitle>
               <DrawerDescription>{dailyChallenge.english}</DrawerDescription>
