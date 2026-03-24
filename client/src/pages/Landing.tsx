@@ -359,10 +359,10 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-card rounded-2xl border border-border/50 p-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-5">
-                <GraduationCap className="w-6 h-6" />
+          <div className="grid md:grid-cols-3 gap-6 mt-8">
+            <div className="relative bg-card rounded-2xl border border-border/50 pt-12 px-7 pb-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
+              <div className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-lg ring-4 ring-muted/20">
+                <GraduationCap className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-xl font-bold font-display mb-3">Four Levels, Hundreds of Phrases</h3>
               <p className="text-muted-foreground leading-relaxed">
@@ -370,9 +370,9 @@ export default function Landing() {
               </p>
             </div>
 
-            <div className="bg-card rounded-2xl border border-border/50 p-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
-              <div className="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center text-secondary-foreground mb-5">
-                <BookOpen className="w-6 h-6" />
+            <div className="relative bg-card rounded-2xl border border-border/50 pt-12 px-7 pb-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
+              <div className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-secondary flex items-center justify-center shadow-lg ring-4 ring-muted/20">
+                <BookOpen className="w-7 h-7 text-secondary-foreground" />
               </div>
               <h3 className="text-xl font-bold font-display mb-3">Save Errors to Your Practice List</h3>
               <p className="text-muted-foreground leading-relaxed">
@@ -380,9 +380,9 @@ export default function Landing() {
               </p>
             </div>
 
-            <div className="bg-card rounded-2xl border border-border/50 p-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-5">
-                <TrendingUp className="w-6 h-6" />
+            <div className="relative bg-card rounded-2xl border border-border/50 pt-12 px-7 pb-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
+              <div className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg ring-4 ring-muted/20">
+                <TrendingUp className="w-7 h-7 text-white" />
               </div>
               <h3 className="text-xl font-bold font-display mb-3">Track Your Progress Over Time</h3>
               <p className="text-muted-foreground leading-relaxed">
