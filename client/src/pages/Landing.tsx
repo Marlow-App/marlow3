@@ -267,14 +267,6 @@ export default function Landing() {
                         </p>
                       </div>
                     </div>
-                    <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg p-3">
-                      <div className="flex items-start gap-2">
-                        <span className="text-lg font-bold text-amber-600 shrink-0">好</span>
-                        <p className="text-sm text-foreground/80">
-                          <span className="font-semibold text-amber-600">Tone:</span> Tone should not start so high, since it's a low falling and functions more like a low tone.
-                        </p>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -311,7 +303,7 @@ export default function Landing() {
                       <div>
                         <p className="text-sm font-medium">Native Speaker from Changchun</p>
                         <p className="text-foreground/80 mt-2 leading-relaxed">
-                          Tones 1 and 4 consistently good, but you tend to mix up Tones 2 and 3. When a third tone comes before another third tone, the first one changes to a second tone.
+                          Tones 1 and 4 consistently good, but you tend to mix up Tones 2 and 3.
                         </p>
                       </div>
                     </div>
