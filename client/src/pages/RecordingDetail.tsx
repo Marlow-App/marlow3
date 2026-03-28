@@ -23,6 +23,7 @@ import { format } from "date-fns";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { type User as SharedUser, type CharacterRating, type PronunciationError } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { api } from "@shared/routes";
 import { pinyin } from "pinyin-pro";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 import { useDisplayPrefs } from "@/hooks/use-display-prefs";
@@ -126,7 +127,7 @@ function FluencyDisplay({ score }: { score: number }) {
 // ─── Error Components ──────────────────────────────────────────────────────
 
 function useAllErrors() {
-  return useQuery<PronunciationError[]>({ queryKey: ["/api/errors"] });
+  return useQuery<PronunciationError[]>({ queryKey: ["/api/errors"], retry: 3, staleTime: 5 * 60 * 1000 });
 }
 
 type PracticeListItem = { id: number; errorId: string; character?: string | null };
@@ -747,7 +748,7 @@ function EditableFeedbackCard({
       await apiRequest("PATCH", `/api/feedback/${item.id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/recordings", recordingId] });
+      queryClient.invalidateQueries({ queryKey: [api.recordings.get.path, recordingId] });
       toast({ title: "Feedback updated", description: "Your changes have been saved." });
       setIsEditing(false);
     },
@@ -761,7 +762,7 @@ function EditableFeedbackCard({
       await apiRequest("DELETE", `/api/feedback/${item.id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/recordings", recordingId] });
+      queryClient.invalidateQueries({ queryKey: [api.recordings.get.path, recordingId] });
       queryClient.invalidateQueries({ queryKey: ["/api/recordings"] });
       toast({ title: "Feedback deleted", description: "Your feedback has been removed." });
     },

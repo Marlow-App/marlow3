@@ -641,7 +641,7 @@ export async function registerRoutes(
 
   // === Pronunciation Errors ===
 
-  app.get("/api/errors", isAuthenticated, async (req, res) => {
+  app.get("/api/errors", async (req, res) => {
     try {
       const category = req.query.category as string | undefined;
       if (category && !["tone", "initial", "final"].includes(category)) {
@@ -655,7 +655,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/errors/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/errors/:id", async (req, res) => {
     try {
       const found = await storage.getError(String(req.params.id));
       if (!found) return res.status(404).json({ message: "Error not found" });
