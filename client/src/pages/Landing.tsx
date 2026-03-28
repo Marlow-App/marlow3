@@ -45,7 +45,7 @@ export default function Landing() {
               Master Chinese Tones with <span className="text-primary">Human</span> Feedback.
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
-              Don't guess if you sound right. Submit voice recordings and get personalized feedback from native speakers trained in linguistics and language teaching.
+              Don't guess if you sound right. Get personalized feedback from native speakers trained in linguistics and language teaching.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <a href="/api/login?role=learner">
