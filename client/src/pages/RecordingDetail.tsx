@@ -315,28 +315,32 @@ function ErrorDetailDialog({
   );
 }
 
-function ErrorBadge({ errorId, errors, character, className }: { errorId: string; errors: PronunciationError[]; character?: string; className?: string }) {
+function RatingErrorButton({ val, opt, error, character, dimKey, idx }: {
+  val: number;
+  opt: typeof RATING_OPTIONS[number] | undefined;
+  error: PronunciationError;
+  character?: string;
+  dimKey: string;
+  idx: number;
+}) {
   const [open, setOpen] = useState(false);
-  const error = errors.find(e => e.id === errorId);
-  if (!error) return null;
-
   const categoryColor =
     error.category === "tone"
-      ? "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-200 dark:hover:bg-blue-900"
+      ? "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700 hover:bg-blue-200 dark:hover:bg-blue-900"
       : error.category === "initial"
-      ? "bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800 hover:bg-violet-200 dark:hover:bg-violet-900"
-      : "bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800 hover:bg-orange-200 dark:hover:bg-orange-900";
+      ? "bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300 border border-violet-300 dark:border-violet-700 hover:bg-violet-200 dark:hover:bg-violet-900"
+      : "bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700 hover:bg-orange-200 dark:hover:bg-orange-900";
 
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`inline-flex items-center gap-0.5 text-xs font-bold px-1.5 py-0.5 rounded border transition-colors cursor-pointer ${categoryColor} ${className ?? ""}`}
-        data-testid={`error-badge-${errorId}`}
         title={error.commonError}
+        className={`text-sm font-semibold px-2 py-0.5 rounded transition-colors cursor-pointer ${categoryColor}`}
+        data-testid={`char-rating-${idx}-${dimKey}`}
       >
-        {errorId}
+        {opt?.label || val}
       </button>
       <ErrorDetailDialog error={error} open={open} onClose={() => setOpen(false)} character={character} />
     </>
@@ -521,19 +525,28 @@ function CharacterRatingDisplay({ ratings, isReviewer, pinyinData, fluencyScore,
                     const val = cr[dim.key];
                     const opt = RATING_OPTIONS.find(o => o.value === val);
                     const errorId = cr[dimToErrorKey[dim.key]] as string | undefined;
+                    const linkedError = errorId ? errors.find(e => e.id === errorId) : undefined;
                     return (
                       <div key={dim.key} className="flex flex-col gap-0.5">
                         <div className="flex items-center gap-1">
                           <span className="text-sm text-muted-foreground">{isReviewer ? dim.chinese : dim.english}</span>
-                          <span className={`text-sm font-semibold px-2 py-0.5 rounded ${
-                            val === 100 ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
-                            val === 50 ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
-                            "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
-                          }`} data-testid={`char-rating-${idx}-${dim.key}`}>
-                            {opt?.label || val}
-                          </span>
-                          {errorId && errors.length > 0 && (
-                            <ErrorBadge errorId={errorId} errors={errors} character={cr.character} />
+                          {linkedError ? (
+                            <RatingErrorButton
+                              val={val}
+                              opt={opt}
+                              error={linkedError}
+                              character={cr.character}
+                              dimKey={dim.key}
+                              idx={idx}
+                            />
+                          ) : (
+                            <span className={`text-sm font-semibold px-2 py-0.5 rounded ${
+                              val === 100 ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
+                              val === 50 ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
+                              "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
+                            }`} data-testid={`char-rating-${idx}-${dim.key}`}>
+                              {opt?.label || val}
+                            </span>
                           )}
                         </div>
                       </div>
