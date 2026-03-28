@@ -108,7 +108,7 @@ export function Layout({ children }: LayoutProps) {
 
         <div className="p-4 border-t border-border/50 bg-muted/10">
           <Link href="/profile">
-            <div className="flex items-center gap-4 mb-4 px-2 cursor-pointer rounded-xl hover:bg-muted/50 transition-colors py-3 -my-1" data-testid="sidebar-profile-link">
+            <div className="flex items-center gap-4 mb-4 px-2 cursor-pointer rounded-xl hover:bg-muted/50 transition-colors py-2" data-testid="sidebar-profile-link">
               <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-base shrink-0">
                 {user?.firstName?.[0] || (user as any)?.username?.[0] || "U"}
               </div>

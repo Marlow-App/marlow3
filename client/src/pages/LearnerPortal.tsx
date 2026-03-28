@@ -299,7 +299,7 @@ function GroupedRecordingsList({ recordings, childLookup }: { recordings: any[];
                 <div key={recording.id}>
                   <RecordingCard recording={recording} />
                   {children.length > 0 && (
-                    <div className="ml-5 mt-2 pl-4 border-l-2 border-primary/25 space-y-2">
+                    <div className="ml-3 mt-2 pl-3 border-l-2 border-primary/25 space-y-2">
                       {children.map((child: any) => (
                         <RecordingCard key={child.id} recording={child} />
                       ))}

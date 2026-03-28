@@ -359,7 +359,7 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 mt-8">
+          <div className="grid md:grid-cols-3 gap-x-6 gap-y-14 mt-8">
             <div className="relative bg-card rounded-2xl border border-border/50 pt-12 px-7 pb-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
               <div className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-lg ring-4 ring-muted/20">
                 <GraduationCap className="w-7 h-7 text-white" />

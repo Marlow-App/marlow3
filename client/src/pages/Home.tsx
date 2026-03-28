@@ -350,7 +350,7 @@ export default function Home() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Link href="/learner-portal?tab=completed">
-              <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/10 cursor-pointer hover:shadow-md transition-shadow" data-testid="stat-reviewed">
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" data-testid="stat-reviewed">
                 <CardContent className="pt-6">
                   <div className="text-4xl font-bold text-primary mb-1">
                     {recordings?.filter(r => r.status === 'reviewed').length || 0}
