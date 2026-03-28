@@ -35,14 +35,14 @@ export default function Landing() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-10 pb-20 md:pt-20 md:pb-28 px-6 md:px-12 max-w-7xl mx-auto w-full">
+      <section className="relative pt-8 pb-16 md:pt-16 md:pb-20 px-6 md:px-12 max-w-7xl mx-auto w-full">
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl z-0"></div>
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl z-0"></div>
 
-        <div className="grid md:grid-cols-2 gap-10 items-center relative z-10">
-          <div className="space-y-6 animate-in">
+        <div className="grid md:grid-cols-2 gap-12 items-center relative z-10">
+          <div className="space-y-8 animate-in">
             <h1 className="text-5xl md:text-7xl font-display font-bold leading-[1.1] tracking-tight text-balance">
-              Master Chinese <span className="text-primary">Tones</span> with Human Feedback.
+              Master Chinese Tones with <span className="text-primary">Human</span> Feedback.
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
               Don't guess if you sound right. Submit voice recordings and get personalized feedback from native speakers trained in linguistics and language teaching.
@@ -105,18 +105,18 @@ export default function Landing() {
       </section>
 
       {/* How It Works Walkthrough */}
-      <section ref={howItWorksRef} className="py-20 px-6 md:px-12" data-testid="how-it-works-section">
+      <section ref={howItWorksRef} className="py-16 px-6 md:px-12" data-testid="how-it-works-section">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">How It Works</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Every recording gets detailed, character-by-character feedback from a linguistically trained native speaker.
             </p>
           </div>
 
-          <div className="space-y-12">
+          <div className="space-y-16">
             {/* Step 1: Record */}
-            <div className="grid md:grid-cols-2 gap-6 items-center">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">1</div>
@@ -159,7 +159,7 @@ export default function Landing() {
             </div>
 
             {/* Step 2: Tone Sandhi */}
-            <div className="grid md:grid-cols-2 gap-6 items-center">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-4">
                   <p className="text-[16px] font-semibold uppercase text-muted-foreground tracking-wide">Tone 3 Sandhi</p>
@@ -190,7 +190,7 @@ export default function Landing() {
             </div>
 
             {/* Step 3: Get Rated */}
-            <div className="grid md:grid-cols-2 gap-6 items-center">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="order-2 md:order-2 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between mb-2">
@@ -254,7 +254,7 @@ export default function Landing() {
             </div>
 
             {/* Step 4: Corrections */}
-            <div className="grid md:grid-cols-2 gap-6 items-center">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-4">
                   <p className="text-[16px] font-semibold uppercase text-muted-foreground tracking-wide">Corrections</p>
@@ -290,7 +290,7 @@ export default function Landing() {
             </div>
 
             {/* Step 5: Overall Comments */}
-            <div className="grid md:grid-cols-2 gap-6 items-center">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="order-2 md:order-2 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-4">
                   <p className="text-[16px] font-semibold uppercase text-muted-foreground tracking-wide">Overall Comments</p>
@@ -338,7 +338,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-16">
             <a href="/api/login?role=learner">
               <Button size="lg" className="h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/30" data-testid="cta-start-recording">
                 Start Recording Free
@@ -350,17 +350,17 @@ export default function Landing() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-6 md:px-12 bg-muted/20">
+      <section className="py-16 px-6 md:px-12 bg-muted/20">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
+          <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Built for Real Progress</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Every feature is designed to help you improve faster and stay motivated.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-x-6 gap-y-12 mt-6">
-            <div className="relative bg-card rounded-2xl border border-border/50 pt-10 px-6 pb-6 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
+          <div className="grid md:grid-cols-3 gap-x-6 gap-y-14 mt-8">
+            <div className="relative bg-card rounded-2xl border border-border/50 pt-12 px-7 pb-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
               <div className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-lg ring-4 ring-muted/20">
                 <GraduationCap className="w-7 h-7 text-white" />
               </div>
@@ -370,7 +370,7 @@ export default function Landing() {
               </p>
             </div>
 
-            <div className="relative bg-card rounded-2xl border border-border/50 pt-10 px-6 pb-6 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
+            <div className="relative bg-card rounded-2xl border border-border/50 pt-12 px-7 pb-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
               <div className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-secondary flex items-center justify-center shadow-lg ring-4 ring-muted/20">
                 <BookOpen className="w-7 h-7 text-secondary-foreground" />
               </div>
@@ -380,7 +380,7 @@ export default function Landing() {
               </p>
             </div>
 
-            <div className="relative bg-card rounded-2xl border border-border/50 pt-10 px-6 pb-6 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
+            <div className="relative bg-card rounded-2xl border border-border/50 pt-12 px-7 pb-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
               <div className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg ring-4 ring-muted/20">
                 <TrendingUp className="w-7 h-7 text-white" />
               </div>
@@ -394,9 +394,9 @@ export default function Landing() {
       </section>
 
       {/* Pricing Section */}
-      <section ref={pricingRef} className="py-20 px-6 md:px-12" data-testid="pricing-section">
+      <section ref={pricingRef} className="py-16 px-6 md:px-12" data-testid="pricing-section">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
+          <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Simple, Pay-as-You-Learn</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               No monthly subscription. Buy credits, use them when you want. Start free with {SIGNUP_BONUS} credits.
@@ -404,7 +404,7 @@ export default function Landing() {
           </div>
 
           {/* Free perks */}
-          <div className="bg-card rounded-2xl border border-border/50 p-6 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+          <div className="bg-card rounded-2xl border border-border/50 p-6 mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-emerald-500" />
@@ -474,30 +474,30 @@ export default function Landing() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-20 bg-background">
+      <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="text-center mb-12 max-w-2xl mx-auto">
+          <div className="text-center mb-16 max-w-2xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Why Marlow works</h2>
             <p className="text-muted-foreground text-lg">AI isn't enough for tonal languages. You need human ears to catch the subtle nuances.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-card p-6 rounded-2xl shadow-sm border border-border/50 hover:shadow-lg transition-all duration-300">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-4">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-6">
                 <Mic2 className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold mb-3">Record Daily</h3>
               <p className="text-muted-foreground">Practice makes perfect. Submit a sentence every day to build your muscle memory.</p>
             </div>
-            <div className="bg-card p-6 rounded-2xl shadow-sm border border-border/50 hover:shadow-lg transition-all duration-300">
-              <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary mb-4">
+            <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary mb-6">
                 <MessageCircle className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold mb-3">Human Feedback</h3>
               <p className="text-muted-foreground">Get corrections from real native speakers who can explain exactly what went wrong.</p>
             </div>
-            <div className="bg-card p-6 rounded-2xl shadow-sm border border-border/50 hover:shadow-lg transition-all duration-300">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mb-4">
+            <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mb-6">
                 <TrendingUp className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold mb-3">Track Progress</h3>
@@ -508,7 +508,7 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="py-10 px-6 md:px-12 border-t border-border">
+      <footer className="py-8 px-6 md:px-12 border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
             <img src={pandaLogo} alt="Marlow" className="w-[53px] h-[53px] object-contain" />
