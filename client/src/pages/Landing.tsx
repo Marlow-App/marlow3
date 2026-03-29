@@ -4,6 +4,8 @@ import { Mic2, MessageCircle, TrendingUp, ChevronRight, CircleDollarSign, Rotate
 import { useRef } from "react";
 import { CREDIT_PACKS, SIGNUP_BONUS, REFUND_THRESHOLD } from "@shared/credits";
 import pandaLogo from "@assets/chow_chow_2_1774332948261.png";
+import julesyPhoto from "@assets/IMG_4243_1774760935474.jpg";
+import { SiYoutube } from "react-icons/si";
 
 export default function Landing() {
   const howItWorksRef = useRef<HTMLElement>(null);
@@ -462,6 +464,69 @@ export default function Landing() {
           <p className="text-center text-sm text-muted-foreground mt-6">
             1 credit = 1 Chinese character. Max 10 characters per recording session.
           </p>
+        </div>
+      </section>
+
+      {/* Who We Are Section */}
+      <section className="py-16 px-6 md:px-12 bg-muted/20">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Who We Are</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Marlow was built by experts who know exactly what it takes to master Chinese tones.
+            </p>
+          </div>
+
+          <div className="bg-card rounded-3xl border border-border/50 shadow-lg p-8 md:p-12">
+            <div className="grid md:grid-cols-[220px_1fr] gap-8 md:gap-12 items-start">
+              {/* Photo + credentials */}
+              <div className="flex flex-col items-center gap-5">
+                <img
+                  src={julesyPhoto}
+                  alt="Julesy (Dr. Chen)"
+                  className="w-44 h-44 rounded-full object-cover shadow-xl ring-4 ring-primary/20"
+                />
+                <div className="text-center">
+                  <h3 className="text-xl font-bold font-display">Julesy (Dr. Chen)</h3>
+                  <p className="text-primary font-semibold text-sm mt-0.5">PhD in Chinese Linguistics</p>
+                  <p className="text-muted-foreground text-xs mt-0.5 leading-snug">The Hong Kong Polytechnic University</p>
+                  <p className="text-muted-foreground text-xs mt-0.5">Language YouTuber</p>
+                </div>
+                <div className="flex flex-col gap-2 w-full">
+                  <a
+                    href="https://youtu.be/eIP8yVcDZRI"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 bg-[#FF0000] hover:bg-[#cc0000] text-white text-sm font-semibold px-4 py-2 rounded-full transition-colors"
+                    data-testid="link-julesy-video-1"
+                  >
+                    <SiYoutube className="w-4 h-4" />
+                    Watch on YouTube
+                  </a>
+                  <a
+                    href="https://youtu.be/UzZyc2BobYw"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 bg-[#FF0000] hover:bg-[#cc0000] text-white text-sm font-semibold px-4 py-2 rounded-full transition-colors"
+                    data-testid="link-julesy-video-2"
+                  >
+                    <SiYoutube className="w-4 h-4" />
+                    Watch on YouTube
+                  </a>
+                </div>
+              </div>
+
+              {/* Bio */}
+              <div className="space-y-5">
+                <p className="text-foreground/80 leading-relaxed">
+                  Julesy (Dr. Chen), born in China and raised in the United States, is passionate about the Chinese language and helping people learn it. She first got her Master's in Chinese Linguistics at PolyU in Hong Kong, but loved the program so much that she later got her PhD in the same department. Since then, she's turned to YouTube to share her love for the historical, social, and scientific aspects of the language.
+                </p>
+                <p className="text-foreground/80 leading-relaxed">
+                  With Marlow, she hopes to create a platform to help Chinese learners hone their skills by finetuning their tone issues — something that AI is not currently able to do with accuracy.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
