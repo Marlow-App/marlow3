@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 const POLL_INTERVAL_MS = 15_000;
-const FIRST_VISIT_LOOKBACK_MS = 5 * 60 * 1000; // show notifications for events in the last 5 min on first visit
+const FIRST_VISIT_LOOKBACK_MS = 5 * 60 * 1000;
 
 export function useInAppNotifications() {
   const { user } = useAuth();
@@ -21,21 +21,22 @@ export function useInAppNotifications() {
     if (stored) {
       lastSeenRef.current = new Date(stored);
     } else {
-      // First visit — look back a short window so recent activity shows up
       lastSeenRef.current = new Date(Date.now() - FIRST_VISIT_LOOKBACK_MS);
     }
 
     async function check() {
       const lastSeen = lastSeenRef.current!;
       const now = new Date();
-      lastSeenRef.current = now;
-      localStorage.setItem(storageKey, now.toISOString());
 
       try {
         if (user!.role === "learner") {
           const res = await fetch("/api/recordings");
           if (!res.ok) return;
           const recordings: any[] = await res.json();
+
+          // Update seen timestamp only after a successful fetch
+          lastSeenRef.current = now;
+          localStorage.setItem(storageKey, now.toISOString());
 
           let newFeedbackCount = 0;
           for (const rec of recordings) {
@@ -59,6 +60,10 @@ export function useInAppNotifications() {
           const res = await fetch("/api/recordings/pending");
           if (!res.ok) return;
           const pending: any[] = await res.json();
+
+          // Update seen timestamp only after a successful fetch
+          lastSeenRef.current = now;
+          localStorage.setItem(storageKey, now.toISOString());
 
           const newCount = pending.filter((r: any) =>
             r.createdAt && new Date(r.createdAt) > lastSeen

@@ -234,7 +234,7 @@ export default function RecordPage() {
           ? "Your recording has been submitted for review."
           : discountedCost === 0
             ? "Submitted for review — no credits used."
-            : rerecordOf && redoType === "discounted"
+            : rerecordOf && redoType === "discount"
               ? `Used ${discountedCost} credit${discountedCost !== 1 ? "s" : ""} (30% off) — submitted for review.`
               : `Used ${discountedCost} credit${discountedCost !== 1 ? "s" : ""} — submitted for review.`,
       });
@@ -448,7 +448,7 @@ export default function RecordPage() {
                     ? <>Speak naturally and clearly with your microphone close. Score {REFUND_THRESHOLD}%+ and your credits are refunded.</>
                     : redoType === "free"
                       ? <>Free re-record — no credits will be used.</>
-                      : <>This recording costs <span className="font-semibold text-foreground">{discountedCost} credit{discountedCost !== 1 ? "s" : ""}</span>{rerecordOf && redoType === "discounted" ? " (30% off)" : ""}. Score {REFUND_THRESHOLD}%+ and they're refunded automatically.</>
+                      : <>This recording costs <span className="font-semibold text-foreground">{discountedCost} credit{discountedCost !== 1 ? "s" : ""}</span>{rerecordOf && redoType === "discount" ? " (30% off)" : ""}. Score {REFUND_THRESHOLD}%+ and they're refunded automatically.</>
                   }
                 </p>
               </div>
