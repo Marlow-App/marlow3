@@ -1,11 +1,55 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Mic2, MessageCircle, TrendingUp, ChevronRight, CircleDollarSign, RotateCcw, Star, GraduationCap, BookOpen } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { CREDIT_PACKS, SIGNUP_BONUS, REFUND_THRESHOLD } from "@shared/credits";
 import pandaLogo from "@assets/chow_chow_2_1774332948261.png";
 import julesyPhoto from "@assets/IMG_4243_1774760935474.jpg";
 import { SiYoutube } from "react-icons/si";
+
+function YouTubeCard({ videoId }: { videoId: string }) {
+  const [title, setTitle] = useState<string | null>(null);
+  const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  const url = `https://youtu.be/${videoId}`;
+
+  useEffect(() => {
+    fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`)
+      .then(r => r.json())
+      .then(d => setTitle(d.title))
+      .catch(() => {});
+  }, [videoId]);
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group block rounded-xl overflow-hidden border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+      data-testid={`link-youtube-${videoId}`}
+    >
+      <div className="relative aspect-video bg-black">
+        <img
+          src={thumbnail}
+          alt={title ?? "YouTube video"}
+          className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-[#FF0000] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+            <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div className="bg-card px-3 py-2 flex items-start gap-2">
+        <SiYoutube className="w-4 h-4 text-[#FF0000] shrink-0 mt-0.5" />
+        <p className="text-xs font-medium text-foreground leading-snug line-clamp-2">
+          {title ?? "Loading…"}
+        </p>
+      </div>
+    </a>
+  );
+}
 
 export default function Landing() {
   const howItWorksRef = useRef<HTMLElement>(null);
@@ -492,27 +536,9 @@ export default function Landing() {
                   <p className="text-muted-foreground text-xs mt-0.5 leading-snug">The Hong Kong Polytechnic University</p>
                   <p className="text-muted-foreground text-xs mt-0.5">Language YouTuber</p>
                 </div>
-                <div className="flex flex-col gap-2 w-full">
-                  <a
-                    href="https://youtu.be/eIP8yVcDZRI"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 bg-[#FF0000] hover:bg-[#cc0000] text-white text-sm font-semibold px-4 py-2 rounded-full transition-colors"
-                    data-testid="link-julesy-video-1"
-                  >
-                    <SiYoutube className="w-4 h-4" />
-                    Watch on YouTube
-                  </a>
-                  <a
-                    href="https://youtu.be/UzZyc2BobYw"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 bg-[#FF0000] hover:bg-[#cc0000] text-white text-sm font-semibold px-4 py-2 rounded-full transition-colors"
-                    data-testid="link-julesy-video-2"
-                  >
-                    <SiYoutube className="w-4 h-4" />
-                    Watch on YouTube
-                  </a>
+                <div className="flex flex-col gap-3 w-full">
+                  <YouTubeCard videoId="eIP8yVcDZRI" />
+                  <YouTubeCard videoId="UzZyc2BobYw" />
                 </div>
               </div>
 
