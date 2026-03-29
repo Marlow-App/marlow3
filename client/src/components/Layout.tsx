@@ -66,8 +66,13 @@ export function Layout({ children }: LayoutProps) {
           <img src={pandaLogo} alt="Marlow" className="w-[46px] h-[46px] object-contain" />
           <span className="font-display font-bold text-xl tracking-tight">Marlow</span>
         </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 relative">
           {isMobileMenuOpen ? <X /> : <Menu />}
+          {!isMobileMenuOpen && unseenCount > 0 && user?.role === "learner" && (
+            <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center leading-none">
+              {unseenCount > 9 ? "9+" : unseenCount}
+            </span>
+          )}
         </button>
       </header>
 
