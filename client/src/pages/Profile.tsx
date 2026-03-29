@@ -484,7 +484,7 @@ export default function Profile() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="mt-6">
               <CardHeader>
                 <CardTitle>Notifications</CardTitle>
                 <CardDescription>Choose when you'd like to receive email updates.</CardDescription>

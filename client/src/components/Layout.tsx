@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { useTourSpotlight } from "@/contexts/TourSpotlightContext";
 import { useQuery } from "@tanstack/react-query";
+import { useInAppNotifications } from "@/hooks/use-in-app-notifications";
 
 interface LayoutProps {
   children: ReactNode;
@@ -17,6 +18,7 @@ export function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { spotlightHref, registerOpenMobileMenu } = useTourSpotlight();
+  useInAppNotifications();
 
   useEffect(() => {
     registerOpenMobileMenu(() => setIsMobileMenuOpen(true));
