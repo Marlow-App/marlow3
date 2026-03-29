@@ -10,7 +10,7 @@
  * 头 as a free suffix, etc.) are already handled by pinyin-pro's context
  * detection and by NEUTRAL_UNDERLYING_TONES in toneSandhi.ts.
  */
-const NEUTRAL_TONE_WORDS: Record<string, (string | null)[]> = {
+export const NEUTRAL_TONE_WORDS: Record<string, (string | null)[]> = {
   // ── Common disyllabic compounds ──────────────────────────────────────────
   "明白": [null, "bai"],
   "知道": [null, "dao"],
@@ -94,7 +94,7 @@ const NEUTRAL_TONE_WORDS: Record<string, (string | null)[]> = {
   "叔叔": [null, "shu"],
   "舅舅": [null, "jiu"],
   "姑姑": [null, "gu"],
-  "阿姨": ["a", null],     // 阿 is an unstressed prefix in kinship usage
+  // 阿姨 is āyí in standard Mandarin — both syllables are fully toned, no neutral.
   "宝宝": [null, "bao"],
   "娃娃": [null, "wa"],
 
