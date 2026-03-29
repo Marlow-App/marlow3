@@ -17,7 +17,7 @@ const NEUTRAL_TONE_WORDS: Record<string, (string | null)[]> = {
   "告诉": [null, "su"],
   "意思": [null, "si"],
   "消息": [null, "xi"],
-  "东西": [null, "xi"],     // "thing" (also direction, but neutral more common)
+  "东西": [null, "xi"],     // "thing" (also direction, but neutral reading more common)
   "先生": [null, "sheng"],
   "太太": [null, "tai"],
   "客气": [null, "qi"],
@@ -82,7 +82,7 @@ const NEUTRAL_TONE_WORDS: Record<string, (string | null)[]> = {
   "狮子": [null, "zi"],
   "兔子": [null, "zi"],
 
-  // ── Kinship reduplications (second syllable neutral) ─────────────────────
+  // ── Kinship terms (second syllable neutral) ───────────────────────────────
   "妈妈": [null, "ma"],
   "爸爸": [null, "ba"],
   "哥哥": [null, "ge"],
@@ -94,6 +94,7 @@ const NEUTRAL_TONE_WORDS: Record<string, (string | null)[]> = {
   "叔叔": [null, "shu"],
   "舅舅": [null, "jiu"],
   "姑姑": [null, "gu"],
+  "阿姨": ["a", null],     // 阿 is an unstressed prefix in kinship usage
   "宝宝": [null, "bao"],
   "娃娃": [null, "wa"],
 
@@ -116,34 +117,19 @@ const NEUTRAL_TONE_WORDS: Record<string, (string | null)[]> = {
 };
 
 /**
- * Apply neutral tone overrides to a pinyin array for a given token.
- * Used in `toToneChars` (phrase bank, one token at a time).
- *
- * @param token     The Chinese word/token string (no spaces)
- * @param pinyinArr The pinyin array from pinyin-pro (same length as chars in token)
- * @returns         A new array with neutral overrides applied where specified
- */
-export function applyNeutralToneOverrides(
-  token: string,
-  pinyinArr: string[],
-): string[] {
-  const override = NEUTRAL_TONE_WORDS[token];
-  if (!override) return pinyinArr;
-  return pinyinArr.map((py, i) => (override[i] !== null && override[i] !== undefined ? override[i]! : py));
-}
-
-/**
- * Scan a string of Chinese-only characters and return a Map of
+ * Scan a Chinese character string and return a Map of
  * character-index → override pinyin for characters that should be neutral tone.
- * Used in `getCharPinyin` (full user sentence, post-processing pass).
  *
- * @param chineseOnlyText  Concatenated Chinese characters from the sentence (no spaces/punctuation)
- * @returns                Map<chineseCharIndex, overridePinyin>
+ * Searches for all known neutral-tone words as substrings so that compounds
+ * embedded inside longer unsegmented tokens (e.g. "我不知道") are also patched.
+ *
+ * @param chineseText  Chinese characters (no spaces / punctuation expected)
+ * @returns            Map<charIndex, neutralPinyin>
  */
-export function getNeutralPatches(chineseOnlyText: string): Map<number, string> {
+export function getNeutralPatches(chineseText: string): Map<number, string> {
   const patches = new Map<number, string>();
   for (const [word, overrides] of Object.entries(NEUTRAL_TONE_WORDS)) {
-    let pos = chineseOnlyText.indexOf(word);
+    let pos = chineseText.indexOf(word);
     while (pos !== -1) {
       for (let i = 0; i < word.length; i++) {
         const ov = overrides[i];
@@ -151,8 +137,32 @@ export function getNeutralPatches(chineseOnlyText: string): Map<number, string> 
           patches.set(pos + i, ov);
         }
       }
-      pos = chineseOnlyText.indexOf(word, pos + 1);
+      pos = chineseText.indexOf(word, pos + 1);
     }
   }
   return patches;
+}
+
+/**
+ * Apply neutral tone overrides to a pinyin array for a given token.
+ * Used in `toToneChars` (phrase bank, one token at a time).
+ *
+ * Uses substring scanning so that compounds embedded inside longer unsegmented
+ * tokens (e.g. "我不知道" containing "知道") are patched correctly.
+ *
+ * @param token     The Chinese token string (no spaces)
+ * @param pinyinArr The pinyin array from pinyin-pro (same length as token chars)
+ * @returns         A new array with neutral overrides applied where specified
+ */
+export function applyNeutralToneOverrides(
+  token: string,
+  pinyinArr: string[],
+): string[] {
+  const patches = getNeutralPatches(token);
+  if (patches.size === 0) return pinyinArr;
+  const result = pinyinArr.slice();
+  patches.forEach((py, idx) => {
+    if (idx < result.length) result[idx] = py;
+  });
+  return result;
 }
