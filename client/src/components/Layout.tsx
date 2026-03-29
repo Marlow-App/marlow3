@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useTourSpotlight } from "@/contexts/TourSpotlightContext";
 import { useQuery } from "@tanstack/react-query";
 import { useInAppNotifications } from "@/hooks/use-in-app-notifications";
+import { useUnseenFeedback } from "@/hooks/use-unseen-feedback";
 
 interface LayoutProps {
   children: ReactNode;
@@ -19,6 +20,7 @@ export function Layout({ children }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { spotlightHref, registerOpenMobileMenu } = useTourSpotlight();
   useInAppNotifications();
+  const { unseenCount } = useUnseenFeedback();
 
   useEffect(() => {
     registerOpenMobileMenu(() => setIsMobileMenuOpen(true));
@@ -111,7 +113,12 @@ export function Layout({ children }: LayoutProps) {
                         ? "text-primary"
                         : "text-muted-foreground group-hover:text-foreground"
                   )} />
-                  <span>{item.label}</span>
+                  <span className="flex-1">{item.label}</span>
+                  {item.href === "/" && unseenCount > 0 && user?.role === "learner" && (
+                    <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold leading-none">
+                      {unseenCount > 9 ? "9+" : unseenCount}
+                    </span>
+                  )}
                 </div>
               </Link>
             );
