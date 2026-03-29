@@ -420,11 +420,11 @@ export default function Landing() {
 
             <div className="relative bg-card rounded-2xl border border-border/50 pt-12 px-7 pb-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
               <div className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg ring-4 ring-muted/20">
-                <TrendingUp className="w-7 h-7 text-white" />
+                <RotateCcw className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-bold font-display mb-3">Track Your Progress Over Time</h3>
+              <h3 className="text-xl font-bold font-display mb-3">Nail It and Get Your Credits Back</h3>
               <p className="text-muted-foreground leading-relaxed">
-                See your scores improve recording by recording. Every submission builds a history you can look back on to understand exactly where your pronunciation has grown.
+                Score {REFUND_THRESHOLD}% or higher on a recording and your credits are automatically refunded. Experiment freely — if you already sound great, it won't cost you a thing.
               </p>
             </div>
           </div>
