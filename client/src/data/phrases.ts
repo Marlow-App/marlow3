@@ -1,4 +1,5 @@
 import { pinyin } from "pinyin-pro";
+import { applyNeutralToneOverrides } from "@/lib/neutralTones";
 
 export interface ToneChar {
   char: string;
@@ -41,10 +42,11 @@ export function toToneChars(words: string): ToneChar[] {
       continue;
     }
     const chars = Array.from(token);
-    const pinyinList = pinyin(token, { toneType: "symbol", type: "array" });
+    const rawPinyinList = pinyin(token, { toneType: "symbol", type: "array" }) as string[];
+    const pinyinList = applyNeutralToneOverrides(token, rawPinyinList);
     for (let i = 0; i < chars.length; i++) {
       const char = chars[i];
-      let py = (pinyinList[i] as string | undefined) ?? "";
+      let py = pinyinList[i] ?? "";
       let tone = extractTone(py);
       if (char === "一") { tone = 1; py = "yī"; }
       else if (char === "不") { tone = 4; py = "bù"; }

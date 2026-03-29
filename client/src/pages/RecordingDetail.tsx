@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, ChevronDown, ChevronUp, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star, RotateCcw, BookOpen, Plus, X, Volume2 } from "lucide-react";
 import { getPhraseEnglish } from "@/data/phrases";
+import { getNeutralPatches } from "@/lib/neutralTones";
 import { countChineseChars } from "@shared/credits";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -75,6 +76,15 @@ function getCharPinyin(text: string): PinyinChar[] {
       result.push({ char: ch, py: "", tone: 0 });
     }
   }
+  const chineseEntries = result.filter(p => p.py !== "");
+  const chineseText = chineseEntries.map(p => p.char).join("");
+  const patches = getNeutralPatches(chineseText);
+  patches.forEach((py, idx) => {
+    if (chineseEntries[idx]) {
+      chineseEntries[idx].py = py;
+      chineseEntries[idx].tone = 0;
+    }
+  });
   return result;
 }
 
