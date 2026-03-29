@@ -43,7 +43,7 @@ function YouTubeCard({ videoId }: { videoId: string }) {
       </div>
       <div className="bg-card px-3 py-2 flex items-start gap-2">
         <SiYoutube className="w-4 h-4 text-[#FF0000] shrink-0 mt-0.5" />
-        <p className="text-xs font-medium text-foreground leading-snug line-clamp-2">
+        <p className="text-[15px] font-medium text-foreground leading-snug line-clamp-2">
           {title ?? "Loading…"}
         </p>
       </div>
@@ -526,11 +526,13 @@ export default function Landing() {
             <div className="grid md:grid-cols-[200px_1fr] gap-8 md:gap-12 items-start">
               {/* Photo + credentials */}
               <div className="flex flex-col items-center gap-4">
-                <img
-                  src={julesyPhoto}
-                  alt="Julesy (Dr. Chen)"
-                  className="w-40 h-40 rounded-full object-cover shadow-xl ring-4 ring-primary/20"
-                />
+                <a href="http://youtube.com/@julesytooshoes" target="_blank" rel="noopener noreferrer" className="group">
+                  <img
+                    src={julesyPhoto}
+                    alt="Julesy (Dr. Chen)"
+                    className="w-40 h-40 rounded-full object-cover shadow-xl ring-4 ring-primary/20 group-hover:ring-[#FF0000]/40 transition-all"
+                  />
+                </a>
                 <div className="text-center">
                   <h3 className="text-xl font-bold font-display">Julesy (Dr. Chen)</h3>
                   <p className="text-primary font-semibold text-sm mt-0.5">PhD in Chinese Linguistics</p>
@@ -539,7 +541,7 @@ export default function Landing() {
                 </div>
               </div>
 
-              {/* Bio */}
+              {/* Bio + videos */}
               <div className="space-y-5">
                 <p className="text-foreground/80 leading-relaxed">
                   Julesy (Dr. Chen), born in China and raised in the United States, is passionate about the Chinese language and helping people learn it. She first got her Master's in Chinese Linguistics at PolyU in Hong Kong, but loved the program so much that she later got her PhD in the same department. Since then, she's turned to YouTube to share her love for the historical, social, and scientific aspects of the language.
@@ -547,13 +549,11 @@ export default function Landing() {
                 <p className="text-foreground/80 leading-relaxed">
                   With Marlow, she hopes to create a platform to help Chinese learners hone their skills by finetuning their tone issues — something that AI is not currently able to do with accuracy.
                 </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <YouTubeCard videoId="eIP8yVcDZRI" />
+                  <YouTubeCard videoId="UzZyc2BobYw" />
+                </div>
               </div>
-            </div>
-
-            {/* Bottom row: video thumbnails side by side */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <YouTubeCard videoId="eIP8yVcDZRI" />
-              <YouTubeCard videoId="UzZyc2BobYw" />
             </div>
           </div>
         </div>
