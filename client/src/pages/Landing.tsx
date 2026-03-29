@@ -521,24 +521,21 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="bg-card rounded-3xl border border-border/50 shadow-lg p-8 md:p-12">
-            <div className="grid md:grid-cols-[220px_1fr] gap-8 md:gap-12 items-start">
+          <div className="bg-card rounded-3xl border border-border/50 shadow-lg p-8 md:p-12 space-y-8">
+            {/* Top row: photo + bio */}
+            <div className="grid md:grid-cols-[200px_1fr] gap-8 md:gap-12 items-start">
               {/* Photo + credentials */}
-              <div className="flex flex-col items-center gap-5">
+              <div className="flex flex-col items-center gap-4">
                 <img
                   src={julesyPhoto}
                   alt="Julesy (Dr. Chen)"
-                  className="w-44 h-44 rounded-full object-cover shadow-xl ring-4 ring-primary/20"
+                  className="w-40 h-40 rounded-full object-cover shadow-xl ring-4 ring-primary/20"
                 />
                 <div className="text-center">
                   <h3 className="text-xl font-bold font-display">Julesy (Dr. Chen)</h3>
                   <p className="text-primary font-semibold text-sm mt-0.5">PhD in Chinese Linguistics</p>
                   <p className="text-muted-foreground text-xs mt-0.5 leading-snug">The Hong Kong Polytechnic University</p>
                   <p className="text-muted-foreground text-xs mt-0.5">Language YouTuber</p>
-                </div>
-                <div className="flex flex-col gap-3 w-full">
-                  <YouTubeCard videoId="eIP8yVcDZRI" />
-                  <YouTubeCard videoId="UzZyc2BobYw" />
                 </div>
               </div>
 
@@ -551,6 +548,12 @@ export default function Landing() {
                   With Marlow, she hopes to create a platform to help Chinese learners hone their skills by finetuning their tone issues — something that AI is not currently able to do with accuracy.
                 </p>
               </div>
+            </div>
+
+            {/* Bottom row: video thumbnails side by side */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <YouTubeCard videoId="eIP8yVcDZRI" />
+              <YouTubeCard videoId="UzZyc2BobYw" />
             </div>
           </div>
         </div>
