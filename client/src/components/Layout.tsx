@@ -74,8 +74,8 @@ export function Layout({ children }: LayoutProps) {
         "fixed inset-y-0 left-0 z-[60] w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out md:translate-x-0 md:static flex flex-col",
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        {/* Logo — desktop only (mobile top bar already shows it) */}
-        <div className="hidden md:block p-6 border-b border-border/50">
+        {/* Logo */}
+        <div className="p-6 border-b border-border/50">
           <div className="flex items-center gap-2">
             <img src={pandaLogo} alt="Marlow" className="w-[54px] h-[54px] object-contain" />
             <span className="font-display font-bold text-2xl tracking-tight text-foreground">Marlow</span>
