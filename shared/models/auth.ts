@@ -35,6 +35,7 @@ export const users = pgTable("users", {
   creditBalance: integer("credit_balance").default(0).notNull(),
   freeCreditsBalance: integer("free_credits_balance").default(0).notNull(),
   lastDailyRewardAt: timestamp("last_daily_reward_at"),
+  emailNotifications: boolean("email_notifications").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

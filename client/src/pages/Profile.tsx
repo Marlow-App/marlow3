@@ -92,6 +92,7 @@ export default function Profile() {
   const [cityOpen, setCityOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<number | null>(null);
+  const [emailNotifications, setEmailNotifications] = useState<boolean>((user as any)?.emailNotifications ?? false);
   const chineseLevelRef = useRef<HTMLDivElement>(null);
   const [highlightLevel, setHighlightLevel] = useState(false);
 
@@ -132,8 +133,20 @@ export default function Profile() {
         teachingExperience: user.teachingExperience || 0,
         dialects: user.dialects || []
       });
+      setEmailNotifications((user as any).emailNotifications ?? false);
     }
   }, [user]);
+
+  async function handleEmailNotificationsChange(enabled: boolean) {
+    setEmailNotifications(enabled);
+    try {
+      await apiRequest("PATCH", "/api/auth/user", { emailNotifications: enabled });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    } catch {
+      setEmailNotifications(!enabled);
+      toast({ title: "Failed to update email notification setting", variant: "destructive" });
+    }
+  }
 
   const isDirty = user ? (
     formData.firstName !== (user.firstName || "") ||
@@ -466,6 +479,39 @@ export default function Profile() {
                     onCheckedChange={setShowSandhi}
                     disabled={!showPinyin}
                     data-testid="switch-show-sandhi"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Notifications</CardTitle>
+                <CardDescription>Choose when you'd like to receive email updates.</CardDescription>
+              </CardHeader>
+              <CardContent className="divide-y divide-border">
+                <div className="flex items-center justify-between py-5">
+                  <div className="space-y-1 pr-4">
+                    <Label htmlFor="toggle-email-notifications" className="text-base font-medium">
+                      {user?.role === "reviewer"
+                        ? "Email me when a new recording is submitted"
+                        : "Email me when I receive feedback"}
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      {user?.role === "reviewer"
+                        ? "Get an email whenever a learner submits a new recording for review."
+                        : "Get an email whenever a reviewer leaves feedback on one of your recordings."}
+                      {!user?.email && (
+                        <span className="block mt-1 italic text-amber-600">No email address is associated with your account — notifications cannot be sent.</span>
+                      )}
+                    </p>
+                  </div>
+                  <Switch
+                    id="toggle-email-notifications"
+                    checked={emailNotifications}
+                    onCheckedChange={handleEmailNotificationsChange}
+                    disabled={!user?.email}
+                    data-testid="switch-email-notifications"
                   />
                 </div>
               </CardContent>

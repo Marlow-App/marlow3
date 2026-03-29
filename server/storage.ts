@@ -53,6 +53,7 @@ export interface IStorage {
   addToPracticeList(userId: string, errorId: string, character?: string, recordingId?: number): Promise<PracticeListItem>;
   removeFromPracticeList(id: number, userId: string): Promise<boolean>;
   isPracticeListItem(userId: string, errorId: string): Promise<boolean>;
+  getReviewersWithEmailNotifications(): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -512,6 +513,19 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(practiceListItems.userId, userId), eq(practiceListItems.errorId, errorId)))
       .limit(1);
     return rows.length > 0;
+  }
+
+  async getReviewersWithEmailNotifications(): Promise<User[]> {
+    return db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.role, "reviewer"),
+          eq(users.emailNotifications, true),
+          sql`${users.email} IS NOT NULL`
+        )
+      );
   }
 }
 

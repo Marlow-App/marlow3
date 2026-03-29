@@ -10,6 +10,7 @@ import { getUncachableStripeClient, getStripePublishableKey } from "./stripe/str
 import { db } from "./db";
 import { generatePhraseAudio, getPhraseAudioFile } from "./elevenlabs";
 import { countChineseChars, MAX_CHARS, REFUND_THRESHOLD, CREDIT_PACKS } from "@shared/credits";
+import { sendFeedbackNotification, sendRecordingNotification } from "./email";
 
 const UNLIMITED_EMAIL = process.env.UNLIMITED_CREDITS_EMAIL ?? null;
 
@@ -360,6 +361,19 @@ export async function registerRoutes(
         await storage.spendCredits(userId, recording.id, creditCost);
       }
 
+      // Notify reviewers of new recording (fire-and-forget)
+      Promise.resolve().then(async () => {
+        try {
+          const learner = await storage.getUser(userId);
+          const reviewers = await storage.getReviewersWithEmailNotifications();
+          await Promise.allSettled(
+            reviewers.map(reviewer => sendRecordingNotification(reviewer, recording, learner ?? null))
+          );
+        } catch (err) {
+          console.error("[email] Error sending recording notifications:", err);
+        }
+      });
+
       res.status(201).json(recording);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -427,6 +441,21 @@ export async function registerRoutes(
       if (overallScore !== null && overallScore >= REFUND_THRESHOLD) {
         storage.refundCredits(recordingId).catch(console.error);
       }
+
+      // Notify learner of new feedback (fire-and-forget)
+      Promise.resolve().then(async () => {
+        try {
+          const rec = await storage.getRecording(recordingId);
+          if (rec) {
+            const learner = await storage.getUser(rec.userId);
+            if (learner?.emailNotifications && learner.email) {
+              await sendFeedbackNotification(learner, rec);
+            }
+          }
+        } catch (err) {
+          console.error("[email] Error sending feedback notification:", err);
+        }
+      });
 
       res.status(201).json(feedbackRecord);
     } catch (err) {
@@ -546,6 +575,7 @@ export async function registerRoutes(
     city: z.string().max(100).optional(),
     teachingExperience: z.number().int().min(0).max(100).optional(),
     dialects: z.array(z.string()).optional(),
+    emailNotifications: z.boolean().optional(),
   });
 
   app.patch("/api/auth/user", isAuthenticated, async (req, res) => {

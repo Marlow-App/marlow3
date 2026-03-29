@@ -16,6 +16,16 @@ Marlow uses a credit-based (pay-as-you-go) model instead of subscriptions:
 - **Stripe**: One-time `payment` mode checkout with `price_data` and `metadata: {userId, credits}`
 - **Constants** in `shared/credits.ts`: `CREDIT_PACKS`, `MAX_CHARS=10`, `REFUND_THRESHOLD=95`, `SIGNUP_BONUS=10`, `DAILY_REWARD=1`, `MAX_FREE_BANK=3`
 
+## Email Notifications
+
+- **Provider**: Resend (`resend` npm package) — requires `RESEND_API_KEY` secret
+- **From address**: `noreply@marlow.app` (must be a Resend-verified sender domain)
+- **Triggers**: feedback submitted → email learner; recording submitted → email all opted-in reviewers
+- **Toggle**: `emailNotifications` boolean on users table (default false); controlled via Profile → Settings tab
+- **Fire-and-forget**: email failures are caught/logged silently and never block API responses
+- **No email graceful skip**: if user has no email address or key is unset, silently skipped
+- **Helper functions**: `server/email.ts` exports `sendFeedbackNotification(learner, recording)` and `sendRecordingNotification(reviewer, recording, learner)`
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
