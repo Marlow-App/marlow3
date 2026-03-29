@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState, useEffect, useRef } from "react";
 import { House, Mic2, BarChart2, BookOpen, UserCircle, FileAudio, X, Menu, LogOut, CircleDollarSign } from "lucide-react";
 import pandaLogo from "@assets/chow_chow_2_1774332948261.png";
 import { Link, useLocation } from "wouter";
@@ -20,11 +20,19 @@ export function Layout({ children }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { spotlightHref, registerOpenMobileMenu } = useTourSpotlight();
   useInAppNotifications();
-  const { unseenCount } = useUnseenFeedback();
+  const { unseenCount, markHomeSeen } = useUnseenFeedback();
 
   useEffect(() => {
     registerOpenMobileMenu(() => setIsMobileMenuOpen(true));
   }, [registerOpenMobileMenu]);
+
+  const prevLocation = useRef<string>("/");
+  useEffect(() => {
+    if (prevLocation.current === "/" && location !== "/") {
+      markHomeSeen();
+    }
+    prevLocation.current = location;
+  }, [location]);
 
   const isActive = (path: string) => location === path;
 

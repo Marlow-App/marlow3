@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { getScoreBgColor, getScoreTextColor } from "@/lib/scoreColor";
 import { useAuth } from "@/hooks/use-auth";
-import { useUnseenFeedback } from "@/hooks/use-unseen-feedback";
 import { useRecordings, usePendingRecordings, useCreateRecording } from "@/hooks/use-recordings";
 import { useUpload } from "@/hooks/use-upload";
 import { useToast } from "@/hooks/use-toast";
@@ -141,8 +140,6 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
 export default function Home() {
   const { user } = useAuth();
   const isReviewer = user?.role === "reviewer";
-  const { markHomeSeen } = useUnseenFeedback();
-  useEffect(() => { markHomeSeen(); }, []);
   const { data: recordings, isLoading } = useRecordings();
   const { data: pendingRecordings } = usePendingRecordings();
   const [drawerOpen, setDrawerOpen] = useState(false);
