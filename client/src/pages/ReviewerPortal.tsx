@@ -59,7 +59,7 @@ function RecordingCard({ recording, showReviewButton = true }: { recording: any;
                     <span className="font-medium text-xs">{recording.user.chineseLevel}</span>
                   </div>
                 )}
-                <span>{showReviewButton ? 'Submitted' : 'Reviewed'} {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}</span>
+                <span>{showReviewButton ? 'Submitted' : 'Reviewed'} {formatDistanceToNow(new Date(!showReviewButton && recording.feedback?.[0]?.createdAt ? recording.feedback[0].createdAt : recording.createdAt), { addSuffix: true })}</span>
                 {!showReviewButton && (recording.feedback?.[0]?.rating || recording.feedback?.[0]?.overallScore) && (
                   <RatingBadge rating={recording.feedback[0].rating} overallScore={recording.feedback[0].overallScore} />
                 )}
@@ -94,16 +94,16 @@ export default function ReviewerPortal() {
 
   const reviewedRecordings = allRecordings?.filter((r: any) => r.status === 'reviewed') || [];
 
-  const sortRecordings = (list: any[]) => {
+  const sortRecordings = (list: any[], useFeedbackDate = false) => {
     return [...list].sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
+      const dateA = new Date(useFeedbackDate && a.feedback?.[0]?.createdAt ? a.feedback[0].createdAt : a.createdAt).getTime();
+      const dateB = new Date(useFeedbackDate && b.feedback?.[0]?.createdAt ? b.feedback[0].createdAt : b.createdAt).getTime();
       return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
     });
   };
 
   const allPending = useMemo(() => sortRecordings(pendingRecordings || []), [pendingRecordings, sortOrder]);
-  const sortedReviewed = useMemo(() => sortRecordings(reviewedRecordings), [reviewedRecordings, sortOrder]);
+  const sortedReviewed = useMemo(() => sortRecordings(reviewedRecordings, true), [reviewedRecordings, sortOrder]);
 
   if (loadingPending || loadingAll) {
     return (
