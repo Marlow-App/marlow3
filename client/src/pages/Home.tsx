@@ -82,7 +82,7 @@ function useAppTour() {
 }
 
 function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
-  const { setSpotlightHref } = useTourSpotlight();
+  const { setSpotlightHref, openMobileMenu } = useTourSpotlight();
 
   useEffect(() => {
     return () => setSpotlightHref(null);
@@ -96,28 +96,29 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
 
   return (
     <Card className="border-border bg-muted/60" data-testid="app-tour-banner">
-      <CardContent className="pt-6 pb-5">
+      <CardContent className="pt-4 pb-4 md:pt-6 md:pb-5">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Compass className="w-8 h-8 text-primary" />
+          <div className="flex items-start gap-3 md:gap-4">
+            <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+              <Compass className="w-6 h-6 md:w-8 md:h-8 text-primary" />
             </div>
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               <div>
-                <h3 className="font-semibold text-3xl font-display">Welcome to Marlow!</h3>
-                <p className="text-base text-muted-foreground mt-1">Here's a quick look at what you can do:</p>
+                <h3 className="font-semibold text-xl md:text-3xl font-display">Welcome to Marlow!</h3>
+                <p className="text-sm md:text-base text-muted-foreground mt-1">Here's a quick look at what you can do:</p>
               </div>
-              <ul className="space-y-4">
+              <ul className="space-y-2 md:space-y-4">
                 {tourItems.map(({ href, icon: Icon, label, desc }) => (
                   <li
                     key={href}
-                    className="flex items-start gap-3 cursor-default rounded-lg px-3 py-2 -mx-3 transition-colors hover:bg-primary/5"
+                    className="flex items-start gap-2 md:gap-3 cursor-pointer rounded-lg px-2 py-1 -mx-2 md:px-3 md:py-2 md:-mx-3 transition-colors hover:bg-primary/5"
                     onMouseEnter={() => setSpotlightHref(href)}
                     onMouseLeave={() => setSpotlightHref(null)}
+                    onClick={() => { openMobileMenu(); setSpotlightHref(href); }}
                     data-testid={`tour-item-${label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
-                    <Icon className="w-6 h-6 text-primary mt-0.5 shrink-0" />
-                    <span className="text-lg"><strong>{label}</strong> — {desc}</span>
+                    <Icon className="w-4 h-4 md:w-6 md:h-6 text-primary mt-0.5 shrink-0" />
+                    <span className="text-sm md:text-lg"><strong>{label}</strong> — {desc}</span>
                   </li>
                 ))}
               </ul>

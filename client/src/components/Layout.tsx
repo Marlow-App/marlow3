@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { House, Mic2, BarChart2, BookOpen, UserCircle, FileAudio, X, Menu, LogOut, CircleDollarSign } from "lucide-react";
 import pandaLogo from "@assets/chow_chow_2_1774332948261.png";
 import { Link, useLocation } from "wouter";
@@ -16,7 +16,11 @@ export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { spotlightHref } = useTourSpotlight();
+  const { spotlightHref, registerOpenMobileMenu } = useTourSpotlight();
+
+  useEffect(() => {
+    registerOpenMobileMenu(() => setIsMobileMenuOpen(true));
+  }, [registerOpenMobileMenu]);
 
   const isActive = (path: string) => location === path;
 
@@ -63,12 +67,13 @@ export function Layout({ children }: LayoutProps) {
         </button>
       </header>
 
-      {/* Sidebar Navigation (Desktop) */}
+      {/* Sidebar Navigation */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out md:translate-x-0 md:static flex flex-col",
+        "fixed inset-y-0 left-0 z-[60] w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out md:translate-x-0 md:static flex flex-col",
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-6 border-b border-border/50">
+        {/* Logo — desktop only (mobile top bar already shows it) */}
+        <div className="hidden md:block p-6 border-b border-border/50">
           <div className="flex items-center gap-2">
             <img src={pandaLogo} alt="Marlow" className="w-[54px] h-[54px] object-contain" />
             <span className="font-display font-bold text-2xl tracking-tight text-foreground">Marlow</span>
@@ -80,7 +85,12 @@ export function Layout({ children }: LayoutProps) {
           {navItems.map((item) => {
             const isSpotlit = spotlightHref === item.href;
             return (
-              <Link key={item.href} href={item.href} className="block">
+              <Link
+                key={item.href}
+                href={item.href}
+                className="block"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 <div
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer group",
@@ -107,7 +117,7 @@ export function Layout({ children }: LayoutProps) {
         </nav>
 
         <div className="p-4 border-t border-border/50 bg-muted/10">
-          <Link href="/profile">
+          <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)}>
             <div className="flex items-center gap-4 mb-4 px-2 cursor-pointer rounded-xl hover:bg-muted/50 transition-colors py-2" data-testid="sidebar-profile-link">
               <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-base shrink-0">
                 {user?.firstName?.[0] || (user as any)?.username?.[0] || "U"}
@@ -142,7 +152,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/50 z-[55] md:hidden backdrop-blur-sm"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
