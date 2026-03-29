@@ -2,15 +2,18 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
-const POLL_INTERVAL_MS = 60_000;
+const POLL_INTERVAL_MS = 15_000;
+const FIRST_VISIT_LOOKBACK_MS = 5 * 60 * 1000; // show notifications for events in the last 5 min on first visit
 
 export function useInAppNotifications() {
   const { user } = useAuth();
   const { toast } = useToast();
   const lastSeenRef = useRef<Date | null>(null);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || initializedRef.current) return;
+    initializedRef.current = true;
 
     const storageKey = `marlow_last_notif_${user.id}`;
     const stored = localStorage.getItem(storageKey);
@@ -18,16 +21,15 @@ export function useInAppNotifications() {
     if (stored) {
       lastSeenRef.current = new Date(stored);
     } else {
-      lastSeenRef.current = null;
+      // First visit — look back a short window so recent activity shows up
+      lastSeenRef.current = new Date(Date.now() - FIRST_VISIT_LOOKBACK_MS);
     }
 
     async function check() {
-      const lastSeen = lastSeenRef.current;
+      const lastSeen = lastSeenRef.current!;
       const now = new Date();
       lastSeenRef.current = now;
       localStorage.setItem(storageKey, now.toISOString());
-
-      if (!lastSeen) return;
 
       try {
         if (user!.role === "learner") {
