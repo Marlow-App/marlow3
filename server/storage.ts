@@ -23,6 +23,7 @@ import { SIGNUP_BONUS, DAILY_REWARD, MAX_FREE_BANK } from "@shared/credits";
 
 export interface IStorage {
   createRecording(userId: string, recording: InsertRecording, creditCost?: number, parentRecordingId?: number): Promise<Recording>;
+  createRecordingAndDeductCredits(userId: string, recording: InsertRecording, creditCost: number, parentRecordingId?: number): Promise<Recording>;
   getRecording(id: number): Promise<Recording | undefined>;
   getRecordingsByUser(userId: string): Promise<Recording[]>;
   getChildRecordings(parentId: number): Promise<Recording[]>;
@@ -67,6 +68,34 @@ export class DatabaseStorage implements IStorage {
       .values({ ...recording, userId, creditCost, ...(parentRecordingId ? { parentRecordingId } : {}) })
       .returning();
     return newRecording;
+  }
+
+  async createRecordingAndDeductCredits(userId: string, recording: InsertRecording, creditCost: number, parentRecordingId?: number): Promise<Recording> {
+    return db.transaction(async (tx) => {
+      const [newRecording] = await tx
+        .insert(recordings)
+        .values({ ...recording, userId, creditCost, ...(parentRecordingId ? { parentRecordingId } : {}) })
+        .returning();
+
+      if (creditCost > 0) {
+        await tx.insert(creditTransactions).values({
+          userId,
+          type: "spend",
+          amount: -creditCost,
+          recordingId: newRecording.id,
+        });
+
+        const [currentUser] = await tx.select().from(users).where(eq(users.id, userId));
+        const newTotal = (currentUser?.creditBalance ?? 0) - creditCost;
+        const newFree = Math.max(0, (currentUser?.freeCreditsBalance ?? 0) - creditCost);
+        await tx
+          .update(users)
+          .set({ creditBalance: newTotal, freeCreditsBalance: newFree, updatedAt: new Date() })
+          .where(eq(users.id, userId));
+      }
+
+      return newRecording;
+    });
   }
 
   async getRecording(id: number): Promise<Recording | undefined> {

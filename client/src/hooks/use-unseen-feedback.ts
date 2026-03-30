@@ -9,6 +9,7 @@ export function useUnseenFeedback() {
   const [unseenCount, setUnseenCount] = useState(0);
   const lastVisitRef = useRef<Date | null>(null);
   const initializedRef = useRef(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const storageKey = user?.id ? `marlow_home_visit_${user.id}` : null;
 
@@ -31,6 +32,11 @@ export function useUnseenFeedback() {
     async function poll() {
       try {
         const res = await fetch("/api/recordings");
+        if (res.status === 401) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          intervalRef.current = null;
+          return;
+        }
         if (!res.ok) return;
         const recordings: any[] = await res.json();
         const lastVisit = lastVisitRef.current!;
@@ -50,7 +56,6 @@ export function useUnseenFeedback() {
       }
     }
 
-    // Reset count immediately when Home marks seen (e.g. from a different hook instance)
     function onHomeSeen() {
       const stored = localStorage.getItem(storageKey!);
       if (stored) lastVisitRef.current = new Date(stored);
@@ -59,9 +64,12 @@ export function useUnseenFeedback() {
 
     window.addEventListener(HOME_SEEN_EVENT, onHomeSeen);
     poll();
-    const interval = setInterval(poll, POLL_INTERVAL_MS);
+    intervalRef.current = setInterval(poll, POLL_INTERVAL_MS);
+
     return () => {
-      clearInterval(interval);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      initializedRef.current = false;
       window.removeEventListener(HOME_SEEN_EVENT, onHomeSeen);
     };
   }, [user?.id, user?.role]);

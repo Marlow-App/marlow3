@@ -10,6 +10,7 @@ export function useInAppNotifications() {
   const { toast } = useToast();
   const lastSeenRef = useRef<Date | null>(null);
   const initializedRef = useRef(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!user?.id || initializedRef.current) return;
@@ -31,10 +32,14 @@ export function useInAppNotifications() {
       try {
         if (user!.role === "learner") {
           const res = await fetch("/api/recordings");
+          if (res.status === 401) {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            intervalRef.current = null;
+            return;
+          }
           if (!res.ok) return;
           const recordings: any[] = await res.json();
 
-          // Update seen timestamp only after a successful fetch
           lastSeenRef.current = now;
           localStorage.setItem(storageKey, now.toISOString());
 
@@ -58,10 +63,14 @@ export function useInAppNotifications() {
           }
         } else if (user!.role === "reviewer") {
           const res = await fetch("/api/recordings/pending");
+          if (res.status === 401) {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            intervalRef.current = null;
+            return;
+          }
           if (!res.ok) return;
           const pending: any[] = await res.json();
 
-          // Update seen timestamp only after a successful fetch
           lastSeenRef.current = now;
           localStorage.setItem(storageKey, now.toISOString());
 
@@ -82,7 +91,12 @@ export function useInAppNotifications() {
     }
 
     check();
-    const interval = setInterval(check, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    intervalRef.current = setInterval(check, POLL_INTERVAL_MS);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      initializedRef.current = false;
+    };
   }, [user?.id]);
 }

@@ -14,6 +14,19 @@ import { sendFeedbackNotification, sendRecordingNotification } from "./email";
 
 const UNLIMITED_EMAIL = process.env.UNLIMITED_CREDITS_EMAIL ?? null;
 
+function safeUser(user: any) {
+  if (!user) return null;
+  const {
+    stripeCustomerId: _sc,
+    stripeSubscriptionId: _ss,
+    creditBalance: _cb,
+    freeCreditsBalance: _fb,
+    lastDailyRewardAt: _ld,
+    ...safe
+  } = user;
+  return safe;
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -158,13 +171,13 @@ export async function registerRoutes(
             const rawFeedback = await storage.getFeedbackForRecording(r.id);
             feedbackList = await Promise.all(rawFeedback.map(async (f: any) => {
               const reviewer = await storage.getUser(f.reviewerId);
-              return { ...f, reviewer };
+              return { ...f, reviewer: safeUser(reviewer) };
             }));
           } catch (e) {
             console.error(`Error fetching feedback for recording ${r.id}:`, e);
           }
         }
-        return { ...r, feedback: feedbackList, user: u };
+        return { ...r, feedback: feedbackList, user: safeUser(u) };
       }));
 
       res.json(recordingsEnhanced);
@@ -186,7 +199,7 @@ export async function registerRoutes(
       const pendingWithUser = await Promise.all(pending.map(async (r: any) => {
         const user = await storage.getUser(r.userId);
         const isPro = user?.chineseLevel === "Advanced";
-        return { ...r, user, isPro };
+        return { ...r, user: safeUser(user), isPro };
       }));
       res.json(pendingWithUser);
     } catch (error) {
@@ -212,12 +225,12 @@ export async function registerRoutes(
           const rawFeedback = await storage.getFeedbackForRecording(r.id);
           feedbackList = await Promise.all(rawFeedback.map(async (f: any) => {
             const reviewer = await storage.getUser(f.reviewerId);
-            return { ...f, reviewer };
+            return { ...f, reviewer: safeUser(reviewer) };
           }));
         } catch (e) {
           console.error(`Error fetching feedback for recording ${r.id}:`, e);
         }
-        return { ...r, feedback: feedbackList, user };
+        return { ...r, feedback: feedbackList, user: safeUser(user) };
       }));
       res.json(recordingsEnhanced);
     } catch (error) {
@@ -236,9 +249,9 @@ export async function registerRoutes(
       const rawFeedback = await storage.getFeedbackForRecording(recording.id);
       const feedbackWithReviewer = await Promise.all(rawFeedback.map(async (f: any) => {
         const reviewer = await storage.getUser(f.reviewerId);
-        return { ...f, reviewer };
+        return { ...f, reviewer: safeUser(reviewer) };
       }));
-      res.json({ ...recording, feedback: feedbackWithReviewer, user });
+      res.json({ ...recording, feedback: feedbackWithReviewer, user: safeUser(user) });
     } catch (error) {
       console.error("Error getting recording:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -254,7 +267,7 @@ export async function registerRoutes(
         const rawFeedback = await storage.getFeedbackForRecording(child.id);
         const feedbackWithReviewer = await Promise.all(rawFeedback.map(async (f: any) => {
           const reviewer = await storage.getUser(f.reviewerId);
-          return { ...f, reviewer };
+          return { ...f, reviewer: safeUser(reviewer) };
         }));
         return { ...child, feedback: feedbackWithReviewer };
       }));
@@ -355,11 +368,9 @@ export async function registerRoutes(
         : rerecordDiscount === "thirty_pct" ? Math.ceil(fullCost * 0.7)
         : fullCost;
 
-      const recording = await storage.createRecording(userId, recordingData, creditCost, parentRecordingId);
-
-      if (!isUnlimited && creditCost > 0) {
-        await storage.spendCredits(userId, recording.id, creditCost);
-      }
+      const recording = isUnlimited || creditCost === 0
+        ? await storage.createRecording(userId, recordingData, creditCost, parentRecordingId)
+        : await storage.createRecordingAndDeductCredits(userId, recordingData, creditCost, parentRecordingId);
 
       // Notify reviewers of new recording (fire-and-forget)
       Promise.resolve().then(async () => {
