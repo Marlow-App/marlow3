@@ -18,7 +18,7 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { Link } from "wouter";
-import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Volume2, Loader2, X, Compass } from "lucide-react";
+import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Volume2, Loader2, X, Compass, BookOpen } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDailyChallenge, phraseToText, getPhraseEnglish } from "@/data/phrases";
 import { apiRequest } from "@/lib/queryClient";
@@ -91,6 +91,7 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
   const tourItems = [
     { href: "/record", icon: Mic2, label: "Record New", desc: "Record yourself speaking Chinese phrases and submit for review." },
     { href: "/learner-portal", icon: PlayCircle, label: "My Progress", desc: "Track your recordings and see detailed feedback from reviewers." },
+    { href: "/practice-list", icon: BookOpen, label: "Practice List", desc: "Review your saved errors and drill the sounds you find most challenging." },
     { href: "/profile", icon: UserCircle, label: "Profile", desc: "Set your Chinese level, manage your credits, and customize your experience." },
   ];
 
@@ -107,7 +108,7 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
                 <h3 className="font-semibold text-xl md:text-3xl font-display">Welcome to Marlow!</h3>
                 <p className="text-sm md:text-base text-muted-foreground mt-1">Here's a quick look at what you can do:</p>
               </div>
-              <ul className="space-y-2 md:space-y-4">
+              <ul className="space-y-1 md:space-y-2">
                 {tourItems.map(({ href, icon: Icon, label, desc }) => (
                   <li
                     key={href}
