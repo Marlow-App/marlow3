@@ -83,6 +83,7 @@ function useAppTour() {
 
 function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
   const { setSpotlightHref, openMobileMenu } = useTourSpotlight();
+  const clickedHref = useRef<string | null>(null);
 
   useEffect(() => {
     return () => setSpotlightHref(null);
@@ -105,8 +106,8 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
             </div>
             <div className="space-y-3 md:space-y-4">
               <div>
-                <h3 className="font-semibold text-xl md:text-3xl font-display">Welcome to Marlow!</h3>
-                <p className="text-sm md:text-base text-muted-foreground mt-1">Here's a quick look at what you can do:</p>
+                <h3 className="font-semibold text-2xl md:text-3xl font-display">Welcome to Marlow!</h3>
+                <p className="text-base text-muted-foreground mt-1">Here's a quick look at what you can do:</p>
               </div>
               <ul className="space-y-1 md:space-y-2">
                 {tourItems.map(({ href, icon: Icon, label, desc }) => (
@@ -114,12 +115,12 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
                     key={href}
                     className="flex items-start gap-2 md:gap-3 cursor-pointer rounded-lg px-2 py-1 -mx-2 md:px-3 md:py-2 md:-mx-3 transition-colors hover:bg-primary/5"
                     onMouseEnter={() => setSpotlightHref(href)}
-                    onMouseLeave={() => setSpotlightHref(null)}
-                    onClick={() => { openMobileMenu(); setSpotlightHref(href); }}
+                    onMouseLeave={() => setSpotlightHref(clickedHref.current)}
+                    onClick={() => { clickedHref.current = href; openMobileMenu(); setSpotlightHref(href); }}
                     data-testid={`tour-item-${label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
                     <Icon className="w-4 h-4 md:w-6 md:h-6 text-primary mt-0.5 shrink-0" />
-                    <span className="text-sm md:text-lg"><strong>{label}</strong> — {desc}</span>
+                    <span className="text-base md:text-lg"><strong>{label}</strong> — {desc}</span>
                   </li>
                 ))}
               </ul>
