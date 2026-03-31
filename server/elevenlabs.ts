@@ -2,7 +2,7 @@ import { createHash, createHmac } from "crypto";
 import WebSocket from "ws";
 import { objectStorageClient } from "./replit_integrations/object_storage/objectStorage";
 
-const IFLYTEK_HOST = "tts-api-sg.xf-yun.com";
+const IFLYTEK_HOST = "tts-api.xfyun.cn";
 const IFLYTEK_PATH = "/v2/tts";
 const IFLYTEK_WSS = `wss://${IFLYTEK_HOST}${IFLYTEK_PATH}`;
 
@@ -33,12 +33,8 @@ function buildSignedUrl(appKey: string, apiSecret: string): string {
     .digest("base64");
   const authorizationOrigin = `api_key="${appKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signature}"`;
   const authorization = Buffer.from(authorizationOrigin).toString("base64");
-  const params = new URLSearchParams({
-    authorization,
-    date,
-    host: IFLYTEK_HOST,
-  });
-  return `${IFLYTEK_WSS}?${params.toString()}`;
+  const query = `authorization=${encodeURIComponent(authorization)}&date=${encodeURIComponent(date)}&host=${encodeURIComponent(IFLYTEK_HOST)}`;
+  return `${IFLYTEK_WSS}?${query}`;
 }
 
 function synthesizeViaWebSocket(url: string, text: string, appId: string): Promise<Buffer> {
