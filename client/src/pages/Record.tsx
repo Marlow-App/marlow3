@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation, Link } from "wouter";
-import { ChevronLeft, Info, X, Loader2, CircleDollarSign } from "lucide-react";
+import { ChevronLeft, Info, X, Loader2, CircleDollarSign, Volume2 } from "lucide-react";
 import { getPhrasesForLevel, phraseToText, toToneChars, PHRASE_BANK, type Phrase } from "@/data/phrases";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 import { useQuery } from "@tanstack/react-query";
@@ -61,7 +61,14 @@ function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoadingGend
               className="flex items-center justify-center w-6 h-5 rounded text-[10px] font-semibold text-primary/60 hover:text-primary hover:bg-primary/10 transition-colors"
               data-testid={`phrase-speak-${gender.toLowerCase()}-btn`}
             >
-              {isLoadingGender(text, gender) ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : gender}
+              {isLoadingGender(text, gender) ? (
+                <Loader2 className="w-2.5 h-2.5 animate-spin" />
+              ) : (
+                <>
+                  <Volume2 className="w-2.5 h-2.5" />
+                  <span>{gender}</span>
+                </>
+              )}
             </button>
           ))}
         </div>
@@ -396,7 +403,10 @@ export default function RecordPage() {
                             {isPhraseLoading(phraseToText(selectedPhrase), gender) ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
-                              <span>{gender}</span>
+                              <>
+                                <Volume2 className="w-4 h-4" />
+                                <span>{gender}</span>
+                              </>
                             )}
                           </button>
                         ))}

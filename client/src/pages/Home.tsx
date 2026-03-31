@@ -18,7 +18,7 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { Link } from "wouter";
-import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Loader2, X, Compass, BookOpen } from "lucide-react";
+import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Loader2, X, Compass, BookOpen, Volume2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDailyChallenge, phraseToText, getPhraseEnglish } from "@/data/phrases";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
@@ -261,7 +261,10 @@ export default function Home() {
                           {isPhraseLoading(challengeText, gender) ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           ) : (
-                            <span>{gender}</span>
+                            <>
+                              <Volume2 className="w-3 h-3" />
+                              <span>{gender}</span>
+                            </>
                           )}
                         </button>
                       ))}
