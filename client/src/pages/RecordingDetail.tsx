@@ -1067,6 +1067,20 @@ export default function RecordingDetail() {
 
   const isOwner = user && recording && recording.userId === user.id && user.role !== "reviewer";
   const reviewerHasFeedback = user?.role === 'reviewer' && recording?.feedback?.some((f: any) => f.reviewerId === user?.id);
+  const hasAiFeedback = recording?.feedback?.some((f: any) => f.isAiFeedback) ?? false;
+
+  const aiReviewMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/recordings/${recordingId}/ai-review`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/recordings", recordingId] });
+      toast({ title: "AI review complete", description: "Pronunciation scores have been added." });
+    },
+    onError: (err: any) => {
+      toast({ title: "AI review failed", description: err?.message ?? "Please try again.", variant: "destructive" });
+    },
+  });
   const charCount = recording ? countChineseChars(recording.sentenceText) : 0;
   const alreadyHasRerecording = childRecordings && childRecordings.length > 0;
   const rerecordLabel = isOwner && !alreadyHasRerecording
@@ -1540,8 +1554,20 @@ export default function RecordingDetail() {
                   </>
                 )
               ) : (
-                <div className="text-center py-8 text-muted-foreground italic bg-muted/20 rounded-xl">
-                  No feedback provided yet.
+                <div className="text-center py-8 space-y-4 bg-muted/20 rounded-xl">
+                  <p className="text-muted-foreground italic">No feedback provided yet.</p>
+                  {isOwner && !hasAiFeedback && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => aiReviewMutation.mutate()}
+                      disabled={aiReviewMutation.isPending}
+                      data-testid="get-ai-review-btn"
+                    >
+                      <Bot className="w-4 h-4 mr-2" />
+                      {aiReviewMutation.isPending ? "Scoring…" : "Get AI Review"}
+                    </Button>
+                  )}
                 </div>
               )}
             </div>

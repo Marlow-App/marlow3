@@ -11,20 +11,27 @@ const ISE_WSS = `ws://${ISE_HOST}${ISE_PATH}`;
 const CHUNK_SIZE = 1280;
 const CHUNK_INTERVAL_MS = 40;
 
-const INITIAL_CONSONANTS = new Set([
-  "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h",
-  "j", "q", "x", "zh", "ch", "sh", "r", "z", "c", "s",
-  "y", "w",
-]);
-
-function isInitialPhone(content: string): boolean {
-  return INITIAL_CONSONANTS.has(content.toLowerCase());
-}
-
 function mapScore(score: number): 0 | 50 | 100 {
   if (score < 40) return 0;
   if (score < 75) return 50;
   return 100;
+}
+
+/**
+ * Convert ISE perr_level_msg (phone error level) to a 0-100 raw score.
+ * 0 = no error → 100 (great)
+ * 1 = slight error → 60 (ok, mapScore→50)
+ * 2 = moderate error → 30 (poor, mapScore→0)
+ * 3 = severe error → 10 (poor, mapScore→0)
+ */
+function perrToRawScore(perr: string | undefined): number {
+  switch (perr) {
+    case "0": return 100;
+    case "1": return 60;
+    case "2": return 30;
+    case "3": return 10;
+    default: return 60;
+  }
 }
 
 function mapFluency(score: number): number {
@@ -82,6 +89,7 @@ function extractSelfClosing(xml: string, tag: string): string[] {
 }
 
 function parseISEXml(xml: string, sentenceText: string): ISEResult {
+  // fluency_score appears on the inner <read_sentence> element (inside <rec_paper>)
   const fluencyMatch = xml.match(/\bfluency_score="([^"]+)"/);
   const fluencyRaw = fluencyMatch ? parseFloat(fluencyMatch[1]) : 50;
   const fluencyScore = mapFluency(fluencyRaw);
@@ -90,40 +98,63 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
     /[\u4e00-\u9fff\u3400-\u4dbf]/.test(ch)
   );
 
-  const syllables: { tone: number; initial: number; final: number }[] = [];
+  const syllables: { tone: 0 | 50 | 100; initial: 0 | 50 | 100; final: 0 | 50 | 100 }[] = [];
 
   for (const word of extractElements(xml, "word")) {
     for (const syll of extractElements(word.inner, "syll")) {
-      const toneScore = parseFloat(attr(syll.attrs, "tone_score") ?? "70");
+      // Skip filler syllables (background noise / hesitation detected by ISE)
+      const nodeType = attr(syll.attrs, "rec_node_type");
+      if (nodeType === "fil") continue;
 
       const initials: number[] = [];
       const finals: number[] = [];
 
       for (const phoneAttrs of extractSelfClosing(syll.inner, "phone")) {
-        const phoneContent = attr(phoneAttrs, "content") ?? "";
-        const phoneScore = parseFloat(attr(phoneAttrs, "score") ?? "70");
-        if (isInitialPhone(phoneContent)) {
-          initials.push(phoneScore);
+        // Skip filler phones
+        const phoneNodeType = attr(phoneAttrs, "rec_node_type");
+        if (phoneNodeType === "fil") continue;
+
+        // perr_level_msg: 0=no error, 1=slight, 2=moderate, 3=severe
+        const perr = attr(phoneAttrs, "perr_level_msg");
+        const rawScore = perrToRawScore(perr);
+
+        // is_yun: "1"=final/rhyme (vowel), "0"=initial consonant
+        const isYun = attr(phoneAttrs, "is_yun");
+        if (isYun === "1") {
+          finals.push(rawScore);
         } else {
-          finals.push(phoneScore);
+          initials.push(rawScore);
         }
       }
+
+      // If no phones classified, skip this syll
+      if (initials.length === 0 && finals.length === 0) continue;
 
       const initialAvg =
         initials.length > 0
           ? initials.reduce((a, b) => a + b, 0) / initials.length
-          : finals.length > 0
-          ? finals[0]
-          : 70;
+          : finals.length > 0 ? finals[0] : 60;
       const finalAvg =
         finals.length > 0
           ? finals.reduce((a, b) => a + b, 0) / finals.length
           : initialAvg;
 
+      // For tone: try explicit tone_score first (available when extra_ability includes "tone")
+      // Fall back to syll-level dp_message: 0=correct, non-zero=error
+      const toneScoreStr = attr(syll.attrs, "tone_score");
+      let toneRaw: number;
+      if (toneScoreStr !== undefined) {
+        toneRaw = parseFloat(toneScoreStr);
+      } else {
+        const syllDpMsg = attr(syll.attrs, "dp_message");
+        // dp_message=0 → correct; non-zero → error of some kind
+        toneRaw = (syllDpMsg === "0" || syllDpMsg === undefined) ? 90 : 30;
+      }
+
       syllables.push({
-        tone: toneScore,
-        initial: initialAvg,
-        final: finalAvg,
+        tone: mapScore(toneRaw),
+        initial: mapScore(initialAvg),
+        final: mapScore(finalAvg),
       });
     }
   }
@@ -135,9 +166,9 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
     }
     return {
       character: char,
-      initial: mapScore(syll.initial),
-      final: mapScore(syll.final),
-      tone: mapScore(syll.tone),
+      initial: syll.initial,
+      final: syll.final,
+      tone: syll.tone,
     };
   });
 
@@ -275,6 +306,7 @@ function assessOverWebSocket(
           tte: "utf-8",
           ttp_skip: true,
           rstcd: "utf8",
+          extra_ability: "syll_phone_err_msg",
           text: textWithBom,
         },
         data: { status: 0, data: "" },
@@ -342,6 +374,6 @@ export async function scoreMandarin(
     throw new Error("iFLYTEK ISE returned empty XML");
   }
 
-  console.log("[iFLYTEK ISE] XML snippet:", xml.slice(0, 300));
+  console.log("[iFLYTEK ISE] FULL XML:", xml);
   return parseISEXml(xml, sentenceText);
 }

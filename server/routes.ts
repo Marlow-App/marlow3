@@ -502,6 +502,51 @@ export async function registerRoutes(
     }
   });
 
+  // Retroactive AI review — lets the recording owner trigger ISE scoring for a recording
+  // that doesn't have AI feedback yet (e.g. recordings submitted before ISE was live).
+  app.post("/api/recordings/:id/ai-review", isAuthenticated, async (req, res) => {
+    try {
+      const recordingId = Number(req.params.id);
+      const userId = (req.user as any).claims.sub;
+
+      const recording = await storage.getRecording(recordingId);
+      if (!recording) {
+        return res.status(404).json({ message: "Recording not found" });
+      }
+      if (recording.userId !== userId) {
+        return res.status(403).json({ message: "You can only request AI review for your own recordings" });
+      }
+
+      // Check if AI feedback already exists
+      const existingFeedback = (recording as any).feedback ?? [];
+      const hasAiFeedback = existingFeedback.some((f: any) => f.isAiFeedback);
+      if (hasAiFeedback) {
+        return res.status(409).json({ message: "AI review already exists for this recording" });
+      }
+
+      const iseResult = await scoreMandarin(recording.audioUrl, recording.sentenceText);
+      const fb = await storage.createFeedback({
+        recordingId: recording.id,
+        reviewerId: "iflytek-ai",
+        textFeedback: "Automatic pronunciation assessment.",
+        characterRatings: iseResult.characterRatings,
+        fluencyScore: iseResult.fluencyScore,
+        overallScore: iseResult.overallScore,
+        isAiFeedback: true,
+      });
+
+      if (iseResult.overallScore >= REFUND_THRESHOLD) {
+        storage.refundCredits(recording.id).catch(console.error);
+      }
+
+      console.log(`[iFLYTEK ISE] Retroactive review complete for recording ${recording.id}, score=${iseResult.overallScore}`);
+      res.status(201).json(fb);
+    } catch (err) {
+      console.error("[iFLYTEK ISE] Retroactive review failed:", err);
+      res.status(500).json({ message: "AI review failed. Please try again." });
+    }
+  });
+
   // Update feedback (reviewer only, own feedback)
   app.patch("/api/feedback/:id", isAuthenticated, async (req, res) => {
     try {
