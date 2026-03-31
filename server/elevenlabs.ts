@@ -46,10 +46,12 @@ function synthesizeViaWebSocket(url: string, text: string, appId: string): Promi
     const ws = new WebSocket(url);
     const audioChunks: Buffer[] = [];
     let settled = false;
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
 
     const done = (err?: Error) => {
       if (settled) return;
       settled = true;
+      clearTimeout(timeoutHandle);
       try { ws.close(); } catch {}
       if (err) {
         reject(err);
@@ -105,7 +107,7 @@ function synthesizeViaWebSocket(url: string, text: string, appId: string): Promi
       }
     });
 
-    setTimeout(() => done(new Error("iFLYTEK TTS timed out after 30s")), 30_000);
+    timeoutHandle = setTimeout(() => done(new Error("iFLYTEK TTS timed out after 30s")), 30_000);
   });
 }
 
