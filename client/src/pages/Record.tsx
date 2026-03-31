@@ -15,21 +15,21 @@ import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { countChineseChars, MAX_CHARS, REFUND_THRESHOLD } from "@shared/credits";
-import { usePhraseAudio, type AudioGender } from "@/hooks/use-phrase-audio";
+import { usePhraseAudio } from "@/hooks/use-phrase-audio";
 
-function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoadingGender, anyLoading }: {
+function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoadingPhrase, anyLoading }: {
   phrase: Phrase;
   onSelect: (phrase: Phrase) => void;
   isSelected: boolean;
-  onPlay: (text: string, gender: AudioGender) => void;
-  isLoadingGender: (text: string, gender: AudioGender) => boolean;
+  onPlay: (text: string) => void;
+  isLoadingPhrase: (text: string) => boolean;
   anyLoading: boolean;
 }) {
   const text = phraseToText(phrase);
 
-  const handlePlay = useCallback((gender: AudioGender) => (e: React.MouseEvent) => {
+  const handlePlay = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    onPlay(text, gender);
+    onPlay(text);
   }, [text, onPlay]);
 
   return (
@@ -53,24 +53,18 @@ function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoadingGend
           <p className="text-[15px] text-muted-foreground mt-0.5 whitespace-nowrap overflow-x-auto scrollbar-none">{phrase.english}</p>
         </div>
         <div className="flex flex-col gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-          {(["M", "F"] as const).map((gender) => (
-            <button
-              key={gender}
-              onClick={handlePlay(gender)}
-              disabled={anyLoading}
-              className="flex items-center justify-center gap-0.5 w-8 h-7 rounded text-[13px] font-bold text-primary/60 hover:text-primary hover:bg-primary/10 transition-colors"
-              data-testid={`phrase-speak-${gender.toLowerCase()}-btn`}
-            >
-              {isLoadingGender(text, gender) ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <>
-                  <Volume2 className="w-3.5 h-3.5" />
-                  <span>{gender}</span>
-                </>
-              )}
-            </button>
-          ))}
+          <button
+            onClick={handlePlay}
+            disabled={anyLoading}
+            className="flex items-center justify-center gap-0.5 w-8 h-7 rounded text-[13px] font-bold text-primary/60 hover:text-primary hover:bg-primary/10 transition-colors"
+            data-testid="phrase-speak-btn"
+          >
+            {isLoadingPhrase(text) ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Volume2 className="w-3.5 h-3.5" />
+            )}
+          </button>
         </div>
       </div>
     </div>
@@ -306,7 +300,7 @@ export default function RecordPage() {
                       onSelect={handleSelectPhrase}
                       isSelected={selectedPhrase === phrase}
                       onPlay={playPhrase}
-                      isLoadingGender={isPhraseLoading}
+                      isLoadingPhrase={isPhraseLoading}
                       anyLoading={anyLoading}
                     />
                   ))}
@@ -392,24 +386,18 @@ export default function RecordPage() {
                   <div className="flex items-center gap-1">
                     {selectedPhrase && (
                       <div className="flex items-center gap-0.5" data-testid="active-phrase-play-btns">
-                        {(["M", "F"] as const).map((gender) => (
-                          <button
-                            key={gender}
-                            onClick={() => playPhrase(phraseToText(selectedPhrase), gender)}
-                            disabled={anyLoading}
-                            className="flex items-center gap-1 px-3 py-2 rounded-full hover:bg-primary/10 text-primary/70 hover:text-primary transition-colors text-[16px] font-bold"
-                            data-testid={`active-phrase-speak-${gender.toLowerCase()}-btn`}
-                          >
-                            {isPhraseLoading(phraseToText(selectedPhrase), gender) ? (
-                              <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : (
-                              <>
-                                <Volume2 className="w-5 h-5" />
-                                <span>{gender}</span>
-                              </>
-                            )}
-                          </button>
-                        ))}
+                        <button
+                          onClick={() => playPhrase(phraseToText(selectedPhrase))}
+                          disabled={anyLoading}
+                          className="flex items-center gap-1 px-3 py-2 rounded-full hover:bg-primary/10 text-primary/70 hover:text-primary transition-colors text-[16px] font-bold"
+                          data-testid="active-phrase-speak-btn"
+                        >
+                          {isPhraseLoading(phraseToText(selectedPhrase)) ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <Volume2 className="w-5 h-5" />
+                          )}
+                        </button>
                       </div>
                     )}
                     <button

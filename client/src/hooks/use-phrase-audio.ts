@@ -1,15 +1,13 @@
 import { useState, useCallback, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
 
-export type AudioGender = "M" | "F";
-
 export function usePhraseAudio() {
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCache = useRef<Map<string, string>>(new Map());
 
-  const playPhrase = useCallback(async (text: string, gender: AudioGender = "M") => {
-    const key = `${text}:${gender}`;
+  const playPhrase = useCallback(async (text: string) => {
+    const key = text;
 
     if (audioRef.current) {
       audioRef.current.pause();
@@ -26,7 +24,7 @@ export function usePhraseAudio() {
 
     setLoadingKey(key);
     try {
-      const res = await apiRequest("POST", "/api/phrase-audio/generate", { text, gender });
+      const res = await apiRequest("POST", "/api/phrase-audio/generate", { text, gender: "F" });
       const data = await res.json();
       audioCache.current.set(key, data.audioUrl);
       const audio = new Audio(data.audioUrl);
@@ -44,8 +42,8 @@ export function usePhraseAudio() {
     }
   }, []);
 
-  const isLoading = useCallback((text: string, gender: AudioGender) => {
-    return loadingKey === `${text}:${gender}`;
+  const isLoading = useCallback((text: string) => {
+    return loadingKey === text;
   }, [loadingKey]);
 
   const anyLoading = loadingKey !== null;

@@ -250,24 +250,18 @@ export default function Home() {
                       </Badge>
                     </Link>
                     <div className="flex items-center gap-0.5" data-testid="daily-challenge-play-btns">
-                      {(["M", "F"] as const).map((gender) => (
-                        <button
-                          key={gender}
-                          onClick={() => playPhrase(challengeText, gender)}
-                          disabled={anyLoading}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-primary/10 text-primary/70 hover:text-primary transition-colors text-[15px] font-bold"
-                          data-testid={`daily-challenge-play-${gender.toLowerCase()}-btn`}
-                        >
-                          {isPhraseLoading(challengeText, gender) ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <>
-                              <Volume2 className="w-4 h-4" />
-                              <span>{gender}</span>
-                            </>
-                          )}
-                        </button>
-                      ))}
+                      <button
+                        onClick={() => playPhrase(challengeText)}
+                        disabled={anyLoading}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-primary/10 text-primary/70 hover:text-primary transition-colors text-[15px] font-bold"
+                        data-testid="daily-challenge-play-btn"
+                      >
+                        {isPhraseLoading(challengeText) ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Volume2 className="w-4 h-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
                   <Button
