@@ -24,7 +24,7 @@ Marlow uses a credit-based (pay-as-you-go) model instead of subscriptions:
 - **Transcoding**: Browser recordings (webm/mp4) are transcoded server-side via ffmpeg to 16kHz 16-bit mono signed PCM before streaming to ISE (`aue:"raw"`). ffmpeg is available at runtime in the Replit NixOS environment.
 - **Audio streaming**: 1280-byte chunks at 40ms intervals over WebSocket
 - **Score mapping**: iFLYTEK 0-100 → app 0/50/100: <40→0, <75→50, ≥75→100. Fluency 0-100 → 1-5 in 20-pt bands
-- **Fire-and-forget**: ISE failures are caught silently so recording upload always succeeds
+- **Synchronous**: ISE runs synchronously during the upload request — AI feedback is saved before the client is redirected, so it appears immediately on the recording detail page. ISE failures are caught silently so recording upload always succeeds regardless.
 - **System user**: `"iflytek-ai"` upserted on server startup (firstName: "AI Review", role: "reviewer") satisfies FK on feedback.reviewerId
 - **`isAiFeedback` field**: boolean on `feedback` table (default false); used in UI to show Bot icon + "AI Review" badge instead of reviewer name
 - **Credit refund**: 95%+ score from ISE auto-review also triggers credit refund

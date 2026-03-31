@@ -386,29 +386,27 @@ export async function registerRoutes(
         }
       });
 
-      // iFLYTEK ISE auto-review (fire-and-forget)
+      // iFLYTEK ISE auto-review (synchronous — feedback is ready before the client redirects)
       // Recordings are webm/mp4 from MediaRecorder; server-side ffmpeg transcodes to 16kHz PCM before ISE.
-      Promise.resolve().then(async () => {
-        try {
-          const iseResult = await scoreMandarin(recording.audioUrl, recording.sentenceText);
-          await storage.createFeedback({
-            recordingId: recording.id,
-            reviewerId: "iflytek-ai",
-            textFeedback: "Automatic pronunciation assessment.",
-            characterRatings: iseResult.characterRatings,
-            fluencyScore: iseResult.fluencyScore,
-            overallScore: iseResult.overallScore,
-            isAiFeedback: true,
-          });
-          // Refund credits if score qualifies
-          if (iseResult.overallScore >= REFUND_THRESHOLD) {
-            storage.refundCredits(recording.id).catch(console.error);
-          }
-          console.log(`[iFLYTEK ISE] Auto-review complete for recording ${recording.id}, score=${iseResult.overallScore}`);
-        } catch (err) {
-          console.error("[iFLYTEK ISE] Auto-review failed (silent):", err);
+      try {
+        const iseResult = await scoreMandarin(recording.audioUrl, recording.sentenceText);
+        await storage.createFeedback({
+          recordingId: recording.id,
+          reviewerId: "iflytek-ai",
+          textFeedback: "Automatic pronunciation assessment.",
+          characterRatings: iseResult.characterRatings,
+          fluencyScore: iseResult.fluencyScore,
+          overallScore: iseResult.overallScore,
+          isAiFeedback: true,
+        });
+        // Refund credits if score qualifies
+        if (iseResult.overallScore >= REFUND_THRESHOLD) {
+          storage.refundCredits(recording.id).catch(console.error);
         }
-      });
+        console.log(`[iFLYTEK ISE] Auto-review complete for recording ${recording.id}, score=${iseResult.overallScore}`);
+      } catch (err) {
+        console.error("[iFLYTEK ISE] Auto-review failed (silent):", err);
+      }
 
       res.status(201).json(recording);
     } catch (err) {
