@@ -224,55 +224,65 @@ function assessOverWebSocket(
       if (settled) return;
       settled = true;
       clearTimeout(timeoutHandle);
-      try {
-        ws.close();
-      } catch {}
+      try { ws.close(); } catch {}
       if (err) reject(err);
       else resolve(xmlParts.join(""));
     };
 
+    // Audio offset for streaming (starts at 0 since ssb frame carries no audio)
+    let audioOffset = 0;
+    let audioFrameIndex = 0; // 0 = first, ... = middle, last = when done
+
+    const sendNextAudioChunk = () => {
+      if (settled) return;
+      if (audioOffset >= audioBuffer.length) {
+        // All audio data sent — send final empty sentinel frame (aus=4, status=2, data="")
+        ws.send(
+          JSON.stringify({
+            business: { cmd: "auw", aus: 4, aue: "raw" },
+            data: { status: 2, data: "", data_type: 1, encoding: "raw" },
+          })
+        );
+        return;
+      }
+      const chunk = audioBuffer.slice(audioOffset, audioOffset + CHUNK_SIZE);
+      audioOffset += CHUNK_SIZE;
+      // aus: 1=first audio frame, 2=middle frames
+      const aus = audioFrameIndex === 0 ? 1 : 2;
+      audioFrameIndex++;
+      ws.send(
+        JSON.stringify({
+          business: { cmd: "auw", aus, aue: "raw" },
+          data: { status: 1, data: chunk.toString("base64"), data_type: 1, encoding: "raw" },
+        })
+      );
+      setTimeout(sendNextAudioChunk, CHUNK_INTERVAL_MS);
+    };
+
     ws.on("open", () => {
       const textWithBom = "\uFEFF" + sentenceText;
-      const firstChunk = audioBuffer.slice(0, CHUNK_SIZE);
-      const isOnlyChunk = audioBuffer.length <= CHUNK_SIZE;
 
-      const firstFrame = {
+      // Phase 1: Send ssb frame with ONLY business params, no audio data
+      const ssbFrame = {
         common: { app_id: appId },
         business: {
-          category: "read_sentence",
-          rstcd: "utf8",
-          ent: "cn_vip",
+          cmd: "ssb",
           sub: "ise",
+          ent: "cn_vip",
+          category: "read_sentence",
           aue: "raw",
-          text: Buffer.from(textWithBom, "utf8").toString("base64"),
-          extra_ability: "syll_phone_err_msg",
-          plev: "0",
+          auf: "audio/L16;rate=16000",
+          tte: "utf-8",
+          ttp_skip: true,
+          rstcd: "utf8",
+          text: textWithBom,
         },
-        data: {
-          status: isOnlyChunk ? 2 : 0,
-          data: firstChunk.toString("base64"),
-        },
+        data: { status: 0, data: "" },
       };
+      ws.send(JSON.stringify(ssbFrame));
 
-      ws.send(JSON.stringify(firstFrame));
-
-      if (!isOnlyChunk) {
-        let offset = CHUNK_SIZE;
-        const sendNext = () => {
-          if (settled) return;
-          if (offset >= audioBuffer.length) return;
-          const chunk = audioBuffer.slice(offset, offset + CHUNK_SIZE);
-          offset += CHUNK_SIZE;
-          const isLast = offset >= audioBuffer.length;
-          ws.send(
-            JSON.stringify({
-              data: { status: isLast ? 2 : 1, data: chunk.toString("base64") },
-            })
-          );
-          if (!isLast) setTimeout(sendNext, CHUNK_INTERVAL_MS);
-        };
-        setTimeout(sendNext, CHUNK_INTERVAL_MS);
-      }
+      // Phase 2: Start streaming audio right after (server acks ssb quickly)
+      setTimeout(sendNextAudioChunk, CHUNK_INTERVAL_MS);
     });
 
     ws.on("message", (raw: WebSocket.RawData) => {
@@ -282,9 +292,7 @@ function assessOverWebSocket(
           `[iFLYTEK ISE] code=${msg.code} status=${msg.data?.status} sid=${msg.sid}`
         );
         if (msg.code !== 0) {
-          done(
-            new Error(`iFLYTEK ISE error ${msg.code}: ${msg.message}`)
-          );
+          done(new Error(`iFLYTEK ISE error ${msg.code}: ${msg.message}`));
           return;
         }
         if (msg.data?.data) {
