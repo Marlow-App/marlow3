@@ -69,7 +69,8 @@ function attr(tagAttrs: string, name: string): string | undefined {
 /** Extract all immediate-child elements of a given tag name from an XML fragment. */
 function extractElements(xml: string, tag: string): { attrs: string; inner: string }[] {
   const results: { attrs: string; inner: string }[] = [];
-  const re = new RegExp(`<${tag}([^>]*)>([\s\S]*?)<\\/${tag}>`, "g");
+  // NOTE: must use [\\s\\S] (double-escaped) so the string value is [\s\S] — any character including newlines
+  const re = new RegExp(`<${tag}([^>]*)>([\\s\\S]*?)<\\/${tag}>`, "g");
   let m;
   while ((m = re.exec(xml)) !== null) {
     results.push({ attrs: m[1], inner: m[2] });
