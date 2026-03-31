@@ -96,10 +96,14 @@ function extractSelfClosing(xml: string, tag: string): string[] {
 }
 
 function parseISEXml(xml: string, sentenceText: string): ISEResult {
-  // fluency_score appears on the inner <read_sentence> element (inside <rec_paper>)
+  // Scores appear on the inner <read_sentence> element (inside <rec_paper>)
   const fluencyMatch = xml.match(/\bfluency_score="([^"]+)"/);
   const fluencyRaw = fluencyMatch ? parseFloat(fluencyMatch[1]) : 50;
   const fluencyScore = mapFluency(fluencyRaw);
+
+  // Use iFlytek's own total_score as the overall score (0-100)
+  const totalScoreMatch = xml.match(/\btotal_score="([^"]+)"/);
+  const iseOverallScore = totalScoreMatch ? Math.round(parseFloat(totalScoreMatch[1])) : 0;
 
   const chineseChars = Array.from(sentenceText).filter(ch =>
     /[\u4e00-\u9fff\u3400-\u4dbf]/.test(ch)
@@ -182,20 +186,7 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
     };
   });
 
-  const fluencyPct = fluencyScore * 20;
-  let overallScore: number;
-  if (characterRatings.length > 0) {
-    const charTotal = characterRatings.reduce(
-      (sum, cr) => sum + cr.initial + cr.final + cr.tone,
-      0
-    );
-    const charScore = charTotal / (characterRatings.length * 3);
-    overallScore = Math.round(charScore * 0.8 + fluencyPct * 0.2);
-  } else {
-    overallScore = fluencyPct;
-  }
-
-  return { characterRatings, fluencyScore, overallScore };
+  return { characterRatings, fluencyScore, overallScore: iseOverallScore };
 }
 
 async function fetchAudioBuffer(audioUrl: string): Promise<Buffer> {
@@ -316,7 +307,7 @@ function assessOverWebSocket(
           tte: "utf-8",
           ttp_skip: true,
           rstcd: "utf8",
-          extra_ability: "syll_phone_err_msg",
+          extra_ability: "syll_phone_err_msg|tone",
           text: textWithBom,
         },
         data: { status: 0, data: "" },
