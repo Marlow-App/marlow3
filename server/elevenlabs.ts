@@ -2,9 +2,9 @@ import { createHash, createHmac } from "crypto";
 import WebSocket from "ws";
 import { objectStorageClient } from "./replit_integrations/object_storage/objectStorage";
 
-const IFLYTEK_HOST = "tts-api.xfyun.cn";
+const IFLYTEK_HOST = "tts-api-sg.xf-yun.com";
 const IFLYTEK_PATH = "/v2/tts";
-const IFLYTEK_WSS = `wss://${IFLYTEK_HOST}${IFLYTEK_PATH}`;
+const IFLYTEK_WSS = `ws://${IFLYTEK_HOST}${IFLYTEK_PATH}`;
 
 const VOICE_NAME = "aisjiuxu";
 
