@@ -16,6 +16,20 @@ Marlow uses a credit-based (pay-as-you-go) model instead of subscriptions:
 - **Stripe**: One-time `payment` mode checkout with `price_data` and `metadata: {userId, credits}`
 - **Constants** in `shared/credits.ts`: `CREDIT_PACKS`, `MAX_CHARS=10`, `REFUND_THRESHOLD=95`, `SIGNUP_BONUS=10`, `DAILY_REWARD=1`, `MAX_FREE_BANK=3`
 
+## iFLYTEK ISE Auto-Review
+
+- **Purpose**: Automatically score learner recordings using iFLYTEK's Pronunciation Assessment (ISE) API, giving instant feedback seconds after upload
+- **Endpoint**: `ws://ise-api-sg.xf-yun.com/v2/ise` — same HMAC-SHA256 auth as TTS, credentials: `IFLYTEK_APP_ID`, `IFLYTEK_API_KEY`, `IFLYTEK_API_SECRET`
+- **ISE params**: `ent:"cn_vip"`, `category:"read_sentence"`, `aue:"lame"`, `extra_ability:"syll_phone_err_msg"`, `plev:"0"`; text requires UTF-8 BOM (`\uFEFF`)
+- **Audio format note**: Browser recordings are webm/mp4; ISE expects lame (mp3). Format mismatch causes silent failure — transcoding is a follow-up task
+- **Audio streaming**: 1280-byte chunks at 40ms intervals over WebSocket
+- **Score mapping**: iFLYTEK 0-100 → app 0/50/100: <40→0, <75→50, ≥75→100. Fluency 0-100 → 1-5 in 20-pt bands
+- **Fire-and-forget**: ISE failures are caught silently so recording upload always succeeds
+- **System user**: `"iflytek-ai"` upserted on server startup (firstName: "AI Review", role: "reviewer") satisfies FK on feedback.reviewerId
+- **`isAiFeedback` field**: boolean on `feedback` table (default false); used in UI to show Bot icon + "AI Review" badge instead of reviewer name
+- **Credit refund**: 95%+ score from ISE auto-review also triggers credit refund
+- **Client module**: `server/iflytek-ise.ts` exports `scoreMandarin(audioUrl, sentenceText): Promise<ISEResult>`
+
 ## Email Notifications
 
 - **Provider**: Resend (`resend` npm package) — requires `RESEND_API_KEY` secret

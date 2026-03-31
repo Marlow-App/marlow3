@@ -204,6 +204,7 @@ export class DatabaseStorage implements IStorage {
         characterRatings: (feedbackData as any).characterRatings ?? null,
         fluencyScore: (feedbackData as any).fluencyScore ?? null,
         overallScore: (feedbackData as any).overallScore ?? null,
+        isAiFeedback: (feedbackData as any).isAiFeedback ?? false,
       })
       .returning();
     

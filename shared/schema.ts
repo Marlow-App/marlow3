@@ -58,6 +58,7 @@ export const feedback = pgTable("feedback", {
   characterRatings: jsonb("character_ratings"),
   fluencyScore: integer("fluency_score"),
   overallScore: integer("overall_score"),
+  isAiFeedback: boolean("is_ai_feedback").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

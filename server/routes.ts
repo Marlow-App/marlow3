@@ -11,6 +11,7 @@ import { db } from "./db";
 import { generatePhraseAudio, getPhraseAudioFile } from "./elevenlabs";
 import { countChineseChars, MAX_CHARS, REFUND_THRESHOLD, CREDIT_PACKS } from "@shared/credits";
 import { sendFeedbackNotification, sendRecordingNotification } from "./email";
+import { scoreMandarin } from "./iflytek-ise";
 
 const UNLIMITED_EMAIL = process.env.UNLIMITED_CREDITS_EMAIL ?? null;
 
@@ -382,6 +383,31 @@ export async function registerRoutes(
           );
         } catch (err) {
           console.error("[email] Error sending recording notifications:", err);
+        }
+      });
+
+      // iFLYTEK ISE auto-review (fire-and-forget)
+      // Note: recordings are webm/mp4 from MediaRecorder; ISE expects lame (mp3).
+      // Format mismatch may cause ISE to fail silently — transcoding is a follow-up task.
+      Promise.resolve().then(async () => {
+        try {
+          const iseResult = await scoreMandarin(recording.audioUrl, recording.sentenceText);
+          await storage.createFeedback({
+            recordingId: recording.id,
+            textFeedback: "Automatic pronunciation assessment.",
+            characterRatings: iseResult.characterRatings,
+            fluencyScore: iseResult.fluencyScore,
+            overallScore: iseResult.overallScore,
+            isAiFeedback: true,
+            reviewerId: "iflytek-ai",
+          } as any);
+          // Refund credits if score qualifies
+          if (iseResult.overallScore >= REFUND_THRESHOLD) {
+            storage.refundCredits(recording.id).catch(console.error);
+          }
+          console.log(`[iFLYTEK ISE] Auto-review complete for recording ${recording.id}, score=${iseResult.overallScore}`);
+        } catch (err) {
+          console.error("[iFLYTEK ISE] Auto-review failed (silent):", err);
         }
       });
 

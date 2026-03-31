@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronDown, ChevronUp, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star, RotateCcw, BookOpen, Plus, X, Volume2 } from "lucide-react";
+import { ChevronLeft, ChevronDown, ChevronUp, MessageSquare, Mic, GraduationCap, MapPin, Trash2, Pencil, Info, Star, RotateCcw, BookOpen, Plus, X, Volume2, Bot } from "lucide-react";
 import { getPhraseEnglish } from "@/data/phrases";
 import { getNeutralPatches } from "@/lib/neutralTones";
 import { countChineseChars } from "@shared/credits";
@@ -828,17 +828,32 @@ function EditableFeedbackCard({
     <Card className="bg-secondary/5 border-secondary/20">
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          <div className="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold">
-            {item.reviewer?.firstName?.[0] || "R"}
-          </div>
+          {item.isAiFeedback ? (
+            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center" data-testid={`ai-avatar-${item.id}`}>
+              <Bot className="w-5 h-5" />
+            </div>
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold">
+              {item.reviewer?.firstName?.[0] || "R"}
+            </div>
+          )}
           <div className="flex-1">
             <div className="flex justify-between items-start mb-2">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-foreground" data-testid={`reviewer-name-${item.id}`}>
-                    {item.reviewer ? `${item.reviewer.firstName || ''} ${item.reviewer.lastName || ''}`.trim() || 'Reviewer' : 'Reviewer'}
-                  </span>
-                  {item.reviewer?.city && (
+                  {item.isAiFeedback ? (
+                    <span className="flex items-center gap-1.5 font-bold text-foreground" data-testid={`reviewer-name-${item.id}`}>
+                      AI Review
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium" data-testid={`ai-badge-${item.id}`}>
+                        Auto
+                      </Badge>
+                    </span>
+                  ) : (
+                    <span className="font-bold text-foreground" data-testid={`reviewer-name-${item.id}`}>
+                      {item.reviewer ? `${item.reviewer.firstName || ''} ${item.reviewer.lastName || ''}`.trim() || 'Reviewer' : 'Reviewer'}
+                    </span>
+                  )}
+                  {!item.isAiFeedback && item.reviewer?.city && (
                     <span className="flex items-center gap-1 text-xs text-muted-foreground" data-testid={`reviewer-city-${item.id}`}>
                       <MapPin className="w-3 h-3" />
                       {item.reviewer.city}
