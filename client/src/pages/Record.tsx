@@ -193,7 +193,7 @@ export default function RecordPage() {
       const uploadRes = await uploadFile(file);
       if (!uploadRes) throw new Error("Upload failed");
 
-      await createRecording.mutateAsync({
+      const newRecording = await createRecording.mutateAsync({
         audioUrl: uploadRes.objectPath,
         sentenceText: activeText,
         ...(rerecordOf ? { rerecordOf } : {}),
@@ -210,7 +210,7 @@ export default function RecordPage() {
               : `Used ${discountedCost} credit${discountedCost !== 1 ? "s" : ""} — submitted for review.`,
       });
 
-      setLocation("/");
+      setLocation(`/recordings/${newRecording.id}`);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Failed to submit recording. Please try again.";
       toast({
