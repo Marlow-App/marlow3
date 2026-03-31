@@ -16,7 +16,7 @@ function parseObjectPath(fullPath: string) {
   return { bucketName, objectName };
 }
 
-const TTS_CACHE_VERSION = "iflytek_v4";
+const TTS_CACHE_VERSION = "iflytek_v5";
 
 function textToHash(text: string, gender: "M" | "F"): string {
   return createHash("md5").update(TTS_CACHE_VERSION + gender + text).digest("hex").slice(0, 12);
