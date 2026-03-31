@@ -20,21 +20,24 @@ function mapScore(score: number): 0 | 50 | 100 {
 /**
  * Convert ISE phone attributes to a 0-100 raw score.
  *
- * perr_level_msg: 0=no deviation, 1=slight, 2=moderate, 3=severe
- * perr_msg: 0=no specific error type identified, non-zero=specific mispronunciation code
+ * perr_msg is the PRIMARY signal: it contains a named mispronunciation error code.
+ *   perr_msg="0" means no specific error was identified — the phone is acceptable
+ *   regardless of how acoustically different it is from the ideal model.
  *
- * When perr_level_msg=1 AND perr_msg=0 it means the phone is slightly off the
- * ideal model but no concrete error was flagged — essentially acceptable
- * native-like pronunciation.  Map that to 85 so mapScore gives 100 (great).
- * Only when a specific error code is set do we drop to 50 (ok).
+ * perr_level_msg gives severity when perr_msg IS non-zero:
+ *   0/1 = slight identified error → 50 (ok)
+ *   2   = moderate identified error → 0 (wrong)
+ *   3   = severe identified error → 0 (wrong)
  */
 function perrToRawScore(perr: string | undefined, perrMsg: string | undefined): number {
-  if (perr === "0") return 100;                          // perfect
-  if (perr === "1" && (perrMsg === "0" || perrMsg === undefined)) return 85; // slight, no specific error → good
-  if (perr === "1") return 60;                           // slight + specific error → ok
-  if (perr === "2") return 30;                           // moderate → wrong
-  if (perr === "3") return 10;                           // severe → wrong
-  return 85;                                             // unknown → assume good
+  // No specific mispronunciation named — treat as acceptable (great)
+  if (perrMsg === "0" || perrMsg === undefined) {
+    return perr === "0" ? 100 : 85;  // perfect (0) or minor acoustic variation (85 → great)
+  }
+  // Specific error code identified — severity determines the score
+  if (perr === "0" || perr === "1") return 60;  // slight named error → ok
+  if (perr === "2") return 30;                  // moderate named error → wrong
+  return 10;                                     // severe named error → wrong
 }
 
 function mapFluency(score: number): number {
