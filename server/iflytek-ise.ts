@@ -18,20 +18,23 @@ function mapScore(score: number): 0 | 50 | 100 {
 }
 
 /**
- * Convert ISE perr_level_msg (phone error level) to a 0-100 raw score.
- * 0 = no error → 100 (great)
- * 1 = slight error → 60 (ok, mapScore→50)
- * 2 = moderate error → 30 (poor, mapScore→0)
- * 3 = severe error → 10 (poor, mapScore→0)
+ * Convert ISE phone attributes to a 0-100 raw score.
+ *
+ * perr_level_msg: 0=no deviation, 1=slight, 2=moderate, 3=severe
+ * perr_msg: 0=no specific error type identified, non-zero=specific mispronunciation code
+ *
+ * When perr_level_msg=1 AND perr_msg=0 it means the phone is slightly off the
+ * ideal model but no concrete error was flagged — essentially acceptable
+ * native-like pronunciation.  Map that to 85 so mapScore gives 100 (great).
+ * Only when a specific error code is set do we drop to 50 (ok).
  */
-function perrToRawScore(perr: string | undefined): number {
-  switch (perr) {
-    case "0": return 100;
-    case "1": return 60;
-    case "2": return 30;
-    case "3": return 10;
-    default: return 60;
-  }
+function perrToRawScore(perr: string | undefined, perrMsg: string | undefined): number {
+  if (perr === "0") return 100;                          // perfect
+  if (perr === "1" && (perrMsg === "0" || perrMsg === undefined)) return 85; // slight, no specific error → good
+  if (perr === "1") return 60;                           // slight + specific error → ok
+  if (perr === "2") return 30;                           // moderate → wrong
+  if (perr === "3") return 10;                           // severe → wrong
+  return 85;                                             // unknown → assume good
 }
 
 function mapFluency(score: number): number {
@@ -117,8 +120,10 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
         if (phoneNodeType === "sil" || phoneNodeType === "fil") continue;
 
         // perr_level_msg: 0=no error, 1=slight, 2=moderate, 3=severe
+        // perr_msg: 0=no specific error, non-zero=specific mispronunciation code
         const perr = attr(phoneAttrs, "perr_level_msg");
-        const rawScore = perrToRawScore(perr);
+        const perrMsg = attr(phoneAttrs, "perr_msg");
+        const rawScore = perrToRawScore(perr, perrMsg);
 
         // is_yun: "1"=final/rhyme (vowel), "0"=initial consonant
         const isYun = attr(phoneAttrs, "is_yun");
