@@ -6,8 +6,8 @@ const IFLYTEK_HOST = "tts-api-sg.xf-yun.com";
 const IFLYTEK_PATH = "/v2/tts";
 const IFLYTEK_WSS = `ws://${IFLYTEK_HOST}${IFLYTEK_PATH}`;
 
-const VOICE_MALE = "aisjiuxu";
-const VOICE_FEMALE = "aisjiaqi";
+const VOICE_MALE = "aisxiaolong";
+const VOICE_FEMALE = "aisjiuxu";
 
 function parseObjectPath(fullPath: string) {
   const parts = fullPath.replace(/^\//, "").split("/");
@@ -16,7 +16,7 @@ function parseObjectPath(fullPath: string) {
   return { bucketName, objectName };
 }
 
-const TTS_CACHE_VERSION = "iflytek_v1";
+const TTS_CACHE_VERSION = "iflytek_v2";
 
 function textToHash(text: string, gender: "M" | "F"): string {
   return createHash("md5").update(TTS_CACHE_VERSION + gender + text).digest("hex").slice(0, 12);
