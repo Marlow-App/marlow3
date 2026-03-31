@@ -102,17 +102,18 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
 
   for (const word of extractElements(xml, "word")) {
     for (const syll of extractElements(word.inner, "syll")) {
-      // Skip filler syllables (background noise / hesitation detected by ISE)
+      // Skip silence and filler syllables — these are NOT real phoneme data
+      // sil = leading/trailing silence; fil = hesitation/filler noise
       const nodeType = attr(syll.attrs, "rec_node_type");
-      if (nodeType === "fil") continue;
+      if (nodeType === "sil" || nodeType === "fil") continue;
 
       const initials: number[] = [];
       const finals: number[] = [];
 
       for (const phoneAttrs of extractSelfClosing(syll.inner, "phone")) {
-        // Skip filler phones
+        // Skip silence and filler phones
         const phoneNodeType = attr(phoneAttrs, "rec_node_type");
-        if (phoneNodeType === "fil") continue;
+        if (phoneNodeType === "sil" || phoneNodeType === "fil") continue;
 
         // perr_level_msg: 0=no error, 1=slight, 2=moderate, 3=severe
         const perr = attr(phoneAttrs, "perr_level_msg");
@@ -375,5 +376,7 @@ export async function scoreMandarin(
   }
 
   console.log("[iFLYTEK ISE] FULL XML:", xml);
-  return parseISEXml(xml, sentenceText);
+  const result = parseISEXml(xml, sentenceText);
+  console.log("[iFLYTEK ISE] Parsed ratings:", JSON.stringify(result.characterRatings));
+  return result;
 }
