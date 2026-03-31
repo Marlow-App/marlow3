@@ -53,8 +53,36 @@ export interface ISEResult {
   overallScore: number;
 }
 
+/** Extract the value of a named XML attribute from a tag's attribute string, regardless of order. */
+function attr(tagAttrs: string, name: string): string | undefined {
+  const m = tagAttrs.match(new RegExp(`\\b${name}="([^"]*)"`));
+  return m ? m[1] : undefined;
+}
+
+/** Extract all immediate-child elements of a given tag name from an XML fragment. */
+function extractElements(xml: string, tag: string): { attrs: string; inner: string }[] {
+  const results: { attrs: string; inner: string }[] = [];
+  const re = new RegExp(`<${tag}([^>]*)>([\s\S]*?)<\\/${tag}>`, "g");
+  let m;
+  while ((m = re.exec(xml)) !== null) {
+    results.push({ attrs: m[1], inner: m[2] });
+  }
+  return results;
+}
+
+/** Extract self-closing or paired elements and their attribute strings. */
+function extractSelfClosing(xml: string, tag: string): string[] {
+  const results: string[] = [];
+  const re = new RegExp(`<${tag}([^>]*)\\s*/?>`, "g");
+  let m;
+  while ((m = re.exec(xml)) !== null) {
+    results.push(m[1]);
+  }
+  return results;
+}
+
 function parseISEXml(xml: string, sentenceText: string): ISEResult {
-  const fluencyMatch = xml.match(/fluency_score="([^"]+)"/);
+  const fluencyMatch = xml.match(/\bfluency_score="([^"]+)"/);
   const fluencyRaw = fluencyMatch ? parseFloat(fluencyMatch[1]) : 50;
   const fluencyScore = mapFluency(fluencyRaw);
 
@@ -64,25 +92,16 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
 
   const syllables: { tone: number; initial: number; final: number }[] = [];
 
-  const wordRegex = /<word[^>]*content="[^"]*"[^>]*>([\s\S]*?)<\/word>/g;
-  let wordMatch;
-  while ((wordMatch = wordRegex.exec(xml)) !== null) {
-    const wordInner = wordMatch[1];
-
-    const syllRegex = /<syll[^>]*tone_score="([^"]+)"[^>]*>([\s\S]*?)<\/syll>/g;
-    let syllMatch;
-    while ((syllMatch = syllRegex.exec(wordInner)) !== null) {
-      const toneScore = parseFloat(syllMatch[1]);
-      const syllInner = syllMatch[2];
+  for (const word of extractElements(xml, "word")) {
+    for (const syll of extractElements(word.inner, "syll")) {
+      const toneScore = parseFloat(attr(syll.attrs, "tone_score") ?? "70");
 
       const initials: number[] = [];
       const finals: number[] = [];
 
-      const phoneRegex = /<phone[^>]+content="([^"]+)"[^>]+score="([^"]+)"[^>]*\/?>/g;
-      let phoneMatch;
-      while ((phoneMatch = phoneRegex.exec(syllInner)) !== null) {
-        const phoneContent = phoneMatch[1];
-        const phoneScore = parseFloat(phoneMatch[2]);
+      for (const phoneAttrs of extractSelfClosing(syll.inner, "phone")) {
+        const phoneContent = attr(phoneAttrs, "content") ?? "";
+        const phoneScore = parseFloat(attr(phoneAttrs, "score") ?? "70");
         if (isInitialPhone(phoneContent)) {
           initials.push(phoneScore);
         } else {
