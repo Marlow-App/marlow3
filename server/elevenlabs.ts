@@ -15,8 +15,10 @@ function parseObjectPath(fullPath: string) {
   return { bucketName, objectName };
 }
 
+const TTS_CACHE_VERSION = "iflytek_v1";
+
 function textToHash(text: string): string {
-  return createHash("md5").update(text).digest("hex").slice(0, 12);
+  return createHash("md5").update(TTS_CACHE_VERSION + text).digest("hex").slice(0, 12);
 }
 
 function getPhraseAudioPath(hash: string): string {
