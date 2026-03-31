@@ -6,7 +6,8 @@ const IFLYTEK_HOST = "tts-api-sg.xf-yun.com";
 const IFLYTEK_PATH = "/v2/tts";
 const IFLYTEK_WSS = `ws://${IFLYTEK_HOST}${IFLYTEK_PATH}`;
 
-const VOICE_NAME = "aisjiuxu";
+const VOICE_MALE = "aisjiuxu";
+const VOICE_FEMALE = "aisjiaqi";
 
 function parseObjectPath(fullPath: string) {
   const parts = fullPath.replace(/^\//, "").split("/");
@@ -17,8 +18,8 @@ function parseObjectPath(fullPath: string) {
 
 const TTS_CACHE_VERSION = "iflytek_v1";
 
-function textToHash(text: string): string {
-  return createHash("md5").update(TTS_CACHE_VERSION + text).digest("hex").slice(0, 12);
+function textToHash(text: string, gender: "M" | "F"): string {
+  return createHash("md5").update(TTS_CACHE_VERSION + gender + text).digest("hex").slice(0, 12);
 }
 
 function getPhraseAudioPath(hash: string): string {
@@ -39,7 +40,7 @@ function buildSignedUrl(appKey: string, apiSecret: string): string {
   return `${IFLYTEK_WSS}?${query}`;
 }
 
-function synthesizeViaWebSocket(url: string, text: string, appId: string): Promise<Buffer> {
+function synthesizeViaWebSocket(url: string, text: string, appId: string, voiceName: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url);
     const audioChunks: Buffer[] = [];
@@ -64,7 +65,7 @@ function synthesizeViaWebSocket(url: string, text: string, appId: string): Promi
         business: {
           aue: "lame",
           auf: "audio/L16;rate=16000",
-          vcn: VOICE_NAME,
+          vcn: voiceName,
           tte: "UTF8",
           speed: 50,
           volume: 50,
@@ -109,7 +110,7 @@ function synthesizeViaWebSocket(url: string, text: string, appId: string): Promi
   });
 }
 
-export async function generatePhraseAudio(text: string): Promise<string> {
+export async function generatePhraseAudio(text: string, gender: "M" | "F" = "M"): Promise<string> {
   const appId = process.env.IFLYTEK_APP_ID;
   const apiKey = process.env.IFLYTEK_API_KEY;
   const apiSecret = process.env.IFLYTEK_API_SECRET;
@@ -117,7 +118,8 @@ export async function generatePhraseAudio(text: string): Promise<string> {
   if (!apiKey) throw new Error("IFLYTEK_API_KEY not set");
   if (!apiSecret) throw new Error("IFLYTEK_API_SECRET not set");
 
-  const hash = textToHash(text);
+  const voiceName = gender === "F" ? VOICE_FEMALE : VOICE_MALE;
+  const hash = textToHash(text, gender);
   const fullPath = getPhraseAudioPath(hash);
   const { bucketName, objectName } = parseObjectPath(fullPath);
   const bucket = objectStorageClient.bucket(bucketName);
@@ -129,7 +131,7 @@ export async function generatePhraseAudio(text: string): Promise<string> {
   }
 
   const url = buildSignedUrl(apiKey, apiSecret);
-  const audioBuffer = await synthesizeViaWebSocket(url, text, appId);
+  const audioBuffer = await synthesizeViaWebSocket(url, text, appId, voiceName);
 
   if (audioBuffer.length === 0) {
     throw new Error("iFLYTEK returned empty audio");

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { getScoreBgColor, getScoreTextColor } from "@/lib/scoreColor";
 import { useAuth } from "@/hooks/use-auth";
 import { useRecordings, usePendingRecordings, useCreateRecording } from "@/hooks/use-recordings";
@@ -18,55 +18,11 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { Link } from "wouter";
-import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Volume2, Loader2, X, Compass, BookOpen } from "lucide-react";
+import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Loader2, X, Compass, BookOpen } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDailyChallenge, phraseToText, getPhraseEnglish } from "@/data/phrases";
-import { apiRequest } from "@/lib/queryClient";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
-
-
-
-function usePhraseAudio() {
-  const [loadingPhrase, setLoadingPhrase] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioCache = useRef<Map<string, string>>(new Map());
-
-  const playPhrase = useCallback(async (text: string) => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-
-    const cached = audioCache.current.get(text);
-    if (cached) {
-      const audio = new Audio(cached);
-      audioRef.current = audio;
-      audio.play().catch(console.error);
-      return;
-    }
-
-    setLoadingPhrase(text);
-    try {
-      const res = await apiRequest("POST", "/api/phrase-audio/generate", { text });
-      const data = await res.json();
-      audioCache.current.set(text, data.audioUrl);
-      const audio = new Audio(data.audioUrl);
-      audioRef.current = audio;
-      audio.play().catch(console.error);
-    } catch (err) {
-      console.error("Failed to generate phrase audio:", err);
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "zh-CN";
-      utterance.rate = 0.8;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
-    } finally {
-      setLoadingPhrase(null);
-    }
-  }, []);
-
-  return { playPhrase, loadingPhrase };
-}
+import { usePhraseAudio } from "@/hooks/use-phrase-audio";
 
 function useAppTour() {
   const [showTour, setShowTour] = useState(() => {
@@ -148,7 +104,7 @@ export default function Home() {
   const { toast } = useToast();
   const { uploadFile, isUploading } = useUpload();
   const createRecording = useCreateRecording();
-  const { playPhrase, loadingPhrase } = usePhraseAudio();
+  const { playPhrase, isLoading: isPhraseLoading, anyLoading } = usePhraseAudio();
   const { showTour, dismissTour } = useAppTour();
 
   if (isLoading) {
@@ -293,18 +249,23 @@ export default function Home() {
                         {dailyChallenge.level} ✎
                       </Badge>
                     </Link>
-                    <button
-                      onClick={() => playPhrase(challengeText)}
-                      disabled={!!loadingPhrase}
-                      className="p-1 rounded-full hover:bg-primary/10 transition-colors"
-                      data-testid="daily-challenge-play-btn"
-                    >
-                      {loadingPhrase === challengeText ? (
-                        <Loader2 className="w-4 h-4 text-primary animate-spin" />
-                      ) : (
-                        <Volume2 className="w-4 h-4 text-primary" />
-                      )}
-                    </button>
+                    <div className="flex items-center gap-0.5" data-testid="daily-challenge-play-btns">
+                      {(["M", "F"] as const).map((gender) => (
+                        <button
+                          key={gender}
+                          onClick={() => playPhrase(challengeText, gender)}
+                          disabled={anyLoading}
+                          className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full hover:bg-primary/10 text-primary/70 hover:text-primary transition-colors text-[11px] font-semibold"
+                          data-testid={`daily-challenge-play-${gender.toLowerCase()}-btn`}
+                        >
+                          {isPhraseLoading(challengeText, gender) ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <span>{gender}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <Button
                     size="lg"

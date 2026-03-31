@@ -9,62 +9,28 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation, Link } from "wouter";
-import { ChevronLeft, Info, Volume2, X, Loader2, CircleDollarSign } from "lucide-react";
+import { ChevronLeft, Info, X, Loader2, CircleDollarSign } from "lucide-react";
 import { getPhrasesForLevel, phraseToText, toToneChars, PHRASE_BANK, type Phrase } from "@/data/phrases";
-import { apiRequest } from "@/lib/queryClient";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { countChineseChars, MAX_CHARS, REFUND_THRESHOLD } from "@shared/credits";
+import { usePhraseAudio, type AudioGender } from "@/hooks/use-phrase-audio";
 
+function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoadingGender, anyLoading }: {
+  phrase: Phrase;
+  onSelect: (phrase: Phrase) => void;
+  isSelected: boolean;
+  onPlay: (text: string, gender: AudioGender) => void;
+  isLoadingGender: (text: string, gender: AudioGender) => boolean;
+  anyLoading: boolean;
+}) {
+  const text = phraseToText(phrase);
 
-function usePhraseAudio() {
-  const [loadingPhrase, setLoadingPhrase] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioCache = useRef<Map<string, string>>(new Map());
-
-  const playPhrase = useCallback(async (text: string) => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-
-    const cached = audioCache.current.get(text);
-    if (cached) {
-      const audio = new Audio(cached);
-      audioRef.current = audio;
-      audio.play().catch(console.error);
-      return;
-    }
-
-    setLoadingPhrase(text);
-    try {
-      const res = await apiRequest("POST", "/api/phrase-audio/generate", { text });
-      const data = await res.json();
-      audioCache.current.set(text, data.audioUrl);
-      const audio = new Audio(data.audioUrl);
-      audioRef.current = audio;
-      audio.play().catch(console.error);
-    } catch (err) {
-      console.error("Failed to generate phrase audio:", err);
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "zh-CN";
-      utterance.rate = 0.8;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
-    } finally {
-      setLoadingPhrase(null);
-    }
-  }, []);
-
-  return { playPhrase, loadingPhrase };
-}
-
-function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoading }: { phrase: Phrase; onSelect: (phrase: Phrase) => void; isSelected: boolean; onPlay: (text: string) => void; isLoading: boolean }) {
-  const handlePlay = useCallback((e: React.MouseEvent) => {
+  const handlePlay = useCallback((gender: AudioGender) => (e: React.MouseEvent) => {
     e.stopPropagation();
-    onPlay(phraseToText(phrase));
-  }, [phrase, onPlay]);
+    onPlay(text, gender);
+  }, [text, onPlay]);
 
   return (
     <div
@@ -77,7 +43,7 @@ function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoading }: 
           ? "border-primary bg-primary/5 shadow-md"
           : "border-border/60 bg-card hover:border-primary/40 hover:shadow-sm"
       }`}
-      data-testid={`phrase-card-${phraseToText(phrase).slice(0, 4)}`}
+      data-testid={`phrase-card-${text.slice(0, 4)}`}
     >
       <div className="flex items-center justify-between gap-1.5">
         <div className="flex-1 min-w-0">
@@ -86,15 +52,19 @@ function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoading }: 
           </div>
           <p className="text-[15px] text-muted-foreground mt-0.5 whitespace-nowrap overflow-x-auto scrollbar-none">{phrase.english}</p>
         </div>
-        <button
-          onClick={handlePlay}
-          className="shrink-0 p-1 rounded-full hover:bg-primary/10 text-primary/60 hover:text-primary transition-colors"
-          title="Listen"
-          data-testid="phrase-speak-btn"
-          disabled={isLoading}
-        >
-          {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Volume2 className="w-3.5 h-3.5" />}
-        </button>
+        <div className="flex flex-col gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+          {(["M", "F"] as const).map((gender) => (
+            <button
+              key={gender}
+              onClick={handlePlay(gender)}
+              disabled={anyLoading}
+              className="flex items-center justify-center w-6 h-5 rounded text-[10px] font-semibold text-primary/60 hover:text-primary hover:bg-primary/10 transition-colors"
+              data-testid={`phrase-speak-${gender.toLowerCase()}-btn`}
+            >
+              {isLoadingGender(text, gender) ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : gender}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -121,7 +91,7 @@ export default function RecordPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [selectedPhrase, setSelectedPhrase] = useState<Phrase | null>(null);
-  const { playPhrase, loadingPhrase } = usePhraseAudio();
+  const { playPhrase, isLoading: isPhraseLoading, anyLoading } = usePhraseAudio();
   const { user } = useAuth();
   const userLevel = user?.chineseLevel || "Beginner";
 
@@ -329,7 +299,8 @@ export default function RecordPage() {
                       onSelect={handleSelectPhrase}
                       isSelected={selectedPhrase === phrase}
                       onPlay={playPhrase}
-                      isLoading={loadingPhrase === phraseToText(phrase)}
+                      isLoadingGender={isPhraseLoading}
+                      anyLoading={anyLoading}
                     />
                   ))}
                 </ScrollRow>
@@ -413,18 +384,23 @@ export default function RecordPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     {selectedPhrase && (
-                      <button
-                        onClick={() => playPhrase(phraseToText(selectedPhrase))}
-                        className="p-2 rounded-full hover:bg-primary/10 text-primary transition-colors"
-                        data-testid="active-phrase-speak-btn"
-                        disabled={loadingPhrase === phraseToText(selectedPhrase)}
-                      >
-                        {loadingPhrase === phraseToText(selectedPhrase) ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <Volume2 className="w-5 h-5" />
-                        )}
-                      </button>
+                      <div className="flex items-center gap-0.5" data-testid="active-phrase-play-btns">
+                        {(["M", "F"] as const).map((gender) => (
+                          <button
+                            key={gender}
+                            onClick={() => playPhrase(phraseToText(selectedPhrase), gender)}
+                            disabled={anyLoading}
+                            className="flex items-center gap-0.5 px-2 py-1.5 rounded-full hover:bg-primary/10 text-primary/70 hover:text-primary transition-colors text-xs font-semibold"
+                            data-testid={`active-phrase-speak-${gender.toLowerCase()}-btn`}
+                          >
+                            {isPhraseLoading(phraseToText(selectedPhrase), gender) ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <span>{gender}</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     )}
                     <button
                       onClick={handleClearPhrase}

@@ -798,11 +798,12 @@ export async function registerRoutes(
 
   app.post("/api/phrase-audio/generate", isAuthenticated, async (req, res) => {
     try {
-      const { text } = req.body;
+      const { text, gender } = req.body;
       if (!text || typeof text !== "string" || text.length > 100) {
         return res.status(400).json({ message: "Invalid text" });
       }
-      const audioUrl = await generatePhraseAudio(text);
+      const resolvedGender: "M" | "F" = gender === "F" ? "F" : "M";
+      const audioUrl = await generatePhraseAudio(text, resolvedGender);
       res.json({ audioUrl });
     } catch (error) {
       console.error("Error generating phrase audio:", error);
