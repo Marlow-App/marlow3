@@ -9,6 +9,7 @@ import {
   practiceListItems,
   type InsertRecording,
   type InsertFeedback,
+  type InsertFeedbackWithReviewer,
   type Recording,
   type Feedback,
   type User,
@@ -30,7 +31,7 @@ export interface IStorage {
   getAllPendingRecordings(): Promise<(Recording & { user: User | null })[]>;
   getAllRecordings(): Promise<(Recording & { user: User | null })[]>;
   deleteRecording(id: number): Promise<boolean>;
-  createFeedback(feedbackData: InsertFeedback): Promise<Feedback>;
+  createFeedback(feedbackData: InsertFeedbackWithReviewer): Promise<Feedback>;
   getFeedback(id: number): Promise<Feedback | undefined>;
   updateFeedback(id: number, data: Partial<InsertFeedback>): Promise<Feedback | undefined>;
   deleteFeedback(id: number): Promise<boolean>;
@@ -191,20 +192,20 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
-  async createFeedback(feedbackData: InsertFeedback): Promise<Feedback> {
+  async createFeedback(feedbackData: InsertFeedbackWithReviewer): Promise<Feedback> {
     const [newFeedback] = await db
       .insert(feedback)
       .values({
         recordingId: feedbackData.recordingId,
-        reviewerId: (feedbackData as any).reviewerId,
+        reviewerId: feedbackData.reviewerId,
         textFeedback: feedbackData.textFeedback,
-        corrections: (feedbackData as any).corrections ?? null,
+        corrections: feedbackData.corrections ?? null,
         audioFeedbackUrl: feedbackData.audioFeedbackUrl,
-        rating: (feedbackData as any).rating ?? null,
-        characterRatings: (feedbackData as any).characterRatings ?? null,
-        fluencyScore: (feedbackData as any).fluencyScore ?? null,
-        overallScore: (feedbackData as any).overallScore ?? null,
-        isAiFeedback: (feedbackData as any).isAiFeedback ?? false,
+        rating: feedbackData.rating ?? null,
+        characterRatings: feedbackData.characterRatings ?? null,
+        fluencyScore: feedbackData.fluencyScore ?? null,
+        overallScore: feedbackData.overallScore ?? null,
+        isAiFeedback: feedbackData.isAiFeedback ?? false,
       })
       .returning();
     

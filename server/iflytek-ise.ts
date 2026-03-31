@@ -1,4 +1,5 @@
 import { createHmac } from "crypto";
+import { spawn } from "child_process";
 import WebSocket from "ws";
 import { ObjectStorageService } from "./replit_integrations/object_storage";
 import type { CharacterRating } from "@shared/schema";
@@ -144,6 +145,50 @@ async function fetchAudioBuffer(audioUrl: string): Promise<Buffer> {
   return buffer as Buffer;
 }
 
+/**
+ * Transcode any audio format to 16kHz 16-bit mono signed PCM (raw) via ffmpeg.
+ * ISE accepts raw PCM with aue:"raw".
+ */
+async function transcodeToRawPcm(input: Buffer): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn("ffmpeg", [
+      "-hide_banner",
+      "-loglevel", "error",
+      "-i", "pipe:0",
+      "-ar", "16000",
+      "-ac", "1",
+      "-f", "s16le",
+      "pipe:1",
+    ]);
+
+    const chunks: Buffer[] = [];
+
+    proc.stdout.on("data", (chunk: Buffer) => chunks.push(chunk));
+    proc.stdout.on("end", () => {
+      if (chunks.length === 0) {
+        reject(new Error("ffmpeg produced no output"));
+        return;
+      }
+      resolve(Buffer.concat(chunks));
+    });
+
+    const stderrChunks: Buffer[] = [];
+    proc.stderr.on("data", (d: Buffer) => stderrChunks.push(d));
+
+    proc.on("error", (err) => reject(new Error(`ffmpeg spawn error: ${err.message}`)));
+
+    proc.on("close", (code) => {
+      if (code !== 0) {
+        const stderrText = Buffer.concat(stderrChunks).toString("utf8").trim();
+        reject(new Error(`ffmpeg exited with code ${code}: ${stderrText}`));
+      }
+    });
+
+    proc.stdin.write(input);
+    proc.stdin.end();
+  });
+}
+
 function assessOverWebSocket(
   url: string,
   audioBuffer: Buffer,
@@ -179,7 +224,7 @@ function assessOverWebSocket(
           rstcd: "utf8",
           ent: "cn_vip",
           sub: "ise",
-          aue: "lame",
+          aue: "raw",
           text: Buffer.from(textWithBom, "utf8").toString("base64"),
           extra_ability: "syll_phone_err_msg",
           plev: "0",
@@ -260,9 +305,11 @@ export async function scoreMandarin(
     throw new Error("iFLYTEK credentials not set");
   }
 
-  const audioBuffer = await fetchAudioBuffer(audioUrl);
+  const rawAudio = await fetchAudioBuffer(audioUrl);
+  const pcmAudio = await transcodeToRawPcm(rawAudio);
+
   const url = buildSignedUrl(apiKey, apiSecret);
-  const xml = await assessOverWebSocket(url, audioBuffer, appId, sentenceText);
+  const xml = await assessOverWebSocket(url, pcmAudio, appId, sentenceText);
 
   if (!xml) {
     throw new Error("iFLYTEK ISE returned empty XML");

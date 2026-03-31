@@ -132,4 +132,5 @@ export type Recording = typeof recordings.$inferSelect;
 export type InsertRecording = z.infer<typeof insertRecordingSchema>;
 export type Feedback = typeof feedback.$inferSelect;
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
+export type InsertFeedbackWithReviewer = InsertFeedback & { reviewerId: string; isAiFeedback?: boolean };
 export type CreditTransaction = typeof creditTransactions.$inferSelect;

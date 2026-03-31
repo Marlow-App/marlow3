@@ -387,20 +387,19 @@ export async function registerRoutes(
       });
 
       // iFLYTEK ISE auto-review (fire-and-forget)
-      // Note: recordings are webm/mp4 from MediaRecorder; ISE expects lame (mp3).
-      // Format mismatch may cause ISE to fail silently — transcoding is a follow-up task.
+      // Recordings are webm/mp4 from MediaRecorder; server-side ffmpeg transcodes to 16kHz PCM before ISE.
       Promise.resolve().then(async () => {
         try {
           const iseResult = await scoreMandarin(recording.audioUrl, recording.sentenceText);
           await storage.createFeedback({
             recordingId: recording.id,
+            reviewerId: "iflytek-ai",
             textFeedback: "Automatic pronunciation assessment.",
             characterRatings: iseResult.characterRatings,
             fluencyScore: iseResult.fluencyScore,
             overallScore: iseResult.overallScore,
             isAiFeedback: true,
-            reviewerId: "iflytek-ai",
-          } as any);
+          });
           // Refund credits if score qualifies
           if (iseResult.overallScore >= REFUND_THRESHOLD) {
             storage.refundCredits(recording.id).catch(console.error);
@@ -464,6 +463,7 @@ export async function registerRoutes(
 
       const feedbackRecord = await storage.createFeedback({
         recordingId,
+        reviewerId,
         textFeedback: textFeedback || "",
         corrections: corrections || null,
         audioFeedbackUrl: audioFeedbackUrl || null,
@@ -471,8 +471,8 @@ export async function registerRoutes(
         characterRatings: validatedRatings,
         fluencyScore: validatedFluency,
         overallScore,
-        reviewerId,
-      } as any);
+        isAiFeedback: false,
+      });
 
       // Refund credits if score >= REFUND_THRESHOLD
       if (overallScore !== null && overallScore >= REFUND_THRESHOLD) {
