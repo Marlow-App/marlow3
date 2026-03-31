@@ -58,14 +58,14 @@ function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoadingGend
               key={gender}
               onClick={handlePlay(gender)}
               disabled={anyLoading}
-              className="flex items-center justify-center gap-0.5 w-12 h-10 rounded text-[20px] font-bold text-primary/60 hover:text-primary hover:bg-primary/10 transition-colors"
+              className="flex items-center justify-center gap-0.5 w-8 h-7 rounded text-[13px] font-bold text-primary/60 hover:text-primary hover:bg-primary/10 transition-colors"
               data-testid={`phrase-speak-${gender.toLowerCase()}-btn`}
             >
               {isLoadingGender(text, gender) ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
                 <>
-                  <Volume2 className="w-5 h-5" />
+                  <Volume2 className="w-3.5 h-3.5" />
                   <span>{gender}</span>
                 </>
               )}
@@ -397,14 +397,14 @@ export default function RecordPage() {
                             key={gender}
                             onClick={() => playPhrase(phraseToText(selectedPhrase), gender)}
                             disabled={anyLoading}
-                            className="flex items-center gap-1 px-4 py-3 rounded-full hover:bg-primary/10 text-primary/70 hover:text-primary transition-colors text-[24px] font-bold"
+                            className="flex items-center gap-1 px-3 py-2 rounded-full hover:bg-primary/10 text-primary/70 hover:text-primary transition-colors text-[16px] font-bold"
                             data-testid={`active-phrase-speak-${gender.toLowerCase()}-btn`}
                           >
                             {isPhraseLoading(phraseToText(selectedPhrase), gender) ? (
-                              <Loader2 className="w-8 h-8 animate-spin" />
+                              <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
                               <>
-                                <Volume2 className="w-8 h-8" />
+                                <Volume2 className="w-5 h-5" />
                                 <span>{gender}</span>
                               </>
                             )}

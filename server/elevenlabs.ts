@@ -6,7 +6,7 @@ const IFLYTEK_HOST = "tts-api-sg.xf-yun.com";
 const IFLYTEK_PATH = "/v2/tts";
 const IFLYTEK_WSS = `ws://${IFLYTEK_HOST}${IFLYTEK_PATH}`;
 
-const VOICE_MALE = "aisxiaolong";
+const VOICE_MALE = "aisbabyxu";
 const VOICE_FEMALE = "aisjiuxu";
 
 function parseObjectPath(fullPath: string) {
@@ -16,7 +16,7 @@ function parseObjectPath(fullPath: string) {
   return { bucketName, objectName };
 }
 
-const TTS_CACHE_VERSION = "iflytek_v2";
+const TTS_CACHE_VERSION = "iflytek_v3";
 
 function textToHash(text: string, gender: "M" | "F"): string {
   return createHash("md5").update(TTS_CACHE_VERSION + gender + text).digest("hex").slice(0, 12);
@@ -82,6 +82,7 @@ function synthesizeViaWebSocket(url: string, text: string, appId: string, voiceN
     ws.on("message", (raw: WebSocket.RawData) => {
       try {
         const msg = JSON.parse(raw.toString());
+        console.log(`[iFLYTEK] code=${msg.code} sid=${msg.sid} status=${msg.data?.status} voice=${voiceName}`);
         if (msg.code !== 0) {
           done(new Error(`iFLYTEK TTS error ${msg.code}: ${msg.message}`));
           return;

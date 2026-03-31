@@ -255,14 +255,14 @@ export default function Home() {
                           key={gender}
                           onClick={() => playPhrase(challengeText, gender)}
                           disabled={anyLoading}
-                          className="flex items-center gap-1 px-3 py-1 rounded-full hover:bg-primary/10 text-primary/70 hover:text-primary transition-colors text-[22px] font-bold"
+                          className="flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-primary/10 text-primary/70 hover:text-primary transition-colors text-[15px] font-bold"
                           data-testid={`daily-challenge-play-${gender.toLowerCase()}-btn`}
                         >
                           {isPhraseLoading(challengeText, gender) ? (
-                            <Loader2 className="w-7 h-7 animate-spin" />
+                            <Loader2 className="w-5 h-5 animate-spin" />
                           ) : (
                             <>
-                              <Volume2 className="w-6 h-6" />
+                              <Volume2 className="w-4 h-4" />
                               <span>{gender}</span>
                             </>
                           )}
