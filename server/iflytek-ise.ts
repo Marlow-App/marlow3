@@ -325,7 +325,10 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
         3: "T010", // T3: dip not completed or too short
         4: "T003", // T4: falling not sharp/deep enough
       };
-      const hasToneError = toneRaw < 60 && expectedTone !== undefined && expectedTone !== 5;
+      // Only flag a tone error when score < 90 — the 90 fallback means iFlytek returned no
+      // explicit tone data (dp_message absent/0), so we can't meaningfully flag an error.
+      // Scores below 90 mean dp_message was non-zero or tone_score was returned as low.
+      const hasToneError = toneRaw < 90 && expectedTone !== undefined && expectedTone !== 5;
       const toneError = hasToneError ? LIKELY_TONE_ERROR[expectedTone!] : undefined;
 
       syllables.push({
