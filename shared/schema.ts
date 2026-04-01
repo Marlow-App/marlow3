@@ -40,6 +40,11 @@ export const characterRatingSchema = z.object({
   initialError: z.string().optional(),
   finalError: z.string().optional(),
   toneError: z.string().optional(),
+  // iFlytek-native fields — only populated on AI feedback, optional for backward compat
+  detectedTone: z.number().int().min(1).max(5).optional(),   // tone iFlytek actually heard (1-5)
+  expectedTone: z.number().int().min(1).max(5).optional(),   // tone the character should be (1-5)
+  toneScoreRaw: z.number().min(0).max(100).optional(),       // iFlytek's 0-100 tone accuracy score
+  phoneScoreRaw: z.number().min(0).max(100).optional(),      // iFlytek's 0-100 consonant+vowel quality
 });
 
 export type CharacterRating = z.infer<typeof characterRatingSchema>;

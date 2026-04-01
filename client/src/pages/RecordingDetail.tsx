@@ -573,6 +573,72 @@ function CharacterRatingDisplay({ ratings, isReviewer, pinyinData, fluencyScore,
   );
 }
 
+function ScoreBar({ score }: { score: number }) {
+  return (
+    <div className="h-1.5 rounded-full bg-muted/60 overflow-hidden flex-1 max-w-[72px]">
+      <div
+        className={`h-full rounded-full transition-all ${getScoreBgColor(score)}`}
+        style={{ width: `${Math.max(2, score)}%` }}
+      />
+    </div>
+  );
+}
+
+function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore }: {
+  ratings: CharacterRating[];
+  pinyinData?: PinyinChar[];
+  fluencyScore?: number | null;
+}) {
+  const chinesePinyinOnly = pinyinData?.filter(p => p.py) || [];
+
+  return (
+    <div className="space-y-2 mt-2" data-testid="ai-character-ratings-display">
+      <div className="grid gap-2">
+        {ratings.map((cr, idx) => {
+          const charPy = chinesePinyinOnly[idx] || null;
+          const toneScore = cr.toneScoreRaw ?? cr.tone;
+          const phoneScore = cr.phoneScoreRaw ?? Math.round((cr.initial + cr.final) / 2);
+          const hasMismatch = cr.detectedTone !== undefined && cr.expectedTone !== undefined && cr.detectedTone !== cr.expectedTone;
+          return (
+            <div key={idx} className="bg-muted/30 rounded-lg px-3 py-2" data-testid={`ai-char-card-${idx}`}>
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col items-center w-10 shrink-0" data-testid={`char-display-${idx}`}>
+                  {charPy && (
+                    <span className={`text-sm font-medium leading-tight ${TONE_COLORS[charPy.tone]}`}>{charPy.py}</span>
+                  )}
+                  <span className="text-lg font-bold">{cr.character}</span>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground w-10 shrink-0">Tone</span>
+                    <ScoreBar score={toneScore} />
+                    <span className={`text-sm font-semibold tabular-nums min-w-[3ch] ${getScoreTextColor(toneScore)}`} data-testid={`ai-tone-score-${idx}`}>
+                      {toneScore}%
+                    </span>
+                    {hasMismatch && (
+                      <span className="text-xs text-muted-foreground" data-testid={`ai-tone-mismatch-${idx}`}>
+                        heard T{cr.detectedTone} · expected T{cr.expectedTone}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground w-10 shrink-0">Sound</span>
+                    <ScoreBar score={phoneScore} />
+                    <span className={`text-sm font-semibold tabular-nums min-w-[3ch] ${getScoreTextColor(phoneScore)}`} data-testid={`ai-phone-score-${idx}`}>
+                      {phoneScore}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {fluencyScore != null && <FluencyDisplay score={fluencyScore} />}
+    </div>
+  );
+}
+
 function FluencyStarPicker({ value, onChange }: { value: number | null; onChange: (v: number | null) => void }) {
   return (
     <div className="border border-border/50 rounded-lg p-3 bg-card" data-testid="fluency-picker">
@@ -949,7 +1015,11 @@ function EditableFeedbackCard({
             ) : (
               <>
                 {item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0 && (
-                  <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={isReviewer} pinyinData={pinyinData} fluencyScore={item.fluencyScore} errors={errors} />
+                  item.isAiFeedback ? (
+                    <AICharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} pinyinData={pinyinData} fluencyScore={item.fluencyScore} />
+                  ) : (
+                    <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={isReviewer} pinyinData={pinyinData} fluencyScore={item.fluencyScore} errors={errors} />
+                  )
                 )}
                 {!(item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0) && item.fluencyScore != null && (
                   <FluencyDisplay score={item.fluencyScore} />

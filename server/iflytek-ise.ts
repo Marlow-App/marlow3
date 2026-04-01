@@ -130,7 +130,15 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
     /[\u4e00-\u9fff\u3400-\u4dbf]/.test(ch)
   );
 
-  const syllables: { tone: 0 | 50 | 100; initial: 0 | 50 | 100; final: 0 | 50 | 100 }[] = [];
+  const syllables: {
+    tone: 0 | 50 | 100;
+    initial: 0 | 50 | 100;
+    final: 0 | 50 | 100;
+    detectedTone?: number;
+    expectedTone?: number;
+    toneScoreRaw?: number;
+    phoneScoreRaw?: number;
+  }[] = [];
 
   for (const word of extractElements(xml, "word")) {
     for (const syll of extractElements(word.inner, "syll")) {
@@ -206,10 +214,20 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
         }
       }
 
+      // Raw phone quality: true average of all phone perr scores (before fallback logic)
+      const allPhoneScores = [...initials, ...finals];
+      const phoneScoreRaw = allPhoneScores.length > 0
+        ? Math.round(allPhoneScores.reduce((a, b) => a + b, 0) / allPhoneScores.length)
+        : undefined;
+
       syllables.push({
         tone: mapScore(toneRaw),
         initial: mapScore(initialAvg),
         final: mapScore(finalAvg),
+        detectedTone: expectedTone !== undefined ? detectedTone : undefined,
+        expectedTone: expectedTone !== undefined && expectedTone !== 5 ? expectedTone : undefined,
+        toneScoreRaw: Math.round(toneRaw),
+        phoneScoreRaw,
       });
     }
   }
@@ -224,6 +242,10 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
       initial: syll.initial,
       final: syll.final,
       tone: syll.tone,
+      detectedTone: syll.detectedTone,
+      expectedTone: syll.expectedTone,
+      toneScoreRaw: syll.toneScoreRaw,
+      phoneScoreRaw: syll.phoneScoreRaw,
     };
   });
 
