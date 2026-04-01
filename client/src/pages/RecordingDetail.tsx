@@ -584,12 +584,23 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
-function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore }: {
+function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, errors = [] }: {
   ratings: CharacterRating[];
   pinyinData?: PinyinChar[];
   fluencyScore?: number | null;
+  errors?: PronunciationError[];
 }) {
+  const [openError, setOpenError] = useState<PronunciationError | null>(null);
+  const [openErrorChar, setOpenErrorChar] = useState<string | undefined>(undefined);
   const chinesePinyinOnly = pinyinData?.filter(p => p.py) || [];
+
+  const lookupError = (errorId: string | undefined) =>
+    errorId ? errors.find(e => e.id === errorId) : undefined;
+
+  const openErrorDialog = (errorId: string | undefined, char: string) => {
+    const err = lookupError(errorId);
+    if (err) { setOpenError(err); setOpenErrorChar(char); }
+  };
 
   return (
     <div className="space-y-2 mt-2" data-testid="ai-character-ratings-display">
@@ -599,34 +610,75 @@ function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore }: {
           const toneScore = cr.toneScoreRaw ?? cr.tone;
           const phoneScore = cr.phoneScoreRaw ?? Math.round((cr.initial + cr.final) / 2);
           const hasMismatch = cr.detectedTone !== undefined && cr.expectedTone !== undefined && cr.detectedTone !== cr.expectedTone;
+          const toneErr = lookupError(cr.toneError);
+          const initErr = lookupError(cr.initialError);
+          const finalErr = lookupError(cr.finalError);
           return (
             <div key={idx} className="bg-muted/30 rounded-lg px-3 py-2" data-testid={`ai-char-card-${idx}`}>
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col items-center w-10 shrink-0" data-testid={`char-display-${idx}`}>
+              <div className="flex items-start gap-3">
+                <div className="flex flex-col items-center w-10 shrink-0 pt-1" data-testid={`char-display-${idx}`}>
                   {charPy && (
                     <span className={`text-sm font-medium leading-tight ${TONE_COLORS[charPy.tone]}`}>{charPy.py}</span>
                   )}
                   <span className="text-lg font-bold">{cr.character}</span>
                 </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground w-10 shrink-0">Tone</span>
-                    <ScoreBar score={toneScore} />
-                    <span className={`text-sm font-semibold tabular-nums min-w-[3ch] ${getScoreTextColor(toneScore)}`} data-testid={`ai-tone-score-${idx}`}>
-                      {toneScore}%
-                    </span>
-                    {hasMismatch && (
-                      <span className="text-xs text-muted-foreground" data-testid={`ai-tone-mismatch-${idx}`}>
-                        heard T{cr.detectedTone} · expected T{cr.expectedTone}
+                <div className="flex-1 space-y-1.5">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground w-10 shrink-0">Tone</span>
+                      <ScoreBar score={toneScore} />
+                      <span className={`text-sm font-semibold tabular-nums min-w-[3ch] ${getScoreTextColor(toneScore)}`} data-testid={`ai-tone-score-${idx}`}>
+                        {toneScore}%
                       </span>
+                      {hasMismatch && (
+                        <span className="text-xs text-muted-foreground" data-testid={`ai-tone-mismatch-${idx}`}>
+                          heard T{cr.detectedTone} · expected T{cr.expectedTone}
+                        </span>
+                      )}
+                    </div>
+                    {toneErr && (
+                      <button
+                        type="button"
+                        onClick={() => openErrorDialog(cr.toneError, cr.character)}
+                        className="mt-0.5 ml-12 text-xs text-blue-600 dark:text-blue-400 hover:underline text-left leading-snug"
+                        data-testid={`ai-tone-error-btn-${idx}`}
+                      >
+                        {toneErr.commonError} →
+                      </button>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground w-10 shrink-0">Sound</span>
-                    <ScoreBar score={phoneScore} />
-                    <span className={`text-sm font-semibold tabular-nums min-w-[3ch] ${getScoreTextColor(phoneScore)}`} data-testid={`ai-phone-score-${idx}`}>
-                      {phoneScore}%
-                    </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground w-10 shrink-0">Sound</span>
+                      <ScoreBar score={phoneScore} />
+                      <span className={`text-sm font-semibold tabular-nums min-w-[3ch] ${getScoreTextColor(phoneScore)}`} data-testid={`ai-phone-score-${idx}`}>
+                        {phoneScore}%
+                      </span>
+                    </div>
+                    {(initErr || finalErr) && (
+                      <div className="mt-0.5 ml-12 flex flex-col gap-0.5">
+                        {initErr && (
+                          <button
+                            type="button"
+                            onClick={() => openErrorDialog(cr.initialError, cr.character)}
+                            className="text-xs text-violet-600 dark:text-violet-400 hover:underline text-left leading-snug"
+                            data-testid={`ai-initial-error-btn-${idx}`}
+                          >
+                            Initial — {initErr.commonError} →
+                          </button>
+                        )}
+                        {finalErr && (
+                          <button
+                            type="button"
+                            onClick={() => openErrorDialog(cr.finalError, cr.character)}
+                            className="text-xs text-orange-600 dark:text-orange-400 hover:underline text-left leading-snug"
+                            data-testid={`ai-final-error-btn-${idx}`}
+                          >
+                            Final — {finalErr.commonError} →
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -635,6 +687,7 @@ function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore }: {
         })}
       </div>
       {fluencyScore != null && <FluencyDisplay score={fluencyScore} />}
+      <ErrorDetailDialog error={openError} open={!!openError} onClose={() => setOpenError(null)} character={openErrorChar} />
     </div>
   );
 }
@@ -1016,7 +1069,7 @@ function EditableFeedbackCard({
               <>
                 {item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0 && (
                   item.isAiFeedback ? (
-                    <AICharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} pinyinData={pinyinData} fluencyScore={item.fluencyScore} />
+                    <AICharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} pinyinData={pinyinData} fluencyScore={item.fluencyScore} errors={errors} />
                   ) : (
                     <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={isReviewer} pinyinData={pinyinData} fluencyScore={item.fluencyScore} errors={errors} />
                   )

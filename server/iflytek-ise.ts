@@ -61,6 +61,49 @@ function getDetectedTone(monoTone: string | undefined): number | undefined {
   return m ? parseInt(m[1], 10) : undefined;
 }
 
+/**
+ * Maps Mandarin initial consonant phone symbols to our pronunciation error library IDs.
+ * Only covers initials where iFlytek commonly identifies mispronunciation.
+ */
+const INITIAL_PHONE_TO_ERROR: Record<string, string> = {
+  zh: "I001", ch: "I001", sh: "I001", // retroflex group (most common confusion)
+  q:  "I002", // q → English ch
+  x:  "I003", // x → English sh
+  r:  "I004", // r → English r
+  c:  "I005", // c → English ts
+  z:  "I006", // z → English z
+  j:  "I007", // j → English j
+  b:  "I008", p: "I008", // b/p aspiration contrast
+};
+
+/**
+ * Maps Mandarin final (vowel/rhyme) phone symbols to pronunciation error library IDs.
+ * iFlytek may use multi-char finals (eng, ian, ong) or single chars (e, v for ü).
+ */
+const FINAL_PHONE_TO_ERROR: Record<string, string> = {
+  v:   "F001", // iFlytek uses 'v' for ü
+  e:   "F002", // e → English uh
+  eng: "F003", ing: "F003", // -eng/-ing velar nasal
+  ian: "F004", // -ian glide
+  uo:  "F005", // -uo diphthong
+  ong: "F006", // -ong velar nasal
+  ai:  "F007", // -ai diphthong
+  iao: "F008", // -iao triple glide
+  er:  "F009", // erhua
+};
+
+/**
+ * Map an expected tone number to the most likely tone error ID when a tone mismatch occurs.
+ * Based on the most common learner mistake for each tone.
+ */
+function toneToErrorId(expected: number): string | undefined {
+  if (expected === 1) return "T006"; // Tone 1 too flat or low
+  if (expected === 2) return "T002"; // Tone 2 not rising enough
+  if (expected === 3) return "T011"; // Tone 3 doesn't dip as it should
+  if (expected === 4) return "T003"; // Tone 4 not falling sharply enough
+  return undefined;
+}
+
 function mapFluency(score: number): number {
   if (score < 20) return 1;
   if (score < 40) return 2;
@@ -138,6 +181,9 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
     expectedTone?: number;
     toneScoreRaw?: number;
     phoneScoreRaw?: number;
+    initialError?: string;
+    finalError?: string;
+    toneError?: string;
   }[] = [];
 
   for (const word of extractElements(xml, "word")) {
@@ -151,6 +197,12 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
       const finals: number[] = [];
       let detectedTone: number | undefined;  // from first vowel phone's mono_tone
 
+      // Track worst-scoring errored phone symbol per category for error ID mapping
+      let worstInitialScore = Infinity;
+      let worstFinalScore = Infinity;
+      let worstInitialSymbol: string | undefined;
+      let worstFinalSymbol: string | undefined;
+
       for (const phoneAttrs of extractSelfClosing(syll.inner, "phone")) {
         // Skip silence and filler phones
         const phoneNodeType = attr(phoneAttrs, "rec_node_type");
@@ -161,6 +213,7 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
         const perr = attr(phoneAttrs, "perr_level_msg");
         const perrMsg = attr(phoneAttrs, "perr_msg");
         const rawScore = perrToRawScore(perr, perrMsg);
+        const hasNamedError = perrMsg !== undefined && perrMsg !== "0";
 
         // is_yun: "1"=final/rhyme (vowel), "0"=initial consonant
         const isYun = attr(phoneAttrs, "is_yun");
@@ -170,8 +223,18 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
           if (detectedTone === undefined) {
             detectedTone = getDetectedTone(attr(phoneAttrs, "mono_tone"));
           }
+          // Track worst final phone with a named error
+          if (hasNamedError && rawScore < worstFinalScore) {
+            worstFinalScore = rawScore;
+            worstFinalSymbol = attr(phoneAttrs, "symbol");
+          }
         } else {
           initials.push(rawScore);
+          // Track worst initial phone with a named error
+          if (hasNamedError && rawScore < worstInitialScore) {
+            worstInitialScore = rawScore;
+            worstInitialSymbol = attr(phoneAttrs, "symbol");
+          }
         }
       }
 
@@ -220,6 +283,17 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
         ? Math.round(allPhoneScores.reduce((a, b) => a + b, 0) / allPhoneScores.length)
         : undefined;
 
+      // Map errored phone symbols to pronunciation error library IDs
+      const initialError = worstInitialSymbol ? INITIAL_PHONE_TO_ERROR[worstInitialSymbol] : undefined;
+      const finalError = worstFinalSymbol ? FINAL_PHONE_TO_ERROR[worstFinalSymbol] : undefined;
+      // Tone error: only when there's a clear mismatch between detected and expected tone
+      const hasToneMismatch =
+        expectedTone !== undefined &&
+        detectedTone !== undefined &&
+        expectedTone !== 5 &&
+        expectedTone !== detectedTone;
+      const toneError = hasToneMismatch ? toneToErrorId(expectedTone!) : undefined;
+
       syllables.push({
         tone: mapScore(toneRaw),
         initial: mapScore(initialAvg),
@@ -228,6 +302,9 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
         expectedTone: expectedTone !== undefined && expectedTone !== 5 ? expectedTone : undefined,
         toneScoreRaw: Math.round(toneRaw),
         phoneScoreRaw,
+        initialError,
+        finalError,
+        toneError,
       });
     }
   }
@@ -246,6 +323,9 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
       expectedTone: syll.expectedTone,
       toneScoreRaw: syll.toneScoreRaw,
       phoneScoreRaw: syll.phoneScoreRaw,
+      initialError: syll.initialError,
+      finalError: syll.finalError,
+      toneError: syll.toneError,
     };
   });
 
