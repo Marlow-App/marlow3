@@ -39,6 +39,27 @@ function perrToRawScore(perr: string | undefined, perrMsg: string | undefined): 
   return 10;                                     // severe named error → poor
 }
 
+const MANDARIN_TWO_CHAR_INITIALS = ["zh", "ch", "sh"] as const;
+const MANDARIN_ONE_CHAR_INITIALS = ["b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "j", "q", "x", "r", "z", "c", "s", "y", "w"] as const;
+
+/**
+ * Extract the initial consonant and final vowel/rhyme from a syll symbol string.
+ * e.g., "zao3" → { initial: "z", final: "ao" }
+ *       "shang4" → { initial: "sh", final: "ang" }
+ *       "an1" → { initial: undefined, final: "an" }
+ * Strips the trailing tone digit before processing.
+ */
+function extractSyllParts(syllSymbol: string): { initial: string | undefined; final: string | undefined } {
+  const base = syllSymbol.replace(/[1-5]$/, ""); // remove tone digit
+  for (const init of MANDARIN_TWO_CHAR_INITIALS) {
+    if (base.startsWith(init)) return { initial: init, final: base.slice(init.length) || undefined };
+  }
+  for (const init of MANDARIN_ONE_CHAR_INITIALS) {
+    if (base.startsWith(init)) return { initial: init, final: base.slice(init.length) || undefined };
+  }
+  return { initial: undefined, final: base || undefined };
+}
+
 /**
  * Extract the expected tone number (1-5) from a syll's symbol attribute.
  * e.g., "mai3" → 3, "dan1" → 1, "le5" → 5 (neutral), undefined if absent/unparseable.
@@ -203,11 +224,17 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
       const finals: number[] = [];
       let detectedTone: number | undefined;  // from first vowel phone's mono_tone
 
-      // Track worst-scoring errored phone symbol per category for error ID mapping
+      // Pre-extract the initial and final from the syll's symbol attribute.
+      // This is much more reliable than reading the phone element's "symbol" attribute,
+      // which iFlytek often omits. The syll symbol (e.g. "zao3") is always present.
+      const syllSymbol = attr(syll.attrs, "symbol") ?? "";
+      const syllParts = extractSyllParts(syllSymbol);
+
+      // Track whether any phone in each category had a named error
+      let initialHasError = false;
+      let finalHasError = false;
       let worstInitialScore = Infinity;
       let worstFinalScore = Infinity;
-      let worstInitialSymbol: string | undefined;
-      let worstFinalSymbol: string | undefined;
 
       for (const phoneAttrs of extractSelfClosing(syll.inner, "phone")) {
         // Skip silence and filler phones
@@ -229,20 +256,22 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
           if (detectedTone === undefined) {
             detectedTone = getDetectedTone(attr(phoneAttrs, "mono_tone"));
           }
-          // Track worst final phone with a named error
           if (hasNamedError && rawScore < worstFinalScore) {
             worstFinalScore = rawScore;
-            worstFinalSymbol = attr(phoneAttrs, "symbol");
+            finalHasError = true;
           }
         } else {
           initials.push(rawScore);
-          // Track worst initial phone with a named error
           if (hasNamedError && rawScore < worstInitialScore) {
             worstInitialScore = rawScore;
-            worstInitialSymbol = attr(phoneAttrs, "symbol");
+            initialHasError = true;
           }
         }
       }
+
+      // Map errors using the syll-derived initial/final symbols (reliable from syll.symbol)
+      const worstInitialSymbol = initialHasError ? syllParts.initial : undefined;
+      const worstFinalSymbol   = finalHasError   ? syllParts.final   : undefined;
 
       // If no phones classified, skip this syll
       if (initials.length === 0 && finals.length === 0) continue;
