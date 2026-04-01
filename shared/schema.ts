@@ -45,6 +45,8 @@ export const characterRatingSchema = z.object({
   expectedTone: z.number().int().min(1).max(5).optional(),   // tone the character should be (1-5)
   toneScoreRaw: z.number().min(0).max(100).optional(),       // iFlytek's 0-100 tone accuracy score
   phoneScoreRaw: z.number().min(0).max(100).optional(),      // iFlytek's 0-100 consonant+vowel quality
+  initialSymbol: z.string().optional(),                      // concrete initial phone symbol detected by iFlytek (e.g. "zh")
+  finalSymbol: z.string().optional(),                        // concrete final phone symbol detected by iFlytek (e.g. "eng")
 });
 
 export type CharacterRating = z.infer<typeof characterRatingSchema>;

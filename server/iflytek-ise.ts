@@ -93,15 +93,20 @@ const FINAL_PHONE_TO_ERROR: Record<string, string> = {
 };
 
 /**
- * Map an expected tone number to the most likely tone error ID when a tone mismatch occurs.
- * Based on the most common learner mistake for each tone.
+ * 2-D matrix: [expectedTone][detectedTone] → error library ID.
+ * Maps the specific confusion pattern (expected + detected) to the most
+ * pedagogically useful error ID from our pronunciation error library.
+ * Rows = expected tone (1-4); Columns = detected tone (1-4).
  */
-function toneToErrorId(expected: number): string | undefined {
-  if (expected === 1) return "T006"; // Tone 1 too flat or low
-  if (expected === 2) return "T002"; // Tone 2 not rising enough
-  if (expected === 3) return "T011"; // Tone 3 doesn't dip as it should
-  if (expected === 4) return "T003"; // Tone 4 not falling sharply enough
-  return undefined;
+const TONE_ERROR_MATRIX: Readonly<Record<number, Readonly<Record<number, string>>>> = {
+  1: { 2: "T006", 3: "T006", 4: "T006" }, // T1 wrong → always "too flat or low"
+  2: { 1: "T002", 3: "T008", 4: "T002" }, // T2→T1: not rising; T2→T3: starts too high; T2→T4: not rising
+  3: { 1: "T010", 2: "T011", 4: "T010" }, // T3→T1/T4: too high; T3→T2: doesn't dip
+  4: { 1: "T003", 2: "T007", 3: "T003" }, // T4→T1/T3: not falling; T4→T2: starts too low
+};
+
+function toneToErrorId(expected: number, detected: number): string | undefined {
+  return TONE_ERROR_MATRIX[expected]?.[detected];
 }
 
 function mapFluency(score: number): number {
@@ -184,6 +189,8 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
     initialError?: string;
     finalError?: string;
     toneError?: string;
+    initialSymbol?: string;
+    finalSymbol?: string;
   }[] = [];
 
   for (const word of extractElements(xml, "word")) {
@@ -287,12 +294,13 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
       const initialError = worstInitialSymbol ? INITIAL_PHONE_TO_ERROR[worstInitialSymbol] : undefined;
       const finalError = worstFinalSymbol ? FINAL_PHONE_TO_ERROR[worstFinalSymbol] : undefined;
       // Tone error: only when there's a clear mismatch between detected and expected tone
+      // Uses the 2-D matrix to pick the most specific error for this expected→detected pair
       const hasToneMismatch =
         expectedTone !== undefined &&
         detectedTone !== undefined &&
         expectedTone !== 5 &&
         expectedTone !== detectedTone;
-      const toneError = hasToneMismatch ? toneToErrorId(expectedTone!) : undefined;
+      const toneError = hasToneMismatch ? toneToErrorId(expectedTone!, detectedTone!) : undefined;
 
       syllables.push({
         tone: mapScore(toneRaw),
@@ -305,6 +313,9 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
         initialError,
         finalError,
         toneError,
+        // Concrete phone symbols from iFlytek (only when a named error was found)
+        initialSymbol: worstInitialSymbol,
+        finalSymbol: worstFinalSymbol,
       });
     }
   }
@@ -326,6 +337,8 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
       initialError: syll.initialError,
       finalError: syll.finalError,
       toneError: syll.toneError,
+      initialSymbol: syll.initialSymbol,
+      finalSymbol: syll.finalSymbol,
     };
   });
 

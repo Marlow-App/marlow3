@@ -584,15 +584,20 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
-function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, errors = [] }: {
+function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, errors = [], recordingId }: {
   ratings: CharacterRating[];
   pinyinData?: PinyinChar[];
   fluencyScore?: number | null;
   errors?: PronunciationError[];
+  recordingId?: number;
 }) {
+  const { toast } = useToast();
   const [openError, setOpenError] = useState<PronunciationError | null>(null);
   const [openErrorChar, setOpenErrorChar] = useState<string | undefined>(undefined);
+  const [addingErrorId, setAddingErrorId] = useState<string | null>(null);
   const chinesePinyinOnly = pinyinData?.filter(p => p.py) || [];
+
+  const { data: practiceList = [] } = useQuery<PracticeListItem[]>({ queryKey: ["/api/practice-list"] });
 
   const lookupError = (errorId: string | undefined) =>
     errorId ? errors.find(e => e.id === errorId) : undefined;
@@ -600,6 +605,20 @@ function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, errors = 
   const openErrorDialog = (errorId: string | undefined, char: string) => {
     const err = lookupError(errorId);
     if (err) { setOpenError(err); setOpenErrorChar(char); }
+  };
+
+  const addToPractice = async (errorId: string, char: string) => {
+    if (addingErrorId) return;
+    setAddingErrorId(errorId);
+    try {
+      await apiRequest("POST", "/api/practice-list", { errorId, character: char, recordingId });
+      queryClient.invalidateQueries({ queryKey: ["/api/practice-list"] });
+      toast({ title: "Added to Practice List", description: "Find it under Practice List in the sidebar." });
+    } catch {
+      toast({ title: "Error", description: "Failed to add to Practice List.", variant: "destructive" });
+    } finally {
+      setAddingErrorId(null);
+    }
   };
 
   return (
@@ -637,14 +656,15 @@ function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, errors = 
                       )}
                     </div>
                     {toneErr && (
-                      <button
-                        type="button"
-                        onClick={() => openErrorDialog(cr.toneError, cr.character)}
-                        className="mt-0.5 ml-12 text-xs text-blue-600 dark:text-blue-400 hover:underline text-left leading-snug"
-                        data-testid={`ai-tone-error-btn-${idx}`}
-                      >
-                        {toneErr.commonError} →
-                      </button>
+                      <AIErrorRow
+                        error={toneErr}
+                        character={cr.character}
+                        practiceList={practiceList}
+                        addingErrorId={addingErrorId}
+                        onOpen={() => openErrorDialog(cr.toneError, cr.character)}
+                        onAdd={() => addToPractice(toneErr.id, cr.character)}
+                        testId={`ai-tone-error-${idx}`}
+                      />
                     )}
                   </div>
                   <div>
@@ -655,29 +675,31 @@ function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, errors = 
                         {phoneScore}%
                       </span>
                     </div>
-                    {(initErr || finalErr) && (
-                      <div className="mt-0.5 ml-12 flex flex-col gap-0.5">
-                        {initErr && (
-                          <button
-                            type="button"
-                            onClick={() => openErrorDialog(cr.initialError, cr.character)}
-                            className="text-xs text-violet-600 dark:text-violet-400 hover:underline text-left leading-snug"
-                            data-testid={`ai-initial-error-btn-${idx}`}
-                          >
-                            Initial — {initErr.commonError} →
-                          </button>
-                        )}
-                        {finalErr && (
-                          <button
-                            type="button"
-                            onClick={() => openErrorDialog(cr.finalError, cr.character)}
-                            className="text-xs text-orange-600 dark:text-orange-400 hover:underline text-left leading-snug"
-                            data-testid={`ai-final-error-btn-${idx}`}
-                          >
-                            Final — {finalErr.commonError} →
-                          </button>
-                        )}
-                      </div>
+                    {initErr && (
+                      <AIErrorRow
+                        error={initErr}
+                        character={cr.character}
+                        symbol={cr.initialSymbol}
+                        label="Initial"
+                        practiceList={practiceList}
+                        addingErrorId={addingErrorId}
+                        onOpen={() => openErrorDialog(cr.initialError, cr.character)}
+                        onAdd={() => addToPractice(initErr.id, cr.character)}
+                        testId={`ai-initial-error-${idx}`}
+                      />
+                    )}
+                    {finalErr && (
+                      <AIErrorRow
+                        error={finalErr}
+                        character={cr.character}
+                        symbol={cr.finalSymbol}
+                        label="Final"
+                        practiceList={practiceList}
+                        addingErrorId={addingErrorId}
+                        onOpen={() => openErrorDialog(cr.finalError, cr.character)}
+                        onAdd={() => addToPractice(finalErr.id, cr.character)}
+                        testId={`ai-final-error-${idx}`}
+                      />
                     )}
                   </div>
                 </div>
@@ -688,6 +710,66 @@ function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, errors = 
       </div>
       {fluencyScore != null && <FluencyDisplay score={fluencyScore} />}
       <ErrorDetailDialog error={openError} open={!!openError} onClose={() => setOpenError(null)} character={openErrorChar} />
+    </div>
+  );
+}
+
+function AIErrorRow({
+  error,
+  character,
+  symbol,
+  label,
+  practiceList,
+  addingErrorId,
+  onOpen,
+  onAdd,
+  testId,
+}: {
+  error: PronunciationError;
+  character: string;
+  symbol?: string;
+  label?: string;
+  practiceList: PracticeListItem[];
+  addingErrorId: string | null;
+  onOpen: () => void;
+  onAdd: () => void;
+  testId: string;
+}) {
+  const isInList = practiceList.some(i => i.errorId === error.id);
+  const isAdding = addingErrorId === error.id;
+
+  const labelColor =
+    error.category === "tone"
+      ? "text-blue-600 dark:text-blue-400"
+      : error.category === "initial"
+      ? "text-violet-600 dark:text-violet-400"
+      : "text-orange-600 dark:text-orange-400";
+
+  return (
+    <div className="mt-1 ml-12 flex items-center gap-2 flex-wrap" data-testid={testId}>
+      <button
+        type="button"
+        onClick={onOpen}
+        className={`text-xs ${labelColor} hover:underline text-left leading-snug`}
+        data-testid={`${testId}-detail-btn`}
+      >
+        {label && <span className="font-semibold">{label}{symbol ? ` "${symbol}"` : ""} — </span>}
+        {error.commonError}
+      </button>
+      {!isInList && (
+        <button
+          type="button"
+          onClick={onAdd}
+          disabled={isAdding}
+          className="text-[11px] px-1.5 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium disabled:opacity-50"
+          data-testid={`${testId}-add-btn`}
+        >
+          {isAdding ? "Adding…" : "+ Practice"}
+        </button>
+      )}
+      {isInList && (
+        <span className="text-[11px] text-muted-foreground" data-testid={`${testId}-saved-badge`}>✓ In practice list</span>
+      )}
     </div>
   );
 }
@@ -1069,7 +1151,7 @@ function EditableFeedbackCard({
               <>
                 {item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0 && (
                   item.isAiFeedback ? (
-                    <AICharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} pinyinData={pinyinData} fluencyScore={item.fluencyScore} errors={errors} />
+                    <AICharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} pinyinData={pinyinData} fluencyScore={item.fluencyScore} errors={errors} recordingId={recordingId} />
                   ) : (
                     <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={isReviewer} pinyinData={pinyinData} fluencyScore={item.fluencyScore} errors={errors} />
                   )
