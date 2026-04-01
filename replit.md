@@ -20,10 +20,14 @@ Marlow uses a credit-based (pay-as-you-go) model instead of subscriptions:
 
 - **Purpose**: Automatically score learner recordings using iFLYTEK's Pronunciation Assessment (ISE) API, giving instant feedback seconds after upload
 - **Endpoint**: `ws://ise-api-sg.xf-yun.com/v2/ise` — same HMAC-SHA256 auth as TTS, credentials: `IFLYTEK_APP_ID`, `IFLYTEK_API_KEY`, `IFLYTEK_API_SECRET`
-- **ISE params**: `ent:"cn_vip"`, `category:"read_sentence"`, `aue:"raw"` (PCM), `extra_ability:"syll_phone_err_msg"`, `plev:"0"`; text requires UTF-8 BOM (`\uFEFF`)
+- **ISE params**: `ent:"cn_vip"`, `category:"read_sentence"`, `aue:"raw"` (PCM), `extra_ability:"syll_phone_err_msg|tone"`, `plev:"0"`; text requires UTF-8 BOM (`\uFEFF`)
 - **Transcoding**: Browser recordings (webm/mp4) are transcoded server-side via ffmpeg to 16kHz 16-bit mono signed PCM before streaming to ISE (`aue:"raw"`). ffmpeg is available at runtime in the Replit NixOS environment.
 - **Audio streaming**: 1280-byte chunks at 40ms intervals over WebSocket
 - **Score mapping**: iFLYTEK 0-100 → app 0/50/100: <40→0, <75→50, ≥75→100. Fluency 0-100 → 1-5 in 20-pt bands
+- **Per-character tone scoring**: Uses `mono_tone` (e.g., `"TONE3"`) on each vowel phone compared against the expected tone from the syll's `symbol` attribute (e.g., `"mai3"` → TONE3). Match → tone great (100), mismatch → tone poor (0). Neutral tone syllables (tone 5) are always treated as correct. Falls back to syll `dp_message` if either attribute is absent.
+- **Per-character initial/final scoring**: Uses `perr_msg` (error code) + `perr_level_msg` (severity 0-3) on each phone. `perr_msg=0` → no error (great). Non-zero `perr_msg` + severity 0/1 → ok (60), severity 2 → poor (30), severity 3 → poor (10).
+- **Overall score**: Uses iFlytek's `total_score` from the inner `<read_sentence>` element (inside `<rec_paper>`), rounded to integer.
+- **XML structure**: `<xml_result> → <read_sentence> → <rec_paper> → <read_sentence total_score="..." phone_score="..." tone_score="..."> → <sentence> → <word symbol="..."> → <syll symbol="mai3"> → <phone is_yun="0|1" mono_tone="TONE3" perr_msg="..." perr_level_msg="...">`
 - **Synchronous**: ISE runs synchronously during the upload request — AI feedback is saved before the client is redirected, so it appears immediately on the recording detail page. ISE failures are caught silently so recording upload always succeeds regardless.
 - **System user**: `"iflytek-ai"` upserted on server startup (firstName: "AI Review", role: "reviewer") satisfies FK on feedback.reviewerId
 - **`isAiFeedback` field**: boolean on `feedback` table (default false); used in UI to show Bot icon + "AI Review" badge instead of reviewer name

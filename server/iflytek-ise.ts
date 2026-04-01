@@ -40,6 +40,27 @@ function perrToRawScore(perr: string | undefined, perrMsg: string | undefined): 
   return 10;                                     // severe named error → wrong
 }
 
+/**
+ * Extract the expected tone number (1-5) from a syll's symbol attribute.
+ * e.g., "mai3" → 3, "dan1" → 1, "le5" → 5 (neutral), undefined if absent/unparseable.
+ */
+function getExpectedTone(symbol: string | undefined): number | undefined {
+  if (!symbol) return undefined;
+  const lastChar = symbol[symbol.length - 1];
+  const n = parseInt(lastChar, 10);
+  return (n >= 1 && n <= 5) ? n : undefined;
+}
+
+/**
+ * Extract the detected tone number (1-5) from a phone's mono_tone attribute.
+ * e.g., "TONE3" → 3, "TONE1" → 1. Returns undefined if absent/unparseable.
+ */
+function getDetectedTone(monoTone: string | undefined): number | undefined {
+  if (!monoTone) return undefined;
+  const m = monoTone.match(/TONE(\d)/);
+  return m ? parseInt(m[1], 10) : undefined;
+}
+
 function mapFluency(score: number): number {
   if (score < 20) return 1;
   if (score < 40) return 2;
@@ -120,6 +141,7 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
 
       const initials: number[] = [];
       const finals: number[] = [];
+      let detectedTone: number | undefined;  // from first vowel phone's mono_tone
 
       for (const phoneAttrs of extractSelfClosing(syll.inner, "phone")) {
         // Skip silence and filler phones
@@ -136,6 +158,10 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
         const isYun = attr(phoneAttrs, "is_yun");
         if (isYun === "1") {
           finals.push(rawScore);
+          // Capture mono_tone from the first vowel phone — this is the tone iFlytek actually heard
+          if (detectedTone === undefined) {
+            detectedTone = getDetectedTone(attr(phoneAttrs, "mono_tone"));
+          }
         } else {
           initials.push(rawScore);
         }
@@ -153,16 +179,31 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
           ? finals.reduce((a, b) => a + b, 0) / finals.length
           : initialAvg;
 
-      // For tone: try explicit tone_score first (available when extra_ability includes "tone")
-      // Fall back to syll-level dp_message: 0=correct, non-zero=error
-      const toneScoreStr = attr(syll.attrs, "tone_score");
+      // Tone scoring — priority order:
+      //
+      // 1. mono_tone comparison (most reliable per-character tone signal):
+      //    Compare iFlytek's detected tone (mono_tone on the vowel phone) against
+      //    the expected tone encoded in the syll's symbol attribute (e.g. "mai3" → tone 3).
+      //    Neutral tone syllables (tone 5) are always treated as correct — they have no
+      //    fixed target pitch and iFlytek does not assess them strictly.
+      //
+      // 2. Explicit tone_score on syll (only present with certain extra_ability combos)
+      //
+      // 3. dp_message fallback (coarse: 0=ok, non-zero=error)
+      const expectedTone = getExpectedTone(attr(syll.attrs, "symbol"));
       let toneRaw: number;
-      if (toneScoreStr !== undefined) {
-        toneRaw = parseFloat(toneScoreStr);
+
+      if (expectedTone !== undefined && detectedTone !== undefined && expectedTone !== 5) {
+        // Direct comparison: match → great, mismatch → poor
+        toneRaw = (expectedTone === detectedTone) ? 100 : 0;
       } else {
-        const syllDpMsg = attr(syll.attrs, "dp_message");
-        // dp_message=0 → correct; non-zero → error of some kind
-        toneRaw = (syllDpMsg === "0" || syllDpMsg === undefined) ? 90 : 30;
+        const toneScoreStr = attr(syll.attrs, "tone_score");
+        if (toneScoreStr !== undefined) {
+          toneRaw = parseFloat(toneScoreStr);
+        } else {
+          const syllDpMsg = attr(syll.attrs, "dp_message");
+          toneRaw = (syllDpMsg === "0" || syllDpMsg === undefined) ? 90 : 30;
+        }
       }
 
       syllables.push({
