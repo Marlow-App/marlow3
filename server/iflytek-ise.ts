@@ -21,23 +21,22 @@ function mapScore(score: number): 0 | 50 | 100 {
  * Convert ISE phone attributes to a 0-100 raw score.
  *
  * perr_msg is the PRIMARY signal: it contains a named mispronunciation error code.
- *   perr_msg="0" means no specific error was identified — the phone is acceptable
- *   regardless of how acoustically different it is from the ideal model.
+ *   perr_msg="0" means no specific error was identified — the phone is acceptable.
+ *   When perr_msg="0", perr_level_msg is irrelevant (it reflects acoustic distance
+ *   from the model, not a mispronunciation). Score is always 100.
  *
- * perr_level_msg gives severity when perr_msg IS non-zero:
- *   0/1 = slight identified error → 50 (ok)
- *   2   = moderate identified error → 0 (wrong)
- *   3   = severe identified error → 0 (wrong)
+ * perr_level_msg gives severity ONLY when perr_msg IS non-zero (named error):
+ *   0/1 = slight identified error → 60 (ok)
+ *   2   = moderate identified error → 30 (poor)
+ *   3   = severe identified error → 10 (poor)
  */
 function perrToRawScore(perr: string | undefined, perrMsg: string | undefined): number {
-  // No specific mispronunciation named — treat as acceptable (great)
-  if (perrMsg === "0" || perrMsg === undefined) {
-    return perr === "0" ? 100 : 85;  // perfect (0) or minor acoustic variation (85 → great)
-  }
+  // No specific mispronunciation named — phone is acceptable, always 100
+  if (perrMsg === "0" || perrMsg === undefined) return 100;
   // Specific error code identified — severity determines the score
   if (perr === "0" || perr === "1") return 60;  // slight named error → ok
-  if (perr === "2") return 30;                  // moderate named error → wrong
-  return 10;                                     // severe named error → wrong
+  if (perr === "2") return 30;                  // moderate named error → poor
+  return 10;                                     // severe named error → poor
 }
 
 /**
