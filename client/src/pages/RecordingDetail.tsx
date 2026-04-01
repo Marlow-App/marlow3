@@ -628,7 +628,6 @@ function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, errors = 
           const charPy = chinesePinyinOnly[idx] || null;
           const toneScore = cr.toneScoreRaw ?? cr.tone;
           const phoneScore = cr.phoneScoreRaw ?? Math.round((cr.initial + cr.final) / 2);
-          const hasMismatch = cr.detectedTone !== undefined && cr.expectedTone !== undefined && cr.detectedTone !== cr.expectedTone;
           const toneErr = lookupError(cr.toneError);
           const initErr = lookupError(cr.initialError);
           const finalErr = lookupError(cr.finalError);
@@ -649,9 +648,9 @@ function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, errors = 
                       <span className={`text-sm font-semibold tabular-nums min-w-[3ch] ${getScoreTextColor(toneScore)}`} data-testid={`ai-tone-score-${idx}`}>
                         {toneScore}%
                       </span>
-                      {hasMismatch && (
-                        <span className="text-xs text-muted-foreground" data-testid={`ai-tone-mismatch-${idx}`}>
-                          heard T{cr.detectedTone} · expected T{cr.expectedTone}
+                      {toneScore < 100 && cr.expectedTone !== undefined && (
+                        <span className="text-xs text-muted-foreground" data-testid={`ai-tone-expected-${idx}`}>
+                          target T{cr.expectedTone}
                         </span>
                       )}
                     </div>

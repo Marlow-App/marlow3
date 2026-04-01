@@ -285,32 +285,26 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
           ? finals.reduce((a, b) => a + b, 0) / finals.length
           : initialAvg;
 
-      // Tone scoring — priority order:
+      // Tone scoring.
       //
-      // 1. mono_tone comparison (most reliable per-character tone signal):
-      //    Compare iFlytek's detected tone (mono_tone on the vowel phone) against
-      //    the expected tone encoded in the syll's symbol attribute (e.g. "mai3" → tone 3).
-      //    Neutral tone syllables (tone 5) are always treated as correct — they have no
-      //    fixed target pitch and iFlytek does not assess them strictly.
+      // NOTE: iFlytek's mono_tone on phone elements reports the TARGET/expected tone from
+      // the reference text — NOT the tone actually detected in the audio. Comparing it against
+      // expectedTone will always match, so it cannot be used for mismatch detection.
       //
-      // 2. Explicit tone_score on syll (only present with certain extra_ability combos)
-      //
-      // 3. dp_message fallback (coarse: 0=ok, non-zero=error)
+      // Instead, we use iFlytek's direct tone_score on the syll element (0-100 quality score),
+      // which genuinely reflects how well the tone was produced. Falls back to dp_message.
       const expectedTone = getExpectedTone(attr(syll.attrs, "symbol"));
       let toneRaw: number;
-
-      if (expectedTone !== undefined && detectedTone !== undefined && expectedTone !== 5) {
-        // Direct comparison: match → great, mismatch → poor
-        toneRaw = (expectedTone === detectedTone) ? 100 : 0;
+      const toneScoreStr = attr(syll.attrs, "tone_score");
+      if (toneScoreStr !== undefined) {
+        toneRaw = parseFloat(toneScoreStr);
       } else {
-        const toneScoreStr = attr(syll.attrs, "tone_score");
-        if (toneScoreStr !== undefined) {
-          toneRaw = parseFloat(toneScoreStr);
-        } else {
-          const syllDpMsg = attr(syll.attrs, "dp_message");
-          toneRaw = (syllDpMsg === "0" || syllDpMsg === undefined) ? 90 : 30;
-        }
+        const syllDpMsg = attr(syll.attrs, "dp_message");
+        toneRaw = (syllDpMsg === "0" || syllDpMsg === undefined) ? 90 : 30;
       }
+
+      // Neutral-tone (5) syllables have no fixed pitch target — treat as full score
+      if (expectedTone === 5) toneRaw = 100;
 
       // Raw phone quality: true average of all phone perr scores (before fallback logic)
       const allPhoneScores = [...initials, ...finals];
@@ -321,20 +315,23 @@ function parseISEXml(xml: string, sentenceText: string): ISEResult {
       // Map errored phone symbols to pronunciation error library IDs
       const initialError = worstInitialSymbol ? INITIAL_PHONE_TO_ERROR[worstInitialSymbol] : undefined;
       const finalError = worstFinalSymbol ? FINAL_PHONE_TO_ERROR[worstFinalSymbol] : undefined;
-      // Tone error: only when there's a clear mismatch between detected and expected tone
-      // Uses the 2-D matrix to pick the most specific error for this expected→detected pair
-      const hasToneMismatch =
-        expectedTone !== undefined &&
-        detectedTone !== undefined &&
-        expectedTone !== 5 &&
-        expectedTone !== detectedTone;
-      const toneError = hasToneMismatch ? toneToErrorId(expectedTone!, detectedTone!) : undefined;
+
+      // Tone error: triggered when tone_score < 60 (poor) on a non-neutral syllable.
+      // Since iFlytek does not reliably report the actual detected tone (only the target),
+      // we use a per-tone "most likely" error based on what learners typically do wrong.
+      const LIKELY_TONE_ERROR: Record<number, string> = {
+        1: "T006", // T1: pitch too low / not sustained flat
+        2: "T002", // T2: rising not pronounced enough
+        3: "T010", // T3: dip not completed or too short
+        4: "T003", // T4: falling not sharp/deep enough
+      };
+      const hasToneError = toneRaw < 60 && expectedTone !== undefined && expectedTone !== 5;
+      const toneError = hasToneError ? LIKELY_TONE_ERROR[expectedTone!] : undefined;
 
       syllables.push({
         tone: mapScore(toneRaw),
         initial: mapScore(initialAvg),
         final: mapScore(finalAvg),
-        detectedTone: expectedTone !== undefined ? detectedTone : undefined,
         expectedTone: expectedTone !== undefined && expectedTone !== 5 ? expectedTone : undefined,
         toneScoreRaw: Math.round(toneRaw),
         phoneScoreRaw,
