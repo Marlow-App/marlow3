@@ -547,7 +547,7 @@ export default function Landing() {
                   Julesy (Dr. Chen), born in China and raised in the United States, is passionate about the Chinese language and helping people learn it. She first got her Master's in Chinese Linguistics at PolyU in Hong Kong, but loved the program so much that she later got her PhD in the same department. Since then, she's turned to YouTube to share her love for the historical, social, and scientific aspects of the language.
                 </p>
                 <p className="text-foreground/80 leading-relaxed">
-                  With Marlow, she hopes to create a platform to help Chinese learners hone their skills by finetuning their tone issues — something that AI is not currently able to do with accuracy.
+                  With Marlow, she hopes to create a platform to help Chinese learners hone their skills by finetuning their tone issues.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                   <YouTubeCard videoId="eIP8yVcDZRI" />
