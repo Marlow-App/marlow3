@@ -19,7 +19,7 @@ import {
 import { Link, useLocation } from "wouter";
 import {
   Mic2, PlayCircle, UserCircle, Zap, Loader2, X,
-  Compass, BookOpen, Volume2, ChevronRight,
+  Compass, BookOpen, Volume2, ChevronRight, Flame,
 } from "lucide-react";
 import {
   format, formatDistanceToNow, startOfWeek, addDays,
@@ -58,6 +58,24 @@ function getDailyWord(words: string[]): string | null {
   const today = new Date();
   const seed = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
   return words[seed % words.length];
+}
+
+function calculateStreak(recordings: any[]): number {
+  if (!recordings.length) return 0;
+  const recordingDays = new Set(
+    recordings.map(r => format(new Date(r.createdAt), "yyyy-MM-dd"))
+  );
+  const today = startOfDay(new Date());
+  const todayKey = format(today, "yyyy-MM-dd");
+  // If today has no recording, check if yesterday does (streak still alive today)
+  let cursor = recordingDays.has(todayKey) ? today : addDays(today, -1);
+  if (!recordingDays.has(format(cursor, "yyyy-MM-dd"))) return 0;
+  let count = 0;
+  while (recordingDays.has(format(cursor, "yyyy-MM-dd"))) {
+    count++;
+    cursor = addDays(cursor, -1);
+  }
+  return count;
 }
 
 function useAppTour() {
@@ -321,6 +339,7 @@ export default function Home() {
   }
 
   const allRecordings = recordings ?? [];
+  const streak = calculateStreak(allRecordings);
 
   return (
     <Layout>
@@ -344,6 +363,29 @@ export default function Home() {
                 </Button>
               </Link>
             </div>
+
+            {/* Streak badge */}
+            {streak > 0 && (
+              <div className="flex items-center gap-2 mb-4" data-testid="streak-badge">
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
+                  streak >= 7
+                    ? "bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800"
+                    : "bg-primary/10 text-primary border border-primary/20"
+                }`}>
+                  <Flame className={`w-4 h-4 shrink-0 ${streak >= 7 ? "text-orange-500" : "text-primary"}`} />
+                  <span data-testid="streak-count">{streak}-day streak</span>
+                </div>
+                {streak === 1 && (
+                  <span className="text-xs text-muted-foreground">Keep going!</span>
+                )}
+                {streak >= 3 && streak < 7 && (
+                  <span className="text-xs text-muted-foreground">You're on a roll!</span>
+                )}
+                {streak >= 7 && (
+                  <span className="text-xs text-muted-foreground font-medium">🔥 Amazing streak!</span>
+                )}
+              </div>
+            )}
 
             {/* Week calendar strip */}
             <WeekCalendarStrip
