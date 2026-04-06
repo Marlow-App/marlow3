@@ -24,7 +24,7 @@ Marlow uses a credit-based (pay-as-you-go) model instead of subscriptions:
 - **Request params**: `coreType:"sent.eval.cn"`, `refText` (Chinese sentence), `phoneme_output:1` (enables per-phoneme data), `tone_weight:0.2`
 - **Audio format**: Browser recordings (webm/mp4) are transcoded server-side via ffmpeg to 16kHz 16-bit mono WAV (`-f wav`). ffmpeg is available at runtime in the Replit NixOS environment.
 - **Score mapping**: SpeechSuper 0-100 → app 0/50/100: <40→0, <75→50, ≥75→100. Fluency 0-100 → 1-5 in 20-pt bands
-- **Response structure**: `result.overall` → overallScore; `result.fluency` → fluencyScore; `result.words[]` — one per Chinese character (filtered by `charType === 0`)
+- **Response structure**: `result.overall` → overallScore; `result.fluency` → fluencyScore; `result.tone/rear_tone/rhythm/speed/pronunciation` → stored in `speechSuperScores` JSONB column; `result.words[]` — one per Chinese character (filtered by `charType === 0`)
 - **Per-character tone scoring**: `words[i].scores.tone` (0-100) → `toneScoreRaw`; `words[i].tone` ("tone3") → `expectedTone`
 - **Per-character initial/final scoring**: `words[i].phonemes` filtered by `tone_index === "0"` (initial consonant) vs `!== "0"` (final vowel); avg `pronunciation` per group → mapped to 0/50/100
 - **Error detection**: `initialSymbol`/`finalSymbol` from the first phoneme's `phone` field → lookup in `INITIAL_PHONE_TO_ERROR`/`FINAL_PHONE_TO_ERROR`; `toneError` from `LIKELY_TONE_ERROR[expectedTone]` when `toneScoreRaw < 75`
@@ -105,7 +105,7 @@ The project uses a monorepo layout with three main directories:
   - `users` — user accounts (required for Replit Auth); includes `focusAreas` (text[]), `nativeLanguage` (text), `onboardingComplete` (boolean, default false)
   - `sessions` — session storage (required for Replit Auth)
   - `recordings` — audio recordings submitted by learners (fields: audioUrl, sentenceText, status pending/reviewed, parentRecordingId nullable FK for re-records)
-  - `feedback` — reviewer feedback on recordings (fields: textFeedback, corrections, audioFeedbackUrl, rating (legacy 1-3), characterRatings (JSONB per-character ratings), fluencyScore (integer 1-5, nullable), overallScore (computed percentage 0-100: 80% character + 20% fluency when fluency present), reviewerId)
+  - `feedback` — reviewer feedback on recordings (fields: textFeedback, corrections, audioFeedbackUrl, rating (legacy 1-3), characterRatings (JSONB per-character ratings), fluencyScore (integer 1-5, nullable), overallScore (computed percentage 0-100: 80% character + 20% fluency when fluency present), speechSuperScores (JSONB: tone/rearTone/rhythm/speed/pronunciation sentence-level scores, AI-only), reviewerId)
   - `userConsents` — consent records (consentType, policyVersion, ipAddress, consentedAt)
 - **Relations**: recordings belong to users, feedback belongs to recordings and reviewers, userConsents belong to users
 - **Schema Push**: Use `npm run db:push` (runs `drizzle-kit push`) to sync schema to database

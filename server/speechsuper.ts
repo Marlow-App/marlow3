@@ -1,12 +1,13 @@
 import { createHash } from "crypto";
 import { spawn } from "child_process";
 import { ObjectStorageService } from "./replit_integrations/object_storage";
-import type { CharacterRating } from "@shared/schema";
+import type { CharacterRating, SpeechSuperScores } from "@shared/schema";
 
 export interface ISEResult {
   characterRatings: CharacterRating[];
   fluencyScore: number;
   overallScore: number;
+  speechSuperScores: SpeechSuperScores;
 }
 
 // ─── Score mapping ────────────────────────────────────────────────────────────
@@ -150,6 +151,11 @@ interface SSResponse {
   result?: {
     overall: number;
     fluency: number;
+    tone?: number;
+    rear_tone?: number;
+    rhythm?: number;
+    speed?: number;
+    pronunciation?: number;
     words: SSWord[];
   };
 }
@@ -324,7 +330,15 @@ function parseSpeechSuperResult(
     };
   });
 
-  return { characterRatings, fluencyScore, overallScore };
+  const speechSuperScores: SpeechSuperScores = {
+    tone: result.tone != null ? Math.round(result.tone) : undefined,
+    rearTone: result.rear_tone != null ? Math.round(result.rear_tone) : undefined,
+    rhythm: result.rhythm != null ? Math.round(result.rhythm) : undefined,
+    speed: result.speed != null ? Math.round(result.speed) : undefined,
+    pronunciation: result.pronunciation != null ? Math.round(result.pronunciation) : undefined,
+  };
+
+  return { characterRatings, fluencyScore, overallScore, speechSuperScores };
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────

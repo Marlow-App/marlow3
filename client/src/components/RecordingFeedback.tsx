@@ -7,7 +7,7 @@ import { Link } from "wouter";
 import { getScoreTextColor } from "@/lib/scoreColor";
 import { api, buildUrl } from "@shared/routes";
 import { useAllErrors, AICharacterRatingDisplay, getCharPinyin, PinyinChar } from "@/components/AIFeedbackDisplay";
-import type { CharacterRating } from "@shared/schema";
+import type { CharacterRating, SpeechSuperScores } from "@shared/schema";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -17,6 +17,7 @@ export interface AiFeedbackItem {
   overallScore: number | null;
   fluencyScore: number | null;
   characterRatings: CharacterRating[] | null;
+  speechSuperScores?: SpeechSuperScores | null;
 }
 
 interface RecordingResponse {
@@ -75,6 +76,7 @@ export function AIFeedbackRatings({
           ratings={ratings}
           pinyinData={pinyinData}
           fluencyScore={feedback.fluencyScore}
+          speechSuperScores={feedback.speechSuperScores ?? undefined}
           errors={errors}
           recordingId={recordingId}
         />

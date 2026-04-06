@@ -40,14 +40,24 @@ export const characterRatingSchema = z.object({
   initialError: z.string().optional(),
   finalError: z.string().optional(),
   toneError: z.string().optional(),
-  // iFlytek-native fields — only populated on AI feedback, optional for backward compat
-  detectedTone: z.number().int().min(1).max(5).optional(),   // tone iFlytek actually heard (1-5)
+  // SpeechSuper fields — only populated on AI feedback, optional for backward compat
+  detectedTone: z.number().int().min(1).max(5).optional(),   // tone SpeechSuper detected (1-5)
   expectedTone: z.number().int().min(1).max(5).optional(),   // tone the character should be (1-5)
-  toneScoreRaw: z.number().min(0).max(100).optional(),       // iFlytek's 0-100 tone accuracy score
-  phoneScoreRaw: z.number().min(0).max(100).optional(),      // iFlytek's 0-100 consonant+vowel quality
-  initialSymbol: z.string().optional(),                      // concrete initial phone symbol detected by iFlytek (e.g. "zh")
-  finalSymbol: z.string().optional(),                        // concrete final phone symbol detected by iFlytek (e.g. "eng")
+  toneScoreRaw: z.number().min(0).max(100).optional(),       // SpeechSuper 0-100 tone accuracy score
+  phoneScoreRaw: z.number().min(0).max(100).optional(),      // SpeechSuper 0-100 consonant+vowel quality
+  initialSymbol: z.string().optional(),                      // initial phone symbol from SpeechSuper (e.g. "zh")
+  finalSymbol: z.string().optional(),                        // final phone symbol from SpeechSuper (e.g. "eng")
 });
+
+export const speechSuperScoresSchema = z.object({
+  tone: z.number().optional(),         // sentence-level tone accuracy (0-100)
+  rearTone: z.number().optional(),     // rear tone / sandhi context (0-100)
+  rhythm: z.number().optional(),       // rhythm / intonation flow (0-100)
+  speed: z.number().optional(),        // speaking pace (0-100)
+  pronunciation: z.number().optional(), // overall phoneme accuracy (0-100)
+});
+
+export type SpeechSuperScores = z.infer<typeof speechSuperScoresSchema>;
 
 export type CharacterRating = z.infer<typeof characterRatingSchema>;
 export type PronunciationError = typeof pronunciationErrors.$inferSelect;
@@ -65,6 +75,7 @@ export const feedback = pgTable("feedback", {
   characterRatings: jsonb("character_ratings"),
   fluencyScore: integer("fluency_score"),
   overallScore: integer("overall_score"),
+  speechSuperScores: jsonb("speech_super_scores"),
   isAiFeedback: boolean("is_ai_feedback").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

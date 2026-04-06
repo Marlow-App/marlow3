@@ -10,7 +10,7 @@ import { getNeutralPatches } from "@/lib/neutralTones";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useRecording } from "@/hooks/use-recordings";
-import type { CharacterRating, PronunciationError } from "@shared/schema";
+import type { CharacterRating, PronunciationError, SpeechSuperScores } from "@shared/schema";
 
 // ─── Shared types ──────────────────────────────────────────────────────────
 
@@ -92,6 +92,42 @@ export function FluencyDisplay({ score }: { score: number }) {
           ))}
         </div>
         <span className={`text-sm font-bold ${color}`}>{pct}%</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── SpeechSuperScoreChips ─────────────────────────────────────────────────
+
+const SS_SCORE_LABELS: { key: keyof SpeechSuperScores; label: string }[] = [
+  { key: "tone",         label: "Tone" },
+  { key: "pronunciation", label: "Pronunciation" },
+  { key: "rhythm",       label: "Rhythm" },
+  { key: "speed",        label: "Speed" },
+  { key: "rearTone",     label: "Rear Tone" },
+];
+
+export function SpeechSuperScoreChips({ scores }: { scores: SpeechSuperScores }) {
+  const items = SS_SCORE_LABELS.filter(({ key }) => scores[key] != null);
+  if (items.length === 0) return null;
+  return (
+    <div className="mt-2 bg-muted/30 rounded-lg px-3 py-2.5" data-testid="speechsuper-score-chips">
+      <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+        Sentence-level scores
+      </p>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+        {items.map(({ key, label }) => {
+          const val = scores[key] as number;
+          return (
+            <div key={key} className="flex items-center gap-2" data-testid={`ss-score-${key}`}>
+              <span className="text-xs text-muted-foreground w-[72px] shrink-0">{label}</span>
+              <ScoreBar score={val} />
+              <span className={`text-xs font-semibold tabular-nums min-w-[3ch] ${getScoreTextColor(val)}`}>
+                {val}%
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -348,10 +384,11 @@ export function AIErrorRow({
 
 // ─── AICharacterRatingDisplay ──────────────────────────────────────────────
 
-export function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, errors = [], recordingId }: {
+export function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, speechSuperScores, errors = [], recordingId }: {
   ratings: CharacterRating[];
   pinyinData?: PinyinChar[];
   fluencyScore?: number | null;
+  speechSuperScores?: SpeechSuperScores;
   errors?: PronunciationError[];
   recordingId?: number;
 }) {
@@ -471,6 +508,7 @@ export function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, er
           );
         })}
       </div>
+      {speechSuperScores && <SpeechSuperScoreChips scores={speechSuperScores} />}
       {fluencyScore != null && <FluencyDisplay score={fluencyScore} />}
       <ErrorDetailDialog
         error={openError}
