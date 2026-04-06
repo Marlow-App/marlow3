@@ -198,12 +198,12 @@ function DayRecordingsPanel({ date, recordings }: { date: Date; recordings: any[
           <p className="text-sm text-muted-foreground">No recordings on this day</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {dayRecordings.map(recording => {
             const score = recording.feedback?.[0]?.overallScore;
             return (
-              <Link key={recording.id} href={`/recordings/${recording.id}`}>
-                <div className="flex items-center gap-3 bg-card border border-border/60 rounded-xl px-4 py-3 hover:shadow-md transition-all duration-200 cursor-pointer" data-testid={`day-recording-${recording.id}`}>
+              <Link key={recording.id} href={`/recordings/${recording.id}`} className="block">
+                <div className="flex items-center gap-3 bg-card border border-border/60 rounded-xl px-4 py-3.5 hover:shadow-md transition-all duration-200 cursor-pointer" data-testid={`day-recording-${recording.id}`}>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-base truncate">{recording.sentenceText}</p>
                     {getPhraseEnglish(recording.sentenceText) && (
@@ -493,7 +493,7 @@ export default function Home() {
               {allRecordings.slice(0, 5).map(recording => {
                 const score = recording.feedback?.[0]?.overallScore;
                 return (
-                  <Link key={recording.id} href={`/recordings/${recording.id}`}>
+                  <Link key={recording.id} href={`/recordings/${recording.id}`} className="block">
                     <div
                       className="flex items-center gap-4 bg-card border border-border/60 rounded-2xl px-5 py-4 hover:shadow-md hover:border-primary/20 transition-all duration-200 cursor-pointer"
                       data-testid={`recent-recording-${recording.id}`}
