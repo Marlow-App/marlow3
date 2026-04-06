@@ -1,6 +1,7 @@
 import { Layout } from "@/components/Layout";
 import { getScoreBgColor, getScoreTextColor } from "@/lib/scoreColor";
 import { useRecordings } from "@/hooks/use-recordings";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation, useSearch } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,40 +44,65 @@ function buildChartData(scoredRecs: any[], range: ChartRange) {
   let start: Date;
   let bucketFn: (d: Date) => string;
   let labelFn: (key: string) => string;
+  let allKeys: string[];
 
   if (range === "1m") {
     start = subMonths(now, 1);
     bucketFn = (d) => format(d, "yyyy-MM-dd");
     labelFn = (key) => format(parseISO(key), "MMM d");
+    allKeys = eachDayOfInterval({ start, end: now }).map(d => format(d, "yyyy-MM-dd"));
   } else if (range === "3m") {
     start = subMonths(now, 3);
     bucketFn = (d) => format(startOfWeek(d, { weekStartsOn: 1 }), "yyyy-MM-dd");
     labelFn = (key) => format(parseISO(key), "MMM d");
+    allKeys = [];
+    let cur = startOfWeek(start, { weekStartsOn: 1 });
+    while (cur <= now) {
+      allKeys.push(format(cur, "yyyy-MM-dd"));
+      cur = new Date(cur.getTime() + 7 * 24 * 60 * 60 * 1000);
+    }
   } else if (range === "6m") {
     start = subMonths(now, 6);
     bucketFn = (d) => format(startOfWeek(d, { weekStartsOn: 1 }), "yyyy-MM-dd");
     labelFn = (key) => format(parseISO(key), "MMM d");
+    allKeys = [];
+    let cur = startOfWeek(start, { weekStartsOn: 1 });
+    while (cur <= now) {
+      allKeys.push(format(cur, "yyyy-MM-dd"));
+      cur = new Date(cur.getTime() + 7 * 24 * 60 * 60 * 1000);
+    }
   } else {
     start = subMonths(now, 12);
     bucketFn = (d) => format(d, "yyyy-MM");
     labelFn = (key) => format(parseISO(key + "-01"), "MMM yy");
+    allKeys = [];
+    let cur = new Date(start.getFullYear(), start.getMonth(), 1);
+    while (cur <= now) {
+      allKeys.push(format(cur, "yyyy-MM"));
+      cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+    }
   }
 
-  const inRange = scoredRecs.filter(r => new Date(r.createdAt) >= start);
   const buckets = new Map<string, number[]>();
-  for (const r of inRange) {
-    const key = bucketFn(new Date(r.createdAt));
-    const arr = buckets.get(key) || [];
-    arr.push(r.feedback[0].overallScore);
-    buckets.set(key, arr);
+  for (const key of allKeys) buckets.set(key, []);
+  for (const r of scoredRecs) {
+    const d = new Date(r.createdAt);
+    if (d >= start && d <= now) {
+      const key = bucketFn(d);
+      const arr = buckets.get(key) || [];
+      arr.push(r.feedback[0].overallScore);
+      buckets.set(key, arr);
+    }
   }
 
-  const sorted = Array.from(buckets.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  return sorted.map(([key, scores]) => ({
-    label: labelFn(key),
-    score: Math.round(scores.reduce((s, v) => s + v, 0) / scores.length),
-    count: scores.length,
-  }));
+  return allKeys.map(key => {
+    const scores = buckets.get(key) || [];
+    return {
+      label: labelFn(key),
+      score: scores.length > 0 ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : 0,
+      count: scores.length,
+    };
+  });
 }
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
@@ -145,7 +171,12 @@ const CATEGORY_TIPS = {
   },
 };
 
-function FocusCard({ catLabel, value, isStrength }: { catLabel: "tone" | "initial" | "final"; value: number; isStrength: boolean }) {
+function FocusCard({ catLabel, value, isStrength, practiceErrors }: {
+  catLabel: "tone" | "initial" | "final";
+  value: number;
+  isStrength: boolean;
+  practiceErrors?: string[];
+}) {
   const tips = CATEGORY_TIPS[catLabel];
   const label = catLabel === "tone" ? "Tone" : catLabel === "initial" ? "Initial consonant" : "Final vowel";
   if (isStrength) {
@@ -164,6 +195,7 @@ function FocusCard({ catLabel, value, isStrength }: { catLabel: "tone" | "initia
       </div>
     );
   }
+  const showPracticeErrors = practiceErrors && practiceErrors.length > 0;
   return (
     <div className="flex items-start gap-3 p-3.5 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200/60 dark:border-orange-800/40" data-testid={`needs-work-card-${catLabel}`}>
       <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900 flex items-center justify-center shrink-0">
@@ -174,7 +206,18 @@ function FocusCard({ catLabel, value, isStrength }: { catLabel: "tone" | "initia
           <p className="text-sm font-semibold">{label}</p>
           <span className="text-xs font-bold text-orange-600 dark:text-orange-400">{value}%</span>
         </div>
-        <p className="text-xs text-muted-foreground leading-relaxed">{tips.weak}</p>
+        {showPracticeErrors ? (
+          <ul className="space-y-1 mt-1">
+            {practiceErrors!.slice(0, 2).map((err, i) => (
+              <li key={i} className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                <span className="text-orange-400 mt-0.5 shrink-0">·</span>
+                <span>{err}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-muted-foreground leading-relaxed">{tips.weak}</p>
+        )}
       </div>
     </div>
   );
@@ -201,6 +244,7 @@ const RANGE_OPTIONS: { label: string; value: ChartRange }[] = [
 
 function ProgressInsights({ recordings, bestRecordingId }: { recordings: any[]; bestRecordingId: number | null }) {
   const [chartRange, setChartRange] = useState<ChartRange>("3m");
+  const { data: practiceList = [] } = useQuery<any[]>({ queryKey: ["/api/practice-list"] });
 
   const scoredRecs = useMemo(() =>
     recordings.filter(r => r.feedback?.[0]?.overallScore != null),
@@ -254,6 +298,21 @@ function ProgressInsights({ recordings, bestRecordingId }: { recordings: any[]; 
     return { strength: cats[0], needsWork: cats[cats.length - 1], showDiff: cats[0].value !== cats[cats.length - 1].value };
   }, [catAvgs]);
 
+  const practiceErrorsByCategory = useMemo(() => {
+    const byCategory: Record<string, string[]> = { tone: [], initial: [], final: [] };
+    const seen = new Set<string>();
+    for (const item of practiceList) {
+      const err = item.error;
+      if (!err) continue;
+      const key = `${err.category}:${err.commonError}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        if (byCategory[err.category]) byCategory[err.category].push(err.commonError);
+      }
+    }
+    return byCategory;
+  }, [practiceList]);
+
   if (scoredRecs.length === 0) return null;
 
   const { avgScore, bestScore, thisMonthCount, trend } = stats!;
@@ -262,7 +321,7 @@ function ProgressInsights({ recordings, bestRecordingId }: { recordings: any[]; 
     <div className="space-y-4" data-testid="progress-insights">
 
       {/* ── Stat cards ────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 gap-3">
 
         {/* Avg score → scroll to chart */}
         <Card
@@ -312,22 +371,6 @@ function ProgressInsights({ recordings, bestRecordingId }: { recordings: any[]; 
             </CardContent>
           </Card>
         )}
-
-        {/* Scored → scroll to all recordings */}
-        <Card
-          className="border-border/60 cursor-pointer hover:shadow-md hover:border-primary/30 transition-all duration-200"
-          onClick={() => scrollTo("all-recordings")}
-          data-testid="stat-total"
-        >
-          <CardContent className="pt-4 pb-4 px-4">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Scored</span>
-              <Mic className="w-3.5 h-3.5 text-muted-foreground" />
-            </div>
-            <p className="text-3xl font-bold font-display tabular-nums text-foreground">{scoredRecs.length}</p>
-            <p className="text-[11px] text-primary mt-1 flex items-center gap-0.5">See all <ChevronRight className="w-3 h-3" /></p>
-          </CardContent>
-        </Card>
 
         {/* This Month → scroll to calendar */}
         <Card
@@ -461,8 +504,8 @@ function ProgressInsights({ recordings, bestRecordingId }: { recordings: any[]; 
                 <CardDescription>Based on your pronunciation history</CardDescription>
               </CardHeader>
               <CardContent className="px-5 pb-5 space-y-3">
-                <FocusCard catLabel={focusAreas.strength.key} value={focusAreas.strength.value} isStrength={true} />
-                <FocusCard catLabel={focusAreas.needsWork.key} value={focusAreas.needsWork.value} isStrength={false} />
+                <FocusCard catLabel={focusAreas.strength.key} value={focusAreas.strength.value} isStrength={true} practiceErrors={practiceErrorsByCategory[focusAreas.strength.key]} />
+                <FocusCard catLabel={focusAreas.needsWork.key} value={focusAreas.needsWork.value} isStrength={false} practiceErrors={practiceErrorsByCategory[focusAreas.needsWork.key]} />
                 {scoredRecs.length >= 3 && (
                   <div className="pt-2 border-t border-border/40">
                     <Link href="/practice-list">
@@ -491,15 +534,16 @@ interface RecordingEntry {
 }
 
 const JOURNAL_COLORS = [
-  { bg: "bg-primary/15 dark:bg-primary/25", ring: "ring-primary/60", text: "text-primary dark:text-primary/80" },
-  { bg: "bg-primary/30 dark:bg-primary/40", ring: "ring-primary/80", text: "text-primary" },
-  { bg: "bg-primary/55 dark:bg-primary/60", ring: "ring-primary", text: "text-primary-foreground" },
-  { bg: "bg-primary/80 dark:bg-primary/85", ring: "ring-primary", text: "text-primary-foreground" },
-  { bg: "bg-primary dark:bg-primary", ring: "ring-primary", text: "text-primary-foreground" },
+  { bg: "bg-primary/15 dark:bg-primary/25", ring: "ring-primary/60", text: "text-primary dark:text-primary/80", whiteRing: false },
+  { bg: "bg-primary/30 dark:bg-primary/40", ring: "ring-primary/80", text: "text-primary", whiteRing: false },
+  { bg: "bg-primary/55 dark:bg-primary/60", ring: "ring-primary", text: "text-primary-foreground", whiteRing: true },
+  { bg: "bg-primary/80 dark:bg-primary/85", ring: "ring-primary", text: "text-primary-foreground", whiteRing: true },
+  { bg: "bg-primary dark:bg-primary", ring: "ring-primary", text: "text-primary-foreground", whiteRing: true },
 ];
 
 function JournalCalendar({ recordings, initialDate }: { recordings: any[]; initialDate?: Date }) {
   const [currentMonth, setCurrentMonth] = useState(initialDate ? startOfMonth(initialDate) : new Date());
+  const [, navigate] = useLocation();
 
   const firstRecordingDate = useMemo(() => {
     if (!recordings || recordings.length === 0) return new Date();
@@ -620,72 +664,112 @@ function JournalCalendar({ recordings, initialDate }: { recordings: any[]; initi
         {/* Day grid */}
         <div className="grid grid-cols-7 gap-y-1">
           {Array.from({ length: startDayOfWeek }).map((_, i) => (
-            <div key={`empty-${i}`} className="h-10" />
+            <div key={`empty-${i}`} className="h-11" />
           ))}
           {days.map((day) => {
             const key = format(day, "yyyy-MM-dd");
             const count = countsByDay.get(key) || 0;
             const today = isToday(day);
-            const future = isBefore(new Date(), startOfDay(day));
             const entries = recordingsByDay.get(key) || [];
             const style = getDayStyle(count);
 
-            const dayCell = (
-              <div className="flex flex-col items-center justify-center h-10 relative">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center relative transition-all duration-200
-                  ${style
-                    ? `${style.bg} ring-2 ${style.ring} shadow-sm cursor-pointer hover:scale-110`
-                    : today
-                      ? "ring-2 ring-amber-400 dark:ring-amber-500"
-                      : "cursor-default"
-                  }
-                  ${future ? "opacity-25" : ""}
-                `}>
-                  <span className={`text-xs leading-none font-semibold
-                    ${style ? style.text : today ? "text-amber-800 dark:text-amber-300 font-bold" : "text-amber-800/50 dark:text-amber-400/40"}
-                  `}>
+            const ringCls = style
+              ? style.whiteRing
+                ? "ring-2 ring-white/80 shadow-sm"
+                : `ring-2 ${style.ring} shadow-sm`
+              : today
+                ? "ring-2 ring-amber-400 dark:ring-amber-500"
+                : "";
+
+            const textCls = style
+              ? style.text
+              : today
+                ? "text-amber-800 dark:text-amber-300 font-bold"
+                : "text-amber-800/80 dark:text-amber-200/70";
+
+            return (
+              <div key={key} className="flex flex-col items-center justify-center h-11 relative">
+                {/* Circle — clicking navigates to that day */}
+                <button
+                  className={`w-9 h-9 rounded-full flex items-center justify-center relative transition-all duration-200
+                    ${style ? `${style.bg} ${ringCls} cursor-pointer hover:scale-110` : `${ringCls} ${count === 0 && !today ? "cursor-default" : "cursor-pointer hover:scale-110"}`}
+                  `}
+                  onClick={() => navigate(`/learner-portal?date=${key}`)}
+                  data-testid={`calendar-day-${key}`}
+                >
+                  <span className={`text-sm leading-none font-semibold ${textCls}`}>
                     {format(day, "d")}
                   </span>
-                  {count > 1 && (
-                    <span className="absolute -top-1 -right-1 bg-amber-700 dark:bg-amber-500 text-white text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">
-                      {count}
-                    </span>
-                  )}
-                </div>
+                </button>
+
+                {/* Count badge — clicking opens popover */}
+                {count > 1 && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        className="absolute -top-0.5 right-0.5 bg-amber-700 dark:bg-amber-500 text-white text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none hover:bg-amber-800 dark:hover:bg-amber-400 transition-colors z-10"
+                        data-testid={`calendar-badge-${key}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {count}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-3" side="top" align="center">
+                      <p className="text-xs font-semibold mb-1">{format(day, "MMMM d, yyyy")}</p>
+                      <p className="text-[11px] text-muted-foreground mb-2">{count} recordings</p>
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                        {entries.map((entry) => (
+                          <Link key={entry.id} href={`/recordings/${entry.id}`}>
+                            <div
+                              className="text-xs bg-muted/50 hover:bg-primary/10 hover:text-primary rounded px-2 py-1.5 cursor-pointer transition-colors flex items-center gap-1.5"
+                              data-testid={`popover-recording-${entry.id}`}
+                            >
+                              <Mic2 className="w-3 h-3 shrink-0 opacity-50" />
+                              <span className="truncate flex-1">{entry.sentenceText}</span>
+                              {entry.score !== null && (
+                                <span className={`text-[10px] font-bold shrink-0 ${getScoreTextColor(entry.score)}`}>{entry.score}%</span>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+
+                {/* Single recording: just a dot indicator, no badge needed */}
+                {count === 1 && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        className="absolute -top-0.5 right-0.5 bg-amber-700 dark:bg-amber-500 rounded-full w-2 h-2 hover:bg-amber-800 dark:hover:bg-amber-400 transition-colors z-10"
+                        data-testid={`calendar-dot-${key}`}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-3" side="top" align="center">
+                      <p className="text-xs font-semibold mb-1">{format(day, "MMMM d, yyyy")}</p>
+                      <div className="space-y-1">
+                        {entries.map((entry) => (
+                          <Link key={entry.id} href={`/recordings/${entry.id}`}>
+                            <div
+                              className="text-xs bg-muted/50 hover:bg-primary/10 hover:text-primary rounded px-2 py-1.5 cursor-pointer transition-colors flex items-center gap-1.5"
+                              data-testid={`popover-recording-${entry.id}`}
+                            >
+                              <Mic2 className="w-3 h-3 shrink-0 opacity-50" />
+                              <span className="truncate flex-1">{entry.sentenceText}</span>
+                              {entry.score !== null && (
+                                <span className={`text-[10px] font-bold shrink-0 ${getScoreTextColor(entry.score)}`}>{entry.score}%</span>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
               </div>
             );
-
-            if (count > 0) {
-              return (
-                <Popover key={key}>
-                  <PopoverTrigger asChild>
-                    {dayCell}
-                  </PopoverTrigger>
-                  <PopoverContent className="w-64 p-3" side="top" align="center">
-                    <p className="text-xs font-semibold mb-1">{format(day, "MMMM d, yyyy")}</p>
-                    <p className="text-[11px] text-muted-foreground mb-2">{count} recording{count > 1 ? "s" : ""}</p>
-                    <div className="space-y-1 max-h-40 overflow-y-auto">
-                      {entries.map((entry) => (
-                        <Link key={entry.id} href={`/recordings/${entry.id}`}>
-                          <div
-                            className="text-xs bg-muted/50 hover:bg-primary/10 hover:text-primary rounded px-2 py-1.5 cursor-pointer transition-colors flex items-center gap-1.5"
-                            data-testid={`popover-recording-${entry.id}`}
-                          >
-                            <Mic2 className="w-3 h-3 shrink-0 opacity-50" />
-                            <span className="truncate flex-1">{entry.sentenceText}</span>
-                            {entry.score !== null && (
-                              <span className={`text-[10px] font-bold shrink-0 ${getScoreTextColor(entry.score)}`}>{entry.score}%</span>
-                            )}
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              );
-            }
-
-            return <div key={key}>{dayCell}</div>;
           })}
         </div>
 
