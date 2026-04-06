@@ -23,6 +23,46 @@ import { formatDistanceToNow } from "date-fns";
 import { getDailyChallenge, phraseToText, getPhraseEnglish } from "@/data/phrases";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 import { usePhraseAudio } from "@/hooks/use-phrase-audio";
+import { useQuery } from "@tanstack/react-query";
+import { pinyin } from "pinyin-pro";
+import { getPracticeWordTranslation } from "@/lib/practiceWordTranslations";
+import { type PronunciationError, type PracticeListItem } from "@shared/schema";
+
+type PracticeItem = PracticeListItem & { error: PronunciationError; sentenceText?: string };
+
+const CATEGORY_COLORS: Record<string, string> = {
+  tone: "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300",
+  initial: "bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300",
+  final: "bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300",
+};
+const CATEGORY_LABELS: Record<string, string> = {
+  tone: "Tone",
+  initial: "Initial",
+  final: "Final",
+};
+
+function speakWord(text: string) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = "zh-CN";
+  utt.rate = 0.85;
+  window.speechSynthesis.speak(utt);
+}
+
+function getDailyPracticeItem(items: PracticeItem[]): PracticeItem | null {
+  if (!items.length) return null;
+  const today = new Date();
+  const seed = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000) + today.getFullYear() * 366;
+  return items[seed % items.length];
+}
+
+function getDailyWord(words: string[]): string | null {
+  if (!words?.length) return null;
+  const today = new Date();
+  const seed = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+  return words[seed % words.length];
+}
 
 function useAppTour() {
   const [showTour, setShowTour] = useState(() => {
@@ -100,6 +140,7 @@ export default function Home() {
   const [, navigate] = useLocation();
   const isReviewer = user?.role === "reviewer";
   const { data: recordings, isLoading } = useRecordings();
+  const { data: practiceList } = useQuery<PracticeItem[]>({ queryKey: ["/api/practice-list"] });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { toast } = useToast();
   const { uploadFile, isUploading } = useUpload();
@@ -280,6 +321,65 @@ export default function Home() {
             </CardContent>
           </Card>
         </section>
+
+        {(() => {
+          const items = practiceList ?? [];
+          const item = getDailyPracticeItem(items);
+          if (!item) return null;
+          const { error } = item;
+          const practiceWord = getDailyWord(error.practiceWords ?? []);
+          if (!practiceWord) return null;
+          const wordPinyin = pinyin(practiceWord, { toneType: "symbol", type: "string" });
+          const translation = getPracticeWordTranslation(practiceWord);
+          const catColor = CATEGORY_COLORS[error.category] ?? "";
+          const catLabel = CATEGORY_LABELS[error.category] ?? error.category;
+          return (
+            <section data-testid="practice-drill-section">
+              <div className="flex items-center gap-2 mb-4">
+                <BookOpen className="w-5 h-5 text-primary" />
+                <h2 className="text-2xl font-bold font-display">Practice Drill</h2>
+                <Link href="/practice-list" className="ml-auto text-sm text-primary font-medium hover:underline" data-testid="practice-drill-see-all">
+                  See all →
+                </Link>
+              </div>
+              <Card className="border-border/60" data-testid="practice-drill-card">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-5">
+                    <button
+                      type="button"
+                      onClick={() => speakWord(practiceWord)}
+                      className="flex flex-col items-center shrink-0 bg-muted/40 hover:bg-primary/10 rounded-xl px-4 py-3 min-w-[72px] transition-colors group"
+                      aria-label={`Pronounce ${practiceWord}`}
+                      data-testid="practice-drill-speak-btn"
+                    >
+                      <span className="text-xs text-muted-foreground font-medium mb-0.5">{wordPinyin}</span>
+                      <span className="text-3xl font-bold leading-tight group-hover:text-primary transition-colors">{practiceWord}</span>
+                      <Volume2 className="w-4 h-4 text-muted-foreground group-hover:text-primary mt-1.5 transition-colors" />
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${catColor}`}>{catLabel}</span>
+                        <span className="text-xs font-mono text-muted-foreground">{error.id}</span>
+                      </div>
+                      <p className="font-semibold text-lg leading-snug">{error.commonError}</p>
+                      {translation && (
+                        <p className="text-sm text-muted-foreground mt-0.5">"{translation}"</p>
+                      )}
+                      {error.simpleExplanation && (
+                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{error.simpleExplanation}</p>
+                      )}
+                      <Link href="/practice-list">
+                        <Button variant="outline" size="sm" className="mt-3" data-testid="practice-drill-go-btn">
+                          Practice this error
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+          );
+        })()}
 
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerContent className="md:left-1/4 md:right-1/4 md:rounded-[10px]" data-testid="recording-drawer">
