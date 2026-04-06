@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { RotateCcw, ExternalLink, Loader2, Bot, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -95,16 +95,15 @@ export function RecordingFeedback({
   onPracticeAgain: () => void;
 }) {
   const [timedOut, setTimedOut] = useState(false);
-  const timedOutRef = useRef(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [pollEnabled, setPollEnabled] = useState(true);
 
+  // Restart 10 s timeout each time the user retries (retryCount changes)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      timedOutRef.current = true;
-      setTimedOut(true);
-    }, 10_000);
+    setTimedOut(false);
+    const timer = setTimeout(() => setTimedOut(true), 10_000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [retryCount]);
 
   const { data: recording, isLoading, refetch, isFetching } = useQuery<RecordingResponse>({
     queryKey: [api.recordings.get.path, recordingId],
@@ -153,9 +152,8 @@ export function RecordingFeedback({
           <Button
             variant="outline"
             onClick={() => {
-              timedOutRef.current = false;
-              setTimedOut(false);
               setPollEnabled(true);
+              setRetryCount(c => c + 1);
               refetch();
             }}
             disabled={isFetching}
