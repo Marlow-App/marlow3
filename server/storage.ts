@@ -308,7 +308,7 @@ export class DatabaseStorage implements IStorage {
       id: userId,
       subscriptionTier: data.subscriptionTier,
       subscriptionStatus: data.subscriptionStatus,
-      subscriptionPeriodEnd: data.subscriptionPeriodEnd ?? undefined,
+      subscriptionPeriodEnd: data.subscriptionPeriodEnd,
     };
     if (data.stripeSubscriptionId) {
       update.stripeSubscriptionId = data.stripeSubscriptionId;
