@@ -305,7 +305,7 @@ export default function Home() {
             <Link href="/learner-portal" className="text-sm text-primary font-medium hover:underline">My Recordings</Link>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <Link href="/learner-portal">
               <Card className="cursor-pointer hover:shadow-md transition-shadow" data-testid="stat-total">
                 <CardContent className="pt-6">
@@ -313,16 +313,6 @@ export default function Home() {
                     {recordings?.length || 0}
                   </div>
                   <div className="text-muted-foreground font-medium">Total Recordings</div>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link href="/learner-portal">
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" data-testid="stat-reviewed">
-                <CardContent className="pt-6">
-                  <div className="text-4xl font-bold text-foreground mb-1">
-                    {recordings?.filter(r => r.feedback?.some((f: any) => f.overallScore != null)).length || 0}
-                  </div>
-                  <div className="text-muted-foreground font-medium">AI Scored</div>
                 </CardContent>
               </Card>
             </Link>
