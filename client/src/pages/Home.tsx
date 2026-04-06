@@ -17,7 +17,7 @@ import {
   DrawerTitle,
   DrawerDescription,
 } from "@/components/ui/drawer";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Loader2, X, Compass, BookOpen, Volume2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDailyChallenge, phraseToText, getPhraseEnglish } from "@/data/phrases";
@@ -97,6 +97,7 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
 
 export default function Home() {
   const { user } = useAuth();
+  const [, navigate] = useLocation();
   const isReviewer = user?.role === "reviewer";
   const { data: recordings, isLoading } = useRecordings();
   const { data: pendingRecordings } = usePendingRecordings();
@@ -129,17 +130,13 @@ export default function Home() {
       const uploadRes = await uploadFile(file);
       if (!uploadRes) throw new Error("Upload failed");
 
-      await createRecording.mutateAsync({
+      const newRecording = await createRecording.mutateAsync({
         audioUrl: uploadRes.objectPath,
         sentenceText: challengeText,
       });
 
-      toast({
-        title: "Success!",
-        description: "Your recording has been submitted for review.",
-      });
-
       setDrawerOpen(false);
+      navigate(`/record?feedbackId=${newRecording.id}&sentenceText=${encodeURIComponent(challengeText)}`);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Failed to submit recording. Please try again.";
       toast({

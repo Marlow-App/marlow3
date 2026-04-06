@@ -113,6 +113,17 @@ export default function RecordPage() {
     const rerecordOfParam = params.get("rerecordOf");
     const sentenceTextParam = params.get("sentenceText");
     const redoParam = params.get("redo");
+    const feedbackIdParam = params.get("feedbackId");
+
+    // Arriving from daily challenge — jump straight to feedback view
+    if (feedbackIdParam && sentenceTextParam) {
+      const id = parseInt(feedbackIdParam);
+      if (!isNaN(id)) {
+        setFeedbackSentenceText(sentenceTextParam);
+        setFeedbackRecordingId(id);
+        return;
+      }
+    }
 
     if (rerecordOfParam && sentenceTextParam) {
       const id = parseInt(rerecordOfParam);
