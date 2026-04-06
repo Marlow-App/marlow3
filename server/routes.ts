@@ -11,7 +11,7 @@ import { db } from "./db";
 import { generatePhraseAudio, getPhraseAudioFile } from "./elevenlabs";
 import { countChineseChars, MAX_CHARS, REFUND_THRESHOLD, CREDIT_PACKS } from "@shared/credits";
 import { sendFeedbackNotification, sendRecordingNotification } from "./email";
-import { scoreMandarin } from "./iflytek-ise";
+import { scoreMandarin } from "./speechsuper";
 
 const UNLIMITED_EMAIL = process.env.UNLIMITED_CREDITS_EMAIL ?? null;
 
@@ -389,8 +389,8 @@ export async function registerRoutes(
       // Respond immediately so the client can show inline feedback (polling handles the result)
       res.status(201).json(recording);
 
-      // iFLYTEK ISE auto-review (fire-and-forget — client polls for the result)
-      // Recordings are webm/mp4 from MediaRecorder; server-side ffmpeg transcodes to 16kHz PCM before ISE.
+      // SpeechSuper auto-review (fire-and-forget — client polls for the result)
+      // Recordings are webm/mp4 from MediaRecorder; server-side ffmpeg transcodes to 16kHz WAV before sending.
       Promise.resolve().then(async () => {
         try {
           const iseResult = await scoreMandarin(recording.audioUrl, recording.sentenceText);
@@ -407,9 +407,9 @@ export async function registerRoutes(
           if (iseResult.overallScore >= REFUND_THRESHOLD) {
             storage.refundCredits(recording.id).catch(console.error);
           }
-          console.log(`[iFLYTEK ISE] Auto-review complete for recording ${recording.id}, score=${iseResult.overallScore}`);
+          console.log(`[SpeechSuper] Auto-review complete for recording ${recording.id}, score=${iseResult.overallScore}`);
         } catch (err) {
-          console.error("[iFLYTEK ISE] Auto-review failed (silent):", err);
+          console.error("[SpeechSuper] Auto-review failed (silent):", err);
         }
       });
     } catch (err) {

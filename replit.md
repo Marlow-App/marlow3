@@ -16,23 +16,24 @@ Marlow uses a credit-based (pay-as-you-go) model instead of subscriptions:
 - **Stripe**: One-time `payment` mode checkout with `price_data` and `metadata: {userId, credits}`
 - **Constants** in `shared/credits.ts`: `CREDIT_PACKS`, `MAX_CHARS=10`, `REFUND_THRESHOLD=95`, `SIGNUP_BONUS=10`, `DAILY_REWARD=1`, `MAX_FREE_BANK=3`
 
-## iFLYTEK ISE Auto-Review
+## SpeechSuper Auto-Review
 
-- **Purpose**: Automatically score learner recordings using iFLYTEK's Pronunciation Assessment (ISE) API, giving instant feedback seconds after upload
-- **Endpoint**: `ws://ise-api-sg.xf-yun.com/v2/ise` — same HMAC-SHA256 auth as TTS, credentials: `IFLYTEK_APP_ID`, `IFLYTEK_API_KEY`, `IFLYTEK_API_SECRET`
-- **ISE params**: `ent:"cn_vip"`, `category:"read_sentence"`, `aue:"raw"` (PCM), `extra_ability:"syll_phone_err_msg|tone"`, `plev:"0"`; text requires UTF-8 BOM (`\uFEFF`)
-- **Transcoding**: Browser recordings (webm/mp4) are transcoded server-side via ffmpeg to 16kHz 16-bit mono signed PCM before streaming to ISE (`aue:"raw"`). ffmpeg is available at runtime in the Replit NixOS environment.
-- **Audio streaming**: 1280-byte chunks at 40ms intervals over WebSocket
-- **Score mapping**: iFLYTEK 0-100 → app 0/50/100: <40→0, <75→50, ≥75→100. Fluency 0-100 → 1-5 in 20-pt bands
-- **Per-character tone scoring**: Uses `mono_tone` (e.g., `"TONE3"`) on each vowel phone compared against the expected tone from the syll's `symbol` attribute (e.g., `"mai3"` → TONE3). Match → tone great (100), mismatch → tone poor (0). Neutral tone syllables (tone 5) are always treated as correct. Falls back to syll `dp_message` if either attribute is absent.
-- **Per-character initial/final scoring**: Uses `perr_msg` (error code) + `perr_level_msg` (severity 0-3) on each phone. `perr_msg=0` → no error (great). Non-zero `perr_msg` + severity 0/1 → ok (60), severity 2 → poor (30), severity 3 → poor (10).
-- **Overall score**: Uses iFlytek's `total_score` from the inner `<read_sentence>` element (inside `<rec_paper>`), rounded to integer.
-- **XML structure**: `<xml_result> → <read_sentence> → <rec_paper> → <read_sentence total_score="..." phone_score="..." tone_score="..."> → <sentence> → <word symbol="..."> → <syll symbol="mai3"> → <phone is_yun="0|1" mono_tone="TONE3" perr_msg="..." perr_level_msg="...">`
-- **Asynchronous**: ISE runs fire-and-forget after the recording is created — the POST endpoint responds immediately with the new recording, and the client's `RecordingFeedback` polling component (2 s interval, 10 s timeout) picks up the results. ISE failures are caught silently so recording creation always succeeds regardless.
-- **System user**: `"iflytek-ai"` upserted on server startup (firstName: "AI Review", role: "reviewer") satisfies FK on feedback.reviewerId
+- **Purpose**: Automatically score learner recordings using SpeechSuper's `sent.eval.cn` API, giving instant per-character tone/initial/final feedback seconds after upload
+- **Endpoint**: `POST https://api.speechsuper.com/cn.sent.eval` — multipart/form-data with `param` JSON field + `audio` WAV binary. Credentials: `SPEECHSUPER_APP_ID`, `SPEECHSUPER_SECRET_KEY`
+- **Auth**: `sig = MD5(applicationId + secretKey + timestamp)` (lowercase hex); `timestamp` is Unix seconds
+- **Request params**: `coreType:"sent.eval.cn"`, `refText` (Chinese sentence), `phoneme_output:1` (enables per-phoneme data), `tone_weight:0.2`
+- **Audio format**: Browser recordings (webm/mp4) are transcoded server-side via ffmpeg to 16kHz 16-bit mono WAV (`-f wav`). ffmpeg is available at runtime in the Replit NixOS environment.
+- **Score mapping**: SpeechSuper 0-100 → app 0/50/100: <40→0, <75→50, ≥75→100. Fluency 0-100 → 1-5 in 20-pt bands
+- **Response structure**: `result.overall` → overallScore; `result.fluency` → fluencyScore; `result.words[]` — one per Chinese character (filtered by `charType === 0`)
+- **Per-character tone scoring**: `words[i].scores.tone` (0-100) → `toneScoreRaw`; `words[i].tone` ("tone3") → `expectedTone`
+- **Per-character initial/final scoring**: `words[i].phonemes` filtered by `tone_index === "0"` (initial consonant) vs `!== "0"` (final vowel); avg `pronunciation` per group → mapped to 0/50/100
+- **Error detection**: `initialSymbol`/`finalSymbol` from the first phoneme's `phone` field → lookup in `INITIAL_PHONE_TO_ERROR`/`FINAL_PHONE_TO_ERROR`; `toneError` from `LIKELY_TONE_ERROR[expectedTone]` when `toneScoreRaw < 75`
+- **Asynchronous**: runs fire-and-forget after recording is created — POST endpoint responds immediately; client's `RecordingFeedback` polling (2s interval, 10s timeout) picks up results. Failures are caught silently.
+- **System user**: `"iflytek-ai"` upserted on server startup (firstName: "AI Review", role: "reviewer") satisfies FK on feedback.reviewerId — kept as-is for backward compat
 - **`isAiFeedback` field**: boolean on `feedback` table (default false); used in UI to show Bot icon + "AI Review" badge instead of reviewer name
-- **Credit refund**: 95%+ score from ISE auto-review also triggers credit refund
-- **Client module**: `server/iflytek-ise.ts` exports `scoreMandarin(audioUrl, sentenceText): Promise<ISEResult>`
+- **Credit refund**: 95%+ score from auto-review also triggers credit refund
+- **Server module**: `server/speechsuper.ts` exports `scoreMandarin(audioUrl, sentenceText): Promise<ISEResult>`
+- **Legacy**: `server/iflytek-ise.ts` kept in place but no longer imported by routes (iFlytek TTS in `server/elevenlabs.ts` is unaffected)
 
 ## Email Notifications
 

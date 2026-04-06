@@ -412,7 +412,7 @@ export function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, er
                       <span className={`text-sm font-semibold tabular-nums min-w-[3ch] ${getScoreTextColor(toneScore)}`} data-testid={`ai-tone-score-${idx}`}>
                         {toneScore}%
                       </span>
-                      {(cr.toneScoreRaw ?? 90) < 90 && cr.expectedTone !== undefined && (
+                      {(cr.toneScoreRaw ?? cr.tone) < 75 && cr.expectedTone !== undefined && (
                         <span className="text-xs text-muted-foreground" data-testid={`ai-tone-expected-${idx}`}>
                           target T{cr.expectedTone}
                         </span>

@@ -134,6 +134,11 @@ app.use((req, res, next) => {
     role: "reviewer",
   }).catch(err => console.error("Error upserting iflytek-ai system user:", err));
 
+  // Warn if SpeechSuper credentials are missing
+  if (!process.env.SPEECHSUPER_APP_ID || !process.env.SPEECHSUPER_SECRET_KEY) {
+    console.warn("[SpeechSuper] SPEECHSUPER_APP_ID or SPEECHSUPER_SECRET_KEY not set — AI auto-review will fail");
+  }
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
