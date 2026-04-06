@@ -433,7 +433,7 @@ function ProgressInsights({ recordings, bestRecordingId }: { recordings: any[]; 
                       tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                       tickLine={false}
                       axisLine={false}
-                      interval="preserveStartEnd"
+                      interval={chartRange === "1m" ? 6 : chartRange === "3m" ? 2 : chartRange === "6m" ? 5 : 1}
                     />
                     <YAxis
                       domain={[0, 100]}
