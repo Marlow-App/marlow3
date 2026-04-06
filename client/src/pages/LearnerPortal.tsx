@@ -664,7 +664,7 @@ function JournalCalendar({ recordings, initialDate }: { recordings: any[]; initi
         {/* Day grid */}
         <div className="grid grid-cols-7 gap-y-1">
           {Array.from({ length: startDayOfWeek }).map((_, i) => (
-            <div key={`empty-${i}`} className="h-11" />
+            <div key={`empty-${i}`} className="h-12" />
           ))}
           {days.map((day) => {
             const key = format(day, "yyyy-MM-dd");
@@ -688,7 +688,7 @@ function JournalCalendar({ recordings, initialDate }: { recordings: any[]; initi
                 : "text-amber-800/80 dark:text-amber-200/70";
 
             return (
-              <div key={key} className="flex flex-col items-center justify-center h-11 relative">
+              <div key={key} className="flex flex-col items-center justify-center h-12 relative">
                 {/* Circle — clicking navigates to that day */}
                 <button
                   className={`w-9 h-9 rounded-full flex items-center justify-center relative transition-all duration-200
@@ -707,7 +707,7 @@ function JournalCalendar({ recordings, initialDate }: { recordings: any[]; initi
                   <Popover>
                     <PopoverTrigger asChild>
                       <button
-                        className="absolute -top-0.5 right-0.5 bg-amber-700 dark:bg-amber-500 text-white text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none hover:bg-amber-800 dark:hover:bg-amber-400 transition-colors z-10"
+                        className="absolute -top-2 -right-0.5 bg-amber-700 dark:bg-amber-500 text-white text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none hover:bg-amber-800 dark:hover:bg-amber-400 transition-colors z-10"
                         data-testid={`calendar-badge-${key}`}
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -742,7 +742,7 @@ function JournalCalendar({ recordings, initialDate }: { recordings: any[]; initi
                   <Popover>
                     <PopoverTrigger asChild>
                       <button
-                        className="absolute -top-0.5 right-0.5 bg-amber-700 dark:bg-amber-500 rounded-full w-2 h-2 hover:bg-amber-800 dark:hover:bg-amber-400 transition-colors z-10"
+                        className="absolute -top-2 -right-0.5 bg-amber-700 dark:bg-amber-500 rounded-full w-2 h-2 hover:bg-amber-800 dark:hover:bg-amber-400 transition-colors z-10"
                         data-testid={`calendar-dot-${key}`}
                         onClick={(e) => e.stopPropagation()}
                       />
