@@ -12,7 +12,7 @@ import {
   DrawerTitle,
   DrawerDescription,
 } from "@/components/ui/drawer";
-import { BookOpen, Trash2, Volume2, ChevronDown, ChevronUp, ExternalLink, Mic2 } from "lucide-react";
+import { BookOpen, Trash2, Volume2, ChevronDown, ChevronUp, ExternalLink, Mic2, Loader2 } from "lucide-react";
 import { pinyin } from "pinyin-pro";
 import { useState } from "react";
 import { getPracticeWordTranslation } from "@/lib/practiceWordTranslations";
@@ -22,6 +22,7 @@ import { type PronunciationError, type PracticeListItem } from "@shared/schema";
 import { AudioRecorder } from "@/components/AudioRecorder";
 import { useUpload } from "@/hooks/use-upload";
 import { useCreateRecording } from "@/hooks/use-recordings";
+import { usePhraseAudio } from "@/hooks/use-phrase-audio";
 
 type PracticeItem = PracticeListItem & { error: PronunciationError; sentenceText?: string };
 
@@ -36,15 +37,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   initial: "Initial",
   final: "Final",
 };
-
-function speakText(text: string) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const utt = new SpeechSynthesisUtterance(text);
-  utt.lang = "zh-CN";
-  utt.rate = 0.85;
-  window.speechSynthesis.speak(utt);
-}
 
 function getDailyWords(words: string[], count = 3): string[] {
   if (!words || words.length === 0) return [];
@@ -68,10 +60,16 @@ function PracticeCard({
   item,
   onRemove,
   onRecordWord,
+  playPhrase,
+  isPhraseLoading,
+  anyLoading,
 }: {
   item: PracticeItem;
   onRemove: () => void;
   onRecordWord: (word: string) => void;
+  playPhrase: (text: string) => void;
+  isPhraseLoading: (text: string) => boolean;
+  anyLoading: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const { error } = item;
@@ -94,12 +92,17 @@ function PracticeCard({
               <span className="text-2xl font-bold leading-tight">{displayChar}</span>
               <button
                 type="button"
-                onClick={() => speakText(displayChar)}
-                className="mt-0.5 text-muted-foreground hover:text-primary transition-colors"
+                onClick={() => playPhrase(displayChar)}
+                disabled={anyLoading}
+                className="mt-0.5 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
                 aria-label={`Pronounce ${displayChar}`}
                 data-testid={`speak-char-${item.id}`}
               >
-                <Volume2 className="w-3.5 h-3.5" />
+                {isPhraseLoading(displayChar) ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Volume2 className="w-3.5 h-3.5" />
+                )}
               </button>
             </div>
           )}
@@ -171,12 +174,17 @@ function PracticeCard({
                             <div className="flex items-center gap-1.5 mt-1">
                               <button
                                 type="button"
-                                onClick={() => speakText(word)}
-                                className="text-muted-foreground hover:text-primary transition-colors"
+                                onClick={() => playPhrase(word)}
+                                disabled={anyLoading}
+                                className="text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
                                 data-testid={`speak-word-${item.id}-${i}`}
                                 aria-label={`Hear ${word}`}
                               >
-                                <Volume2 className="w-3 h-3" />
+                                {isPhraseLoading(word) ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Volume2 className="w-3 h-3" />
+                                )}
                               </button>
                               <button
                                 type="button"
@@ -222,6 +230,7 @@ export default function PracticeList() {
   const [activeRecordWord, setActiveRecordWord] = useState<string | null>(null);
   const { uploadFile, isUploading } = useUpload();
   const createRecording = useCreateRecording();
+  const { playPhrase, isLoading: isPhraseLoading, anyLoading } = usePhraseAudio();
 
   const removeMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -307,6 +316,9 @@ export default function PracticeList() {
                         item={item}
                         onRemove={() => removeMutation.mutate(item.id)}
                         onRecordWord={setActiveRecordWord}
+                        playPhrase={playPhrase}
+                        isPhraseLoading={isPhraseLoading}
+                        anyLoading={anyLoading}
                       />
                     ))}
                   </div>

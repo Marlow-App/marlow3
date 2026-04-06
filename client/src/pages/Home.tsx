@@ -41,15 +41,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   final: "Final",
 };
 
-function speakWord(text: string) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const utt = new SpeechSynthesisUtterance(text);
-  utt.lang = "zh-CN";
-  utt.rate = 0.85;
-  window.speechSynthesis.speak(utt);
-}
-
 function getDailyPracticeItem(items: PracticeItem[]): PracticeItem | null {
   if (!items.length) return null;
   const today = new Date();
@@ -347,14 +338,19 @@ export default function Home() {
                   <div className="flex items-start gap-5">
                     <button
                       type="button"
-                      onClick={() => speakWord(practiceWord)}
-                      className="flex flex-col items-center shrink-0 bg-muted/40 hover:bg-primary/10 rounded-xl px-4 py-3 min-w-[72px] transition-colors group"
+                      onClick={() => playPhrase(practiceWord)}
+                      disabled={anyLoading}
+                      className="flex flex-col items-center shrink-0 bg-muted/40 hover:bg-primary/10 rounded-xl px-4 py-3 min-w-[72px] transition-colors group disabled:opacity-50"
                       aria-label={`Pronounce ${practiceWord}`}
                       data-testid="practice-drill-speak-btn"
                     >
                       <span className="text-xs text-muted-foreground font-medium mb-0.5">{wordPinyin}</span>
                       <span className="text-3xl font-bold leading-tight group-hover:text-primary transition-colors">{practiceWord}</span>
-                      <Volume2 className="w-4 h-4 text-muted-foreground group-hover:text-primary mt-1.5 transition-colors" />
+                      {isPhraseLoading(practiceWord) ? (
+                        <Loader2 className="w-4 h-4 text-primary mt-1.5 animate-spin" />
+                      ) : (
+                        <Volume2 className="w-4 h-4 text-muted-foreground group-hover:text-primary mt-1.5 transition-colors" />
+                      )}
                     </button>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5">
