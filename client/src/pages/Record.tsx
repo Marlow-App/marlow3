@@ -7,9 +7,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useLocation, Link } from "wouter";
 import { ChevronLeft, Info, X, Loader2, CircleDollarSign, Volume2 } from "lucide-react";
+import { RecordingFeedback } from "@/components/RecordingFeedback";
 import { getPhrasesForLevel, phraseToText, toToneChars, PHRASE_BANK, type Phrase } from "@/data/phrases";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 import { useQuery } from "@tanstack/react-query";
@@ -98,6 +98,8 @@ export default function RecordPage() {
 
   const [rerecordOf, setRerecordOf] = useState<number | null>(null);
   const [redoType, setRedoType] = useState<"free" | "discount" | null>(null);
+  const [feedbackRecordingId, setFeedbackRecordingId] = useState<number | null>(null);
+  const [feedbackSentenceText, setFeedbackSentenceText] = useState<string>("");
 
   const { data: creditData } = useQuery<{ creditBalance: number; freeCreditsBalance: number; isUnlimited: boolean }>({
     queryKey: ['/api/credits/balance'],
@@ -199,18 +201,8 @@ export default function RecordPage() {
         ...(rerecordOf ? { rerecordOf } : {}),
       });
 
-      toast({
-        title: "Success!",
-        description: isUnlimited
-          ? "Your recording has been submitted for review."
-          : discountedCost === 0
-            ? "Submitted for review — no credits used."
-            : rerecordOf && redoType === "discount"
-              ? `Used ${discountedCost} credit${discountedCost !== 1 ? "s" : ""} (30% off) — submitted for review.`
-              : `Used ${discountedCost} credit${discountedCost !== 1 ? "s" : ""} — submitted for review.`,
-      });
-
-      setLocation(`/recordings/${newRecording.id}`);
+      setFeedbackSentenceText(activeText);
+      setFeedbackRecordingId(newRecording.id);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Failed to submit recording. Please try again.";
       toast({
@@ -220,6 +212,35 @@ export default function RecordPage() {
       });
     }
   };
+
+  const handlePracticeAgain = () => {
+    setFeedbackRecordingId(null);
+    setFeedbackSentenceText("");
+  };
+
+  if (feedbackRecordingId !== null) {
+    return (
+      <Layout>
+        <div className="max-w-3xl mx-auto space-y-4 animate-in">
+          <div className="flex items-center gap-1">
+            <button onClick={handlePracticeAgain} className="p-1 -ml-1 rounded-md hover:bg-muted transition-colors" data-testid="back-to-record-btn">
+              <ChevronLeft className="w-9 h-9 text-foreground" strokeWidth={3} />
+            </button>
+            <h1 className="text-3xl font-bold font-display">Your Results</h1>
+          </div>
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="p-5">
+              <RecordingFeedback
+                recordingId={feedbackRecordingId}
+                sentenceText={feedbackSentenceText}
+                onPracticeAgain={handlePracticeAgain}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
