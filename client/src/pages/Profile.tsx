@@ -74,7 +74,7 @@ export default function Profile() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { uploadFile, isUploading } = useUpload();
-  const { showPinyin, showSandhi, setShowPinyin, setShowSandhi } = useDisplayPrefs();
+  const { showPinyin, showSandhi, showTips, setShowPinyin, setShowSandhi, setShowTips } = useDisplayPrefs();
 
   const [activeTab, setActiveTab] = useState<string>("profile");
   const [formData, setFormData] = useState({
@@ -479,6 +479,21 @@ export default function Profile() {
                     onCheckedChange={setShowSandhi}
                     disabled={!showPinyin}
                     data-testid="switch-show-sandhi"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between py-5">
+                  <div className="space-y-1 pr-4">
+                    <Label htmlFor="toggle-tips" className="text-base font-medium">Show pronunciation tips</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Show tone tips below each phrase — helpful hints on how to pronounce each tone correctly, including T3 sandhi rules.
+                    </p>
+                  </div>
+                  <Switch
+                    id="toggle-tips"
+                    checked={showTips}
+                    onCheckedChange={setShowTips}
+                    data-testid="switch-show-tips"
                   />
                 </div>
               </CardContent>

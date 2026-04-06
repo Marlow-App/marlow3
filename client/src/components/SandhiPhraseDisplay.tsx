@@ -38,14 +38,41 @@ const TONE_PILL_COLORS: Record<number, string> = {
   0: "bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800",
 };
 
-interface ToneTip {
-  label: string;
-  heading: string;
-  body: React.ReactNode;
+function isPunct(char: string, pinyin: string) {
+  return !pinyin || /[，。！？、；：]/.test(char);
 }
 
-function getToneTip(tone: number, hasNonFinalT3: boolean): ToneTip {
-  switch (tone) {
+interface TipEntry {
+  id: string;
+  tone: number;
+  charIndices: number[];
+  isT3T3: boolean;
+}
+
+function getTipContent(entry: TipEntry, hasNonFinalT3: boolean): { label: string; heading: string; body: React.ReactNode } {
+  if (entry.isT3T3) {
+    return {
+      label: "T3+T3 sandhi",
+      heading: "Third-tone sandhi (T3+T3)",
+      body: (
+        <div className="space-y-2 text-xs leading-relaxed">
+          <p className="text-muted-foreground">
+            When two third-tone syllables appear in a row, the first changes to <strong>second tone</strong> in natural speech. This is called <em>T3+T3 sandhi</em>.
+          </p>
+          <div className="bg-muted/40 rounded px-2.5 py-2 font-mono text-[11px] space-y-0.5">
+            <p>Written: T3 + T3</p>
+            <p>Spoken:  T2 + T3</p>
+            <p className="text-muted-foreground">e.g. 你好 nǐhǎo → <span className="text-foreground">níhǎo</span></p>
+          </div>
+          <p className="text-muted-foreground">
+            The change happens automatically in speech — you don't need to consciously think about it. Just let the first syllable rise naturally into the second.
+          </p>
+        </div>
+      ),
+    };
+  }
+
+  switch (entry.tone) {
     case 1:
       return {
         label: "T1 tip",
@@ -86,14 +113,14 @@ function getToneTip(tone: number, hasNonFinalT3: boolean): ToneTip {
               <p>Final T3: dip then rise ↘↗</p>
             </div>
             <p className="text-muted-foreground">
-              The full rise back up only happens on the <strong>last syllable of a phrase</strong>. Trying to fully rise on every T3 sounds unnatural and choppy.
+              The full rise back up only happens on the <strong>last syllable of a phrase</strong>. Trying to fully rise on every T3 sounds choppy and unnatural.
             </p>
           </div>
         ) : (
           <p className="text-muted-foreground text-xs leading-relaxed">
             At the end of a phrase, T3 makes the full <strong>dip-and-rise</strong> shape: start at mid pitch, fall to your lowest, then rise back up.
             <br /><br />
-            In the middle of phrases, T3 only dips — the rise is dropped. So here, let your voice just fall low and hold briefly.
+            In the middle of phrases, T3 only dips — the rise is dropped.
           </p>
         ),
       };
@@ -127,36 +154,40 @@ function getToneTip(tone: number, hasNonFinalT3: boolean): ToneTip {
   }
 }
 
-function ToneTipPopover({ tone, hasNonFinalT3 }: { tone: number; hasNonFinalT3: boolean }) {
+function ToneTipPopover({
+  entry,
+  hasNonFinalT3,
+  onHoverChange,
+}: {
+  entry: TipEntry;
+  hasNonFinalT3: boolean;
+  onHoverChange: (id: string | null) => void;
+}) {
   const [open, setOpen] = useState(false);
-  const tip = getToneTip(tone, hasNonFinalT3);
+  const { label, heading, body } = getTipContent(entry, hasNonFinalT3);
+  const pillColor = TONE_PILL_COLORS[entry.tone] ?? TONE_PILL_COLORS[3];
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors ${TONE_PILL_COLORS[tone]}`}
-          data-testid={`tone-tip-btn-${tone}`}
-          aria-label={tip.label}
+          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors ${pillColor}`}
+          data-testid={`tone-tip-btn-${entry.id}`}
+          onMouseEnter={() => onHoverChange(entry.id)}
+          onMouseLeave={() => onHoverChange(null)}
+          onFocus={() => onHoverChange(entry.id)}
+          onBlur={() => onHoverChange(null)}
         >
           <Lightbulb className="w-2.5 h-2.5 shrink-0" />
-          {tip.label}
+          {label}
         </button>
       </PopoverTrigger>
-      <PopoverContent side="top" align="start" className="max-w-xs text-sm space-y-2 p-4" data-testid={`tone-tip-popover-${tone}`}>
-        <p className="font-semibold text-foreground text-sm">{tip.heading}</p>
-        {tip.body}
+      <PopoverContent side="top" align="start" className="max-w-xs text-sm space-y-2 p-4" data-testid={`tone-tip-popover-${entry.id}`}>
+        <p className="font-semibold text-foreground text-sm">{heading}</p>
+        {body}
       </PopoverContent>
     </Popover>
   );
-}
-
-interface SandhiPhraseDisplayProps {
-  characters?: ToneChar[];
-  pinyinChars?: { char: string; py: string; tone: number }[];
-  charSize?: string;
-  pinyinSize?: string;
-  showSandhiRow?: boolean;
-  showTips?: boolean;
 }
 
 function CharDisplay({
@@ -167,6 +198,7 @@ function CharDisplay({
   pinyinSize = "text-xs",
   changed = false,
   showPinyin = true,
+  highlighted = false,
 }: {
   char: string;
   tone: number;
@@ -175,10 +207,15 @@ function CharDisplay({
   pinyinSize?: string;
   changed?: boolean;
   showPinyin?: boolean;
+  highlighted?: boolean;
 }) {
-  const isPunctuation = !pinyin || /[，。！？、；：]/.test(char);
+  const isPunctuation = isPunct(char, pinyin);
   return (
-    <span className="inline-flex flex-col items-center mx-[1px]">
+    <span
+      className={`inline-flex flex-col items-center mx-[1px] rounded transition-colors duration-150 ${
+        highlighted && !isPunctuation ? "bg-primary/10" : ""
+      }`}
+    >
       {showPinyin && !isPunctuation && (
         <span className={`${pinyinSize} leading-tight font-medium ${TONE_PINYIN_COLORS[tone]}`}>
           {pinyin}
@@ -252,15 +289,92 @@ function SandhiExplainerPopover({ t3, bu, yi }: { t3: boolean; bu: boolean; yi: 
   );
 }
 
+function buildTipEntries(toneChars: ToneChar[], sandhiResult: SandhiChar[]): TipEntry[] {
+  const n = toneChars.length;
+
+  // Step 1: Find consecutive T3 groups (2+) in original toneChars, skipping punctuation
+  const t3t3Owned = new Set<number>();
+  const t3t3Groups: number[][] = [];
+  let i = 0;
+  while (i < n) {
+    const tc = toneChars[i];
+    if (tc.tone === 3 && !isPunct(tc.char, tc.pinyin)) {
+      let j = i;
+      while (
+        j + 1 < n &&
+        toneChars[j + 1].tone === 3 &&
+        !isPunct(toneChars[j + 1].char, toneChars[j + 1].pinyin)
+      ) {
+        j++;
+      }
+      if (j > i) {
+        const group: number[] = [];
+        for (let k = i; k <= j; k++) {
+          group.push(k);
+          t3t3Owned.add(k);
+        }
+        t3t3Groups.push(group);
+        i = j + 1;
+        continue;
+      }
+    }
+    i++;
+  }
+
+  // Step 2: Build tip entries in order of first appearance
+  const tipMap = new Map<string, TipEntry>();
+  const tipOrder: string[] = [];
+
+  for (let idx = 0; idx < n; idx++) {
+    const tc = toneChars[idx];
+    if (isPunct(tc.char, tc.pinyin)) continue;
+
+    // Check if this index starts a T3+T3 group
+    const groupStarting = t3t3Groups.find(g => g[0] === idx);
+    if (groupStarting) {
+      const key = "t3t3";
+      if (!tipMap.has(key)) {
+        tipMap.set(key, { id: key, tone: 3, charIndices: [], isT3T3: true });
+        tipOrder.push(key);
+      }
+      tipMap.get(key)!.charIndices.push(...groupStarting);
+      // Skip to end of group
+      idx = groupStarting[groupStarting.length - 1];
+      continue;
+    }
+
+    if (t3t3Owned.has(idx)) continue;
+
+    // Use effective (as-spoken) tone from sandhiResult
+    const effectiveTone = sandhiResult[idx]?.tone ?? tc.tone;
+    const key = `tone-${effectiveTone}`;
+    if (!tipMap.has(key)) {
+      tipMap.set(key, { id: key, tone: effectiveTone, charIndices: [], isT3T3: false });
+      tipOrder.push(key);
+    }
+    tipMap.get(key)!.charIndices.push(idx);
+  }
+
+  return tipOrder.map(k => tipMap.get(k)!);
+}
+
+interface SandhiPhraseDisplayProps {
+  characters?: ToneChar[];
+  pinyinChars?: { char: string; py: string; tone: number }[];
+  charSize?: string;
+  pinyinSize?: string;
+  showSandhiRow?: boolean;
+}
+
 export function SandhiPhraseDisplay({
   characters,
   pinyinChars,
   charSize = "text-2xl",
   pinyinSize = "text-xs",
   showSandhiRow = true,
-  showTips = true,
 }: SandhiPhraseDisplayProps) {
-  const { showPinyin, showSandhi } = useDisplayPrefs();
+  const { showPinyin, showSandhi, showTips } = useDisplayPrefs();
+  const [hoveredTipId, setHoveredTipId] = useState<string | null>(null);
 
   const toneChars: ToneChar[] = useMemo(() => {
     if (characters) return characters;
@@ -274,19 +388,39 @@ export function SandhiPhraseDisplay({
 
   const effectiveShowSandhi = showSandhiRow && showSandhi && hasChanges;
 
-  const { uniqueTones, hasNonFinalT3 } = useMemo(() => {
-    const contentChars = toneChars.filter(tc => tc.pinyin && !/[，。！？、；：]/.test(tc.char));
-    const toneSet = new Set<number>();
-    contentChars.forEach(tc => { if (tc.tone >= 0 && tc.tone <= 4) toneSet.add(tc.tone); });
-    const finalTone = contentChars.length > 0 ? contentChars[contentChars.length - 1].tone : -1;
-    const nonFinalT3 = contentChars.some((tc, i) => tc.tone === 3 && i < contentChars.length - 1);
-    return { uniqueTones: Array.from(toneSet).sort(), hasNonFinalT3: nonFinalT3 };
-  }, [toneChars]);
+  const tipEntries = useMemo(() => buildTipEntries(toneChars, sandhiResult), [toneChars, sandhiResult]);
 
-  const tipsBar = showTips && uniqueTones.length > 0 ? (
+  // The last non-punctuation char index in sandhiResult (for non-final T3 detection)
+  const lastContentIdx = useMemo(() => {
+    for (let i = sandhiResult.length - 1; i >= 0; i--) {
+      if (!isPunct(sandhiResult[i].char, sandhiResult[i].pinyin)) return i;
+    }
+    return -1;
+  }, [sandhiResult]);
+
+  // Whether any T3 tip char is in a non-final position
+  const hasNonFinalT3 = useMemo(() => {
+    const t3Entry = tipEntries.find(e => e.id === "tone-3");
+    if (!t3Entry) return false;
+    return t3Entry.charIndices.some(idx => idx !== lastContentIdx);
+  }, [tipEntries, lastContentIdx]);
+
+  // Highlighted char indices from hovered tip
+  const highlightedIndices = useMemo<Set<number>>(() => {
+    if (!hoveredTipId) return new Set();
+    const entry = tipEntries.find(e => e.id === hoveredTipId);
+    return new Set(entry?.charIndices ?? []);
+  }, [hoveredTipId, tipEntries]);
+
+  const tipsBar = showTips && tipEntries.length > 0 ? (
     <div className="flex flex-wrap gap-1.5 mt-2.5" data-testid="tone-tips-bar">
-      {uniqueTones.map(tone => (
-        <ToneTipPopover key={tone} tone={tone} hasNonFinalT3={tone === 3 ? hasNonFinalT3 : false} />
+      {tipEntries.map(entry => (
+        <ToneTipPopover
+          key={entry.id}
+          entry={entry}
+          hasNonFinalT3={hasNonFinalT3}
+          onHoverChange={setHoveredTipId}
+        />
       ))}
     </div>
   ) : null;
@@ -304,6 +438,7 @@ export function SandhiPhraseDisplay({
               charSize={charSize}
               pinyinSize={pinyinSize}
               showPinyin={showPinyin}
+              highlighted={highlightedIndices.has(i)}
             />
           ))}
         </div>
@@ -336,6 +471,7 @@ export function SandhiPhraseDisplay({
                   charSize={charSize}
                   pinyinSize={pinyinSize}
                   showPinyin={showPinyin}
+                  highlighted={highlightedIndices.has(i)}
                 />
               ))}
             </div>
@@ -358,6 +494,7 @@ export function SandhiPhraseDisplay({
                   pinyinSize={pinyinSize}
                   changed={sc.changed}
                   showPinyin={showPinyin}
+                  highlighted={highlightedIndices.has(i)}
                 />
               ))}
             </div>

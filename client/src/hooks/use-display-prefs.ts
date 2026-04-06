@@ -5,11 +5,13 @@ const STORAGE_KEY = "marlow_display_prefs";
 interface DisplayPrefs {
   showPinyin: boolean;
   showSandhi: boolean;
+  showTips: boolean;
 }
 
 const DEFAULT_PREFS: DisplayPrefs = {
   showPinyin: true,
   showSandhi: true,
+  showTips: true,
 };
 
 function loadPrefs(): DisplayPrefs {
@@ -48,10 +50,20 @@ export function useDisplayPrefs() {
     });
   }, []);
 
+  const setShowTips = useCallback((value: boolean) => {
+    setPrefs(prev => {
+      const next = { ...prev, showTips: value };
+      savePrefs(next);
+      return next;
+    });
+  }, []);
+
   return {
     showPinyin: prefs.showPinyin,
     showSandhi: prefs.showSandhi,
+    showTips: prefs.showTips,
     setShowPinyin,
     setShowSandhi,
+    setShowTips,
   };
 }
