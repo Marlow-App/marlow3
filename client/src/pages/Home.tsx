@@ -127,8 +127,7 @@ function WeekCalendarStrip({
   onSelectDate: (date: Date | null) => void;
 }) {
   const today = startOfDay(new Date());
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const days = Array.from({ length: 7 }, (_, i) => addDays(today, i - 3));
 
   const daysWithRecordings = new Set(
     recordings.map(r => format(new Date(r.createdAt), "yyyy-MM-dd"))
@@ -490,27 +489,27 @@ export default function Home() {
           </div>
 
           {allRecordings.length > 0 ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {allRecordings.slice(0, 5).map(recording => {
                 const score = recording.feedback?.[0]?.overallScore;
                 return (
                   <Link key={recording.id} href={`/recordings/${recording.id}`}>
                     <div
-                      className="flex items-center gap-3 bg-card border border-border/60 rounded-2xl px-4 py-3.5 hover:shadow-md hover:border-primary/20 transition-all duration-200 cursor-pointer"
+                      className="flex items-center gap-4 bg-card border border-border/60 rounded-2xl px-5 py-4 hover:shadow-md hover:border-primary/20 transition-all duration-200 cursor-pointer"
                       data-testid={`recent-recording-${recording.id}`}
                     >
-                      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <Mic2 className="w-4 h-4 text-primary" />
+                      <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <Mic2 className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-base truncate leading-tight">{recording.sentenceText}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
+                        <p className="font-semibold text-lg truncate leading-tight">{recording.sentenceText}</p>
+                        <p className="text-sm text-muted-foreground mt-0.5">
                           {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {score != null && (
-                          <span className={`text-sm font-bold ${getScoreTextColor(score)}`}>{score}%</span>
+                          <span className={`text-base font-bold ${getScoreTextColor(score)}`}>{score}%</span>
                         )}
                         <ChevronRight className="w-4 h-4 text-muted-foreground" />
                       </div>
