@@ -715,7 +715,6 @@ export default function Profile() {
                     "Unlimited error category insights",
                     "Unlimited Practice List items",
                     "Full pronunciation breakdown per character",
-                    "Support for native speakers who review your recordings",
                   ].map(f => (
                     <div key={f} className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-emerald-500 shrink-0" />
