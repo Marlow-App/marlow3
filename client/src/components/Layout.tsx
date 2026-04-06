@@ -1,13 +1,13 @@
 import { ReactNode, useState, useEffect, useRef } from "react";
-import { House, Mic2, BarChart2, BookOpen, UserCircle, FileAudio, X, Menu, LogOut, CircleDollarSign } from "lucide-react";
+import { House, Mic2, BarChart2, BookOpen, UserCircle, FileAudio, X, Menu, LogOut, Zap } from "lucide-react";
 import pandaLogo from "@assets/chow_chow_2_1774332948261.png";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { useTourSpotlight } from "@/contexts/TourSpotlightContext";
-import { useQuery } from "@tanstack/react-query";
 import { useInAppNotifications } from "@/hooks/use-in-app-notifications";
+import { useIsPro } from "@/hooks/use-subscription";
 import { useUnseenFeedback } from "@/hooks/use-unseen-feedback";
 
 interface LayoutProps {
@@ -52,19 +52,13 @@ export function Layout({ children }: LayoutProps) {
 
   const navItems = user?.role === "reviewer" ? reviewerItems : learnerItems;
 
-  const { data: creditData } = useQuery<{ creditBalance: number; freeCreditsBalance: number; isUnlimited: boolean }>({
-    queryKey: ['/api/credits/balance'],
-    enabled: user?.role === "learner",
-  });
-
-  const totalCredits = creditData?.creditBalance ?? 0;
-  const isUnlimited = creditData?.isUnlimited ?? false;
+  const isPro = useIsPro();
 
   const subLabel = user?.role === "reviewer"
     ? "Reviewer"
-    : isUnlimited
-      ? "∞ credits"
-      : `${totalCredits} credit${totalCredits !== 1 ? "s" : ""}`;
+    : isPro
+      ? "Pro Plan"
+      : "Free Plan";
 
   return (
     <div className="h-screen bg-background flex flex-col md:flex-row font-sans text-foreground overflow-hidden">
@@ -146,8 +140,8 @@ export function Layout({ children }: LayoutProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-base font-semibold truncate">{user?.firstName || (user as any)?.username || "Learner"}</p>
-                <p className="text-sm font-normal text-foreground truncate flex items-center gap-1.5 mt-0.5" data-testid="sidebar-credit-label">
-                  {user?.role === "learner" && <CircleDollarSign className="w-4 h-4 shrink-0 text-primary" />}
+                <p className="text-sm font-normal text-muted-foreground truncate flex items-center gap-1.5 mt-0.5" data-testid="sidebar-credit-label">
+                  {isPro && <Zap className="w-3.5 h-3.5 shrink-0 text-amber-500 fill-amber-500" />}
                   {subLabel}
                 </p>
               </div>
