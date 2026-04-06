@@ -28,7 +28,7 @@ Marlow uses a credit-based (pay-as-you-go) model instead of subscriptions:
 - **Per-character initial/final scoring**: Uses `perr_msg` (error code) + `perr_level_msg` (severity 0-3) on each phone. `perr_msg=0` → no error (great). Non-zero `perr_msg` + severity 0/1 → ok (60), severity 2 → poor (30), severity 3 → poor (10).
 - **Overall score**: Uses iFlytek's `total_score` from the inner `<read_sentence>` element (inside `<rec_paper>`), rounded to integer.
 - **XML structure**: `<xml_result> → <read_sentence> → <rec_paper> → <read_sentence total_score="..." phone_score="..." tone_score="..."> → <sentence> → <word symbol="..."> → <syll symbol="mai3"> → <phone is_yun="0|1" mono_tone="TONE3" perr_msg="..." perr_level_msg="...">`
-- **Synchronous**: ISE runs synchronously during the upload request — AI feedback is saved before the client is redirected, so it appears immediately on the recording detail page. ISE failures are caught silently so recording upload always succeeds regardless.
+- **Asynchronous**: ISE runs fire-and-forget after the recording is created — the POST endpoint responds immediately with the new recording, and the client's `RecordingFeedback` polling component (2 s interval, 10 s timeout) picks up the results. ISE failures are caught silently so recording creation always succeeds regardless.
 - **System user**: `"iflytek-ai"` upserted on server startup (firstName: "AI Review", role: "reviewer") satisfies FK on feedback.reviewerId
 - **`isAiFeedback` field**: boolean on `feedback` table (default false); used in UI to show Bot icon + "AI Review" badge instead of reviewer name
 - **Credit refund**: 95%+ score from ISE auto-review also triggers credit refund
