@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { RotateCcw, ExternalLink, Loader2, Bot, RefreshCw } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { RotateCcw, ExternalLink, Loader2, Bot, RefreshCw, Mic, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { getScoreTextColor } from "@/lib/scoreColor";
 import { api, buildUrl } from "@shared/routes";
 import { useAllErrors, AICharacterRatingDisplay, getCharPinyin, PinyinChar } from "@/components/AIFeedbackDisplay";
+import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 import type { CharacterRating, SpeechSuperScores } from "@shared/schema";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -24,7 +25,93 @@ interface RecordingResponse {
   id: number;
   status: "pending" | "reviewed";
   sentenceText: string;
+  audioUrl: string | null;
   feedback: AiFeedbackItem[];
+}
+
+// ─── TTS audio fetcher ────────────────────────────────────────────────────────
+
+function useTtsAudio(sentenceText: string, enabled: boolean) {
+  const mutation = useMutation<{ audioUrl: string }, Error, void>({
+    mutationFn: async () => {
+      const res = await fetch("/api/phrase-audio/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ text: sentenceText }),
+      });
+      if (!res.ok) throw new Error("TTS failed");
+      return res.json();
+    },
+  });
+
+  useEffect(() => {
+    if (enabled && !mutation.data && !mutation.isPending && !mutation.isError) {
+      mutation.mutate();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled]);
+
+  return mutation;
+}
+
+// ─── Audio comparison block ───────────────────────────────────────────────────
+
+function AudioComparison({
+  learnerAudioUrl,
+  sentenceText,
+}: {
+  learnerAudioUrl: string | null;
+  sentenceText: string;
+}) {
+  const tts = useTtsAudio(sentenceText, true);
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="audio-comparison">
+      <div className="bg-muted/30 rounded-xl border border-border/50 p-4 space-y-2">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <Mic className="w-3.5 h-3.5" />
+          Your recording
+        </div>
+        {learnerAudioUrl ? (
+          <audio
+            src={learnerAudioUrl}
+            controls
+            className="w-full h-9"
+            preload="auto"
+            playsInline
+            data-testid="learner-audio-player"
+          />
+        ) : (
+          <p className="text-xs text-muted-foreground">Audio unavailable</p>
+        )}
+      </div>
+
+      <div className="bg-muted/30 rounded-xl border border-border/50 p-4 space-y-2">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <Volume2 className="w-3.5 h-3.5" />
+          Reference (AI)
+        </div>
+        {tts.isPending ? (
+          <div className="flex items-center gap-2 h-9 text-xs text-muted-foreground">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            Generating…
+          </div>
+        ) : tts.data?.audioUrl ? (
+          <audio
+            src={tts.data.audioUrl}
+            controls
+            className="w-full h-9"
+            preload="auto"
+            playsInline
+            data-testid="reference-audio-player"
+          />
+        ) : (
+          <p className="text-xs text-muted-foreground">Unavailable</p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // ─── Shared display component ────────────────────────────────────────────────
@@ -127,6 +214,11 @@ export function RecordingFeedback({
 
   const isPending = !aiFeedback && recording?.status !== "reviewed";
 
+  const pinyinData = useMemo(
+    (): PinyinChar[] => getCharPinyin(sentenceText).filter(p => p.py !== ""),
+    [sentenceText],
+  );
+
   // ── Loading / pending state ─────────────────────────────────────────────
 
   if (isLoading || (isPending && !timedOut)) {
@@ -185,13 +277,30 @@ export function RecordingFeedback({
   if (!aiFeedback) return null;
 
   return (
-    <div className="space-y-4" data-testid="recording-feedback-panel">
+    <div className="space-y-5" data-testid="recording-feedback-panel">
+      {/* Sentence header */}
+      <div data-testid="feedback-sentence-header">
+        {pinyinData.length > 0 ? (
+          <SandhiPhraseDisplay pinyinChars={pinyinData} charSize="text-2xl" pinyinSize="text-sm" />
+        ) : (
+          <p className="text-2xl font-display font-bold text-foreground">{sentenceText}</p>
+        )}
+      </div>
+
+      {/* Audio comparison */}
+      <AudioComparison
+        learnerAudioUrl={recording?.audioUrl ?? null}
+        sentenceText={sentenceText}
+      />
+
+      {/* AI score + character breakdown */}
       <AIFeedbackRatings
         feedback={aiFeedback}
         sentenceText={sentenceText}
         recordingId={recordingId}
         showHeader
       />
+
       <div className="flex gap-3 pt-2 flex-wrap">
         <Button
           onClick={onPracticeAgain}
