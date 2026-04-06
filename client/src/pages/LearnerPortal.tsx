@@ -2,11 +2,19 @@ import { Layout } from "@/components/Layout";
 import { getScoreBgColor, getScoreTextColor } from "@/lib/scoreColor";
 import { useRecordings } from "@/hooks/use-recordings";
 import { Link, useLocation, useSearch } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mic2, Mic, MessageCircle, Clock, ChevronRight, ChevronLeft, Loader2, Calendar, Trash2, RotateCcw } from "lucide-react";
-import { format, formatDistanceToNow, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, isToday, isBefore, startOfDay, isThisWeek, isThisMonth, differenceInMonths, isSameDay, parseISO } from "date-fns";
+import {
+  Mic2, Mic, MessageCircle, Clock, ChevronRight, ChevronLeft, Loader2,
+  Calendar, Trash2, RotateCcw, TrendingUp, TrendingDown, Minus,
+  Award, Activity, Target, Star, AlertTriangle, Check,
+} from "lucide-react";
+import {
+  format, formatDistanceToNow, startOfMonth, endOfMonth, eachDayOfInterval,
+  subMonths, addMonths, isToday, isBefore, startOfDay, isThisWeek,
+  isThisMonth, differenceInMonths, isSameDay, parseISO,
+} from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useMemo } from "react";
@@ -14,15 +22,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useMutation } from "@tanstack/react-query";
 import { getPhraseEnglish } from "@/data/phrases";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine,
+} from "recharts";
+
+// ─── Sub-components ────────────────────────────────────────────────────────────
 
 function RatingBadge({ rating, overallScore }: { rating?: number | null; overallScore?: number | null }) {
   if (overallScore !== null && overallScore !== undefined) {
@@ -46,6 +54,357 @@ function RatingBadge({ rating, overallScore }: { rating?: number | null; overall
     </div>
   );
 }
+
+function CategoryBar({ label, value }: { label: string; value: number }) {
+  const barColor =
+    value >= 75 ? "bg-emerald-500 dark:bg-emerald-400"
+    : value >= 50 ? "bg-amber-500 dark:bg-amber-400"
+    : "bg-primary";
+  const textColor =
+    value >= 75 ? "text-emerald-600 dark:text-emerald-400"
+    : value >= 50 ? "text-amber-600 dark:text-amber-400"
+    : "text-primary";
+  return (
+    <div className="space-y-1.5" data-testid={`category-bar-${label.toLowerCase()}`}>
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium">{label}</span>
+        <span className={`text-sm font-bold tabular-nums ${textColor}`}>{value}%</span>
+      </div>
+      <div className="h-2.5 bg-muted/50 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ${barColor}`}
+          style={{ width: `${value}%` }}
+          data-testid={`category-bar-fill-${label.toLowerCase()}`}
+        />
+      </div>
+    </div>
+  );
+}
+
+const CATEGORY_TIPS = {
+  tone: {
+    strong: "Your tone accuracy is solid. Keep listening to natives to internalize the shapes.",
+    weak: "Focus on the pitch shape of each tone. T1 is flat-high, T2 rises, T3 dips (or half-dips), T4 falls sharply.",
+  },
+  initial: {
+    strong: "Your initial consonants are accurate — nice work!",
+    weak: "Work on aspirated vs unaspirated pairs (b/p, d/t, g/k) and tricky sounds like zh, ch, sh, and x.",
+  },
+  final: {
+    strong: "Your final vowels and endings sound natural.",
+    weak: "Pay attention to endings: -in vs -ing, -an vs -ang, and the ü vowel. Exaggerate them until they stick.",
+  },
+};
+
+function FocusCard({
+  catLabel, value, isStrength,
+}: { catLabel: "tone" | "initial" | "final"; value: number; isStrength: boolean }) {
+  const tips = CATEGORY_TIPS[catLabel];
+  const label = catLabel === "tone" ? "Tone" : catLabel === "initial" ? "Initial consonant" : "Final vowel";
+  if (isStrength) {
+    return (
+      <div className="flex items-start gap-3 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40" data-testid={`strength-card-${catLabel}`}>
+        <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center shrink-0">
+          <Star className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <p className="text-sm font-semibold text-foreground">{label}</p>
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{value}%</span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">{tips.strong}</p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-start gap-3 p-3.5 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200/60 dark:border-orange-800/40" data-testid={`needs-work-card-${catLabel}`}>
+      <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900 flex items-center justify-center shrink-0">
+        <Target className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <p className="text-sm font-semibold text-foreground">{label}</p>
+          <span className="text-xs font-bold text-orange-600 dark:text-orange-400">{value}%</span>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">{tips.weak}</p>
+      </div>
+    </div>
+  );
+}
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  const score = payload[0].value;
+  return (
+    <div className="bg-popover border border-border rounded-lg px-3 py-2 shadow-lg text-xs">
+      <p className="text-muted-foreground mb-0.5">{label}</p>
+      <p className="font-bold text-foreground text-sm">{score}%</p>
+    </div>
+  );
+};
+
+function ProgressInsights({ recordings }: { recordings: any[] }) {
+  const scoredRecs = useMemo(() =>
+    recordings.filter(r => r.feedback?.[0]?.overallScore != null),
+    [recordings]
+  );
+
+  const sortedByDate = useMemo(() =>
+    [...scoredRecs].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
+    [scoredRecs]
+  );
+
+  const stats = useMemo(() => {
+    if (scoredRecs.length === 0) return null;
+    const avgScore = Math.round(
+      scoredRecs.reduce((s, r) => s + r.feedback[0].overallScore, 0) / scoredRecs.length
+    );
+    const bestScore = Math.max(...scoredRecs.map(r => r.feedback[0].overallScore));
+    const thisMonthCount = scoredRecs.filter(r => isThisMonth(new Date(r.createdAt))).length;
+    const recent5 = sortedByDate.slice(-5);
+    const prev5 = sortedByDate.slice(-10, -5);
+    const recent5Avg = recent5.length > 0
+      ? recent5.reduce((s, r) => s + r.feedback[0].overallScore, 0) / recent5.length : null;
+    const prev5Avg = prev5.length > 0
+      ? prev5.reduce((s, r) => s + r.feedback[0].overallScore, 0) / prev5.length : null;
+    const trend = (recent5Avg !== null && prev5Avg !== null) ? recent5Avg - prev5Avg : null;
+    return { avgScore, bestScore, thisMonthCount, trend };
+  }, [scoredRecs, sortedByDate]);
+
+  const catAvgs = useMemo(() => {
+    const allCR = scoredRecs.flatMap(r =>
+      (r.feedback[0].characterRatings || []).filter((cr: any) => typeof cr.tone === "number")
+    );
+    if (allCR.length === 0) return null;
+    return {
+      tone: Math.round(allCR.reduce((s: number, cr: any) => s + cr.tone, 0) / allCR.length),
+      initial: Math.round(allCR.reduce((s: number, cr: any) => s + cr.initial, 0) / allCR.length),
+      final: Math.round(allCR.reduce((s: number, cr: any) => s + cr.final, 0) / allCR.length),
+      count: allCR.length,
+    };
+  }, [scoredRecs]);
+
+  const chartData = useMemo(() =>
+    sortedByDate.slice(-20).map((r, i) => ({
+      idx: i + 1,
+      score: r.feedback[0].overallScore,
+      date: format(new Date(r.createdAt), "MMM d"),
+      sentence: r.sentenceText,
+    })),
+    [sortedByDate]
+  );
+
+  const focusAreas = useMemo(() => {
+    if (!catAvgs) return null;
+    const cats = [
+      { key: "tone" as const, value: catAvgs.tone },
+      { key: "initial" as const, value: catAvgs.initial },
+      { key: "final" as const, value: catAvgs.final },
+    ].sort((a, b) => b.value - a.value);
+    const best = cats[0];
+    const worst = cats[cats.length - 1];
+    return { strength: best, needsWork: worst, showDiff: best.value !== worst.value };
+  }, [catAvgs]);
+
+  if (scoredRecs.length === 0) return null;
+
+  const { avgScore, bestScore, thisMonthCount, trend } = stats!;
+
+  return (
+    <div className="space-y-4" data-testid="progress-insights">
+
+      {/* ── Stat cards ────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Avg score */}
+        <Card className="border-border/60" data-testid="stat-avg-score">
+          <CardContent className="pt-4 pb-4 px-4">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Avg Score</span>
+              <Activity className="w-3.5 h-3.5 text-muted-foreground" />
+            </div>
+            <p className={`text-3xl font-bold font-display tabular-nums ${getScoreTextColor(avgScore)}`}>{avgScore}%</p>
+            {trend !== null && (
+              <div className={`flex items-center gap-0.5 mt-1 text-[11px] font-medium ${
+                trend > 2 ? "text-emerald-600" : trend < -2 ? "text-primary" : "text-muted-foreground"
+              }`}>
+                {trend > 2 ? <TrendingUp className="w-3 h-3" /> : trend < -2 ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                {trend > 2 ? `+${Math.round(trend)}% vs before` : trend < -2 ? `${Math.round(trend)}% vs before` : "Steady"}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Best score */}
+        <Card className="border-border/60" data-testid="stat-best-score">
+          <CardContent className="pt-4 pb-4 px-4">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Best</span>
+              <Award className="w-3.5 h-3.5 text-muted-foreground" />
+            </div>
+            <p className={`text-3xl font-bold font-display tabular-nums ${getScoreTextColor(bestScore)}`}>{bestScore}%</p>
+            <p className="text-[11px] text-muted-foreground mt-1">personal best</p>
+          </CardContent>
+        </Card>
+
+        {/* Total recordings */}
+        <Card className="border-border/60" data-testid="stat-total">
+          <CardContent className="pt-4 pb-4 px-4">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Scored</span>
+              <Mic className="w-3.5 h-3.5 text-muted-foreground" />
+            </div>
+            <p className="text-3xl font-bold font-display tabular-nums text-foreground">{scoredRecs.length}</p>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              {recordings.length > scoredRecs.length ? `of ${recordings.length} total` : "recordings"}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* This month */}
+        <Card className="border-border/60" data-testid="stat-this-month">
+          <CardContent className="pt-4 pb-4 px-4">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">This Month</span>
+              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+            </div>
+            <p className="text-3xl font-bold font-display tabular-nums text-foreground">{thisMonthCount}</p>
+            <p className="text-[11px] text-muted-foreground mt-1">{format(new Date(), "MMMM")}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Score over time chart ──────────────────────────────── */}
+      {chartData.length >= 3 && (
+        <Card className="border-border/60" data-testid="score-trend-chart">
+          <CardHeader className="pb-2 pt-4 px-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-primary" />
+                <CardTitle className="text-base font-display">Score Trend</CardTitle>
+              </div>
+              <span className="text-[11px] text-muted-foreground">
+                Last {chartData.length} recorded
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent className="px-2 pb-4">
+            <ResponsiveContainer width="100%" height={190}>
+              <AreaChart data={chartData} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
+                <defs>
+                  <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  tickLine={false}
+                  axisLine={false}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  tickLine={false}
+                  axisLine={false}
+                  ticks={[0, 25, 50, 75, 100]}
+                />
+                <ReferenceLine y={75} stroke="hsl(var(--border))" strokeDasharray="4 4" />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: "hsl(var(--border))", strokeWidth: 1 }} />
+                <Area
+                  type="monotone"
+                  dataKey="score"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  fill="url(#scoreGrad)"
+                  dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+            <p className="text-[10px] text-muted-foreground text-right pr-3 mt-1">
+              Dashed line = 75% target
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Pronunciation breakdown + focus areas ────────────── */}
+      {catAvgs && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Category bars */}
+          <Card className="border-border/60" data-testid="pronunciation-breakdown">
+            <CardHeader className="pb-3 pt-4 px-5">
+              <CardTitle className="text-base font-display">Pronunciation Breakdown</CardTitle>
+              <CardDescription>
+                Averaged across {catAvgs.count} character{catAvgs.count !== 1 ? "s" : ""} you've recorded
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-5 pb-5 space-y-5">
+              <CategoryBar label="Tone" value={catAvgs.tone} />
+              <CategoryBar label="Initial consonant" value={catAvgs.initial} />
+              <CategoryBar label="Final vowel" value={catAvgs.final} />
+
+              {/* Legend */}
+              <div className="flex items-center gap-4 pt-1 border-t border-border/40">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <span className="text-[10px] text-muted-foreground">≥75% Strong</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                  <span className="text-[10px] text-muted-foreground">50–74% Developing</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                  <span className="text-[10px] text-muted-foreground">&lt;50% Needs work</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Strengths and focus */}
+          {focusAreas && focusAreas.showDiff && (
+            <Card className="border-border/60" data-testid="focus-areas">
+              <CardHeader className="pb-3 pt-4 px-5">
+                <CardTitle className="text-base font-display">What to Focus On</CardTitle>
+                <CardDescription>Based on your pronunciation history</CardDescription>
+              </CardHeader>
+              <CardContent className="px-5 pb-5 space-y-3">
+                <FocusCard
+                  catLabel={focusAreas.strength.key}
+                  value={focusAreas.strength.value}
+                  isStrength={true}
+                />
+                <FocusCard
+                  catLabel={focusAreas.needsWork.key}
+                  value={focusAreas.needsWork.value}
+                  isStrength={false}
+                />
+                {scoredRecs.length >= 3 && (
+                  <div className="pt-2 border-t border-border/40">
+                    <Link href="/practice-list">
+                      <Button variant="outline" size="sm" className="w-full rounded-full text-xs" data-testid="go-to-practice-list">
+                        <Target className="w-3.5 h-3.5 mr-1.5" />
+                        View saved error list
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Calendar ──────────────────────────────────────────────────────────────────
 
 interface RecordingEntry {
   id: number;
@@ -233,6 +592,8 @@ function JournalCalendar({ recordings, initialDate }: { recordings: any[]; initi
   );
 }
 
+// ─── Recordings list ───────────────────────────────────────────────────────────
+
 function getTimeGroup(date: Date): string {
   const now = new Date();
   if (isThisWeek(date, { weekStartsOn: 0 })) return "This Week";
@@ -246,10 +607,7 @@ function getTimeGroup(date: Date): string {
 function GroupedRecordingsList({ recordings, childLookup }: { recordings: any[]; childLookup?: any[] }) {
   const { grouped, childrenMap } = useMemo(() => {
     const idSet = new Set(recordings.map((r: any) => r.id));
-    // Look for children in the broader set (cross-status) when provided
     const source = childLookup ?? recordings;
-
-    // Build children map: anything in source whose parent is one of our roots
     const childrenMap = new Map<number, any[]>();
     for (const rec of source) {
       if (rec.parentRecordingId && idSet.has(rec.parentRecordingId)) {
@@ -260,13 +618,9 @@ function GroupedRecordingsList({ recordings, childLookup }: { recordings: any[];
         }
       }
     }
-
-    // Sort roots newest-first
     const sorted = [...recordings].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-
-    // Time-group the roots
     const groups: { label: string; items: any[] }[] = [];
     let currentLabel = "";
     for (const rec of sorted) {
@@ -431,6 +785,8 @@ function RecordingCard({ recording }: { recording: any }) {
   );
 }
 
+// ─── Main page ─────────────────────────────────────────────────────────────────
+
 export default function LearnerPortal() {
   const { data: recordings, isLoading } = useRecordings() as { data: any[]; isLoading: boolean };
   const { toast } = useToast();
@@ -486,6 +842,9 @@ export default function LearnerPortal() {
           </Link>
         </div>
 
+        {/* Stats and charts — only shown when there's scored data */}
+        <ProgressInsights recordings={allRecordingsList} />
+
         <JournalCalendar recordings={recordings || []} initialDate={dateFilter ?? undefined} />
 
         {dateFilter && (
@@ -501,24 +860,29 @@ export default function LearnerPortal() {
           </div>
         )}
 
-        {filteredList.length > 0 ? (
-          <GroupedRecordingsList recordings={filteredList} childLookup={allRecordingsList} />
-        ) : (
-          <div className="text-center py-14 bg-muted/10 rounded-2xl border border-dashed border-border">
-            <Mic2 className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-            <h3 className="text-lg font-medium">{dateFilter ? "No recordings on this day" : "No recordings yet"}</h3>
-            <p className="text-muted-foreground mt-2 mb-5 text-sm">
-              {dateFilter ? "Try a different date or clear the filter." : "Start your journey by recording your first sentence!"}
-            </p>
-            {dateFilter ? (
-              <Button variant="outline" onClick={() => navigate("/learner-portal")} data-testid="clear-date-filter-empty">Show all recordings</Button>
-            ) : (
-              <Link href="/record">
-                <Button data-testid="first-recording-btn">Record Now</Button>
-              </Link>
-            )}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold font-display">All Recordings</h2>
           </div>
-        )}
+          {filteredList.length > 0 ? (
+            <GroupedRecordingsList recordings={filteredList} childLookup={allRecordingsList} />
+          ) : (
+            <div className="text-center py-14 bg-muted/10 rounded-2xl border border-dashed border-border">
+              <Mic2 className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+              <h3 className="text-lg font-medium">{dateFilter ? "No recordings on this day" : "No recordings yet"}</h3>
+              <p className="text-muted-foreground mt-2 mb-5 text-sm">
+                {dateFilter ? "Try a different date or clear the filter." : "Start your journey by recording your first sentence!"}
+              </p>
+              {dateFilter ? (
+                <Button variant="outline" onClick={() => navigate("/learner-portal")} data-testid="clear-date-filter-empty">Show all recordings</Button>
+              ) : (
+                <Link href="/record">
+                  <Button data-testid="first-recording-btn">Record Now</Button>
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </Layout>
   );
