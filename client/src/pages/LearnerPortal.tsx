@@ -687,87 +687,62 @@ function JournalCalendar({ recordings, initialDate }: { recordings: any[]; initi
                 ? "text-amber-800 dark:text-amber-300 font-bold"
                 : "text-amber-800/80 dark:text-amber-200/70";
 
-            return (
-              <div key={key} className="flex flex-col items-center justify-center h-12 relative">
-                {/* Circle — clicking navigates to that day */}
-                <button
-                  className={`w-9 h-9 rounded-full flex items-center justify-center relative transition-all duration-200
-                    ${style ? `${style.bg} ${ringCls} cursor-pointer hover:scale-110` : `${ringCls} ${count === 0 && !today ? "cursor-default" : "cursor-pointer hover:scale-110"}`}
-                  `}
-                  onClick={() => navigate(`/learner-portal?date=${key}`)}
-                  data-testid={`calendar-day-${key}`}
-                >
-                  <span className={`text-sm leading-none font-semibold ${textCls}`}>
-                    {format(day, "d")}
-                  </span>
-                </button>
-
-                {/* Count badge — clicking opens popover */}
-                {count > 1 && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button
-                        className="absolute -top-2 -right-0.5 bg-amber-700 dark:bg-amber-500 text-white text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none hover:bg-amber-800 dark:hover:bg-amber-400 transition-colors z-10"
-                        data-testid={`calendar-badge-${key}`}
-                        onClick={(e) => e.stopPropagation()}
+            const popoverEntries = (
+              <PopoverContent className="w-64 p-3" side="top" align="center">
+                <p className="text-xs font-semibold mb-1">{format(day, "MMMM d, yyyy")}</p>
+                {count > 1 && <p className="text-[11px] text-muted-foreground mb-2">{count} recordings</p>}
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {entries.map((entry) => (
+                    <Link key={entry.id} href={`/recordings/${entry.id}`}>
+                      <div
+                        className="text-xs bg-muted/50 hover:bg-primary/10 hover:text-primary rounded px-2 py-1.5 cursor-pointer transition-colors flex items-center gap-1.5"
+                        data-testid={`popover-recording-${entry.id}`}
                       >
-                        {count}
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64 p-3" side="top" align="center">
-                      <p className="text-xs font-semibold mb-1">{format(day, "MMMM d, yyyy")}</p>
-                      <p className="text-[11px] text-muted-foreground mb-2">{count} recordings</p>
-                      <div className="space-y-1 max-h-40 overflow-y-auto">
-                        {entries.map((entry) => (
-                          <Link key={entry.id} href={`/recordings/${entry.id}`}>
-                            <div
-                              className="text-xs bg-muted/50 hover:bg-primary/10 hover:text-primary rounded px-2 py-1.5 cursor-pointer transition-colors flex items-center gap-1.5"
-                              data-testid={`popover-recording-${entry.id}`}
-                            >
-                              <Mic2 className="w-3 h-3 shrink-0 opacity-50" />
-                              <span className="truncate flex-1">{entry.sentenceText}</span>
-                              {entry.score !== null && (
-                                <span className={`text-[10px] font-bold shrink-0 ${getScoreTextColor(entry.score)}`}>{entry.score}%</span>
-                              )}
-                            </div>
-                          </Link>
-                        ))}
+                        <Mic2 className="w-3 h-3 shrink-0 opacity-50" />
+                        <span className="truncate flex-1">{entry.sentenceText}</span>
+                        {entry.score !== null && (
+                          <span className={`text-[10px] font-bold shrink-0 ${getScoreTextColor(entry.score)}`}>{entry.score}%</span>
+                        )}
                       </div>
-                    </PopoverContent>
-                  </Popover>
-                )}
+                    </Link>
+                  ))}
+                </div>
+              </PopoverContent>
+            );
 
-                {/* Single recording: just a dot indicator, no badge needed */}
-                {count === 1 && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button
-                        className="absolute -top-2 -right-0.5 bg-amber-700 dark:bg-amber-500 rounded-full w-2 h-2 hover:bg-amber-800 dark:hover:bg-amber-400 transition-colors z-10"
-                        data-testid={`calendar-dot-${key}`}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64 p-3" side="top" align="center">
-                      <p className="text-xs font-semibold mb-1">{format(day, "MMMM d, yyyy")}</p>
-                      <div className="space-y-1">
-                        {entries.map((entry) => (
-                          <Link key={entry.id} href={`/recordings/${entry.id}`}>
-                            <div
-                              className="text-xs bg-muted/50 hover:bg-primary/10 hover:text-primary rounded px-2 py-1.5 cursor-pointer transition-colors flex items-center gap-1.5"
-                              data-testid={`popover-recording-${entry.id}`}
-                            >
-                              <Mic2 className="w-3 h-3 shrink-0 opacity-50" />
-                              <span className="truncate flex-1">{entry.sentenceText}</span>
-                              {entry.score !== null && (
-                                <span className={`text-[10px] font-bold shrink-0 ${getScoreTextColor(entry.score)}`}>{entry.score}%</span>
-                              )}
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                )}
+            return (
+              <div key={key} className="flex items-center justify-center h-12">
+                {/* Wrapper keeps badge positioned relative to the circle */}
+                <div className="relative">
+                  {/* Circle — clicking navigates to that day */}
+                  <button
+                    className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200
+                      ${style ? `${style.bg} ${ringCls} cursor-pointer hover:scale-110` : `${ringCls} ${count === 0 && !today ? "cursor-default" : "cursor-pointer hover:scale-110"}`}
+                    `}
+                    onClick={() => navigate(`/learner-portal?date=${key}`)}
+                    data-testid={`calendar-day-${key}`}
+                  >
+                    <span className={`text-sm leading-none font-semibold ${textCls}`}>
+                      {format(day, "d")}
+                    </span>
+                  </button>
+
+                  {/* Badge — sits on top-right of the circle, opens popover */}
+                  {count >= 1 && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          className="absolute -top-1.5 -right-1.5 bg-amber-700 dark:bg-amber-500 text-white text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none hover:bg-amber-800 dark:hover:bg-amber-400 transition-colors z-10"
+                          data-testid={`calendar-badge-${key}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {count}
+                        </button>
+                      </PopoverTrigger>
+                      {popoverEntries}
+                    </Popover>
+                  )}
+                </div>
               </div>
             );
           })}
