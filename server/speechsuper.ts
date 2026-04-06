@@ -84,8 +84,9 @@ async function transcodeToWav(input: Buffer): Promise<Buffer> {
       "-hide_banner",
       "-loglevel", "error",
       "-i", "pipe:0",
-      "-ar", "16000",
+      "-acodec", "pcm_s16le",
       "-ac", "1",
+      "-ar", "16000",
       "-f", "wav",
       "pipe:1",
     ]);
