@@ -16,5 +16,5 @@ export function useSubscription() {
 
 export function useIsPro(): boolean {
   const { data } = useSubscription();
-  return data?.tier === "pro" && (data?.status === "active" || !!data?.isUnlimited);
+  return data?.tier === "pro" && (data?.status === "active" || data?.status === "canceling" || !!data?.isUnlimited);
 }

@@ -83,6 +83,8 @@ export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [reactivateLoading, setReactivateLoading] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState<boolean>((user as any)?.emailNotifications ?? false);
   const chineseLevelRef = useRef<HTMLDivElement>(null);
   const [highlightLevel, setHighlightLevel] = useState(false);
@@ -212,8 +214,35 @@ export default function Profile() {
     }
   };
 
+  const handleCancelSubscription = async () => {
+    setCancelLoading(true);
+    try {
+      await apiRequest("POST", "/api/stripe/cancel", {});
+      await queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+      toast({ title: "Subscription cancelled", description: "You'll keep Pro access until the end of your billing period." });
+    } catch {
+      toast({ title: "Couldn't cancel", description: "Please try again.", variant: "destructive" });
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  const handleReactivateSubscription = async () => {
+    setReactivateLoading(true);
+    try {
+      await apiRequest("POST", "/api/stripe/reactivate", {});
+      await queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+      toast({ title: "Subscription reactivated", description: "Your Pro plan will continue as normal." });
+    } catch {
+      toast({ title: "Couldn't reactivate", description: "Please try again.", variant: "destructive" });
+    } finally {
+      setReactivateLoading(false);
+    }
+  };
+
   const isReviewer = user?.role === "reviewer";
-  const isPro = subscription?.tier === "pro" && (subscription?.status === "active" || !!subscription?.isUnlimited);
+  const isCanceling = subscription?.status === "canceling";
+  const isPro = subscription?.tier === "pro" && (subscription?.status === "active" || isCanceling || !!subscription?.isUnlimited);
   const isUnlimited = !!subscription?.isUnlimited;
 
   return (
@@ -539,13 +568,21 @@ export default function Profile() {
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="text-2xl font-bold font-display">{isPro ? "Pro" : "Free"}</p>
-                          {isPro && (
+                          {isPro && !isCanceling && (
                             <Badge className="bg-primary text-primary-foreground text-xs">Active</Badge>
                           )}
+                          {isCanceling && (
+                            <Badge variant="outline" className="text-xs text-muted-foreground border-muted-foreground/40">Cancels soon</Badge>
+                          )}
                         </div>
-                        {isPro && subscription?.periodEnd && !isUnlimited && (
+                        {isPro && subscription?.periodEnd && !isUnlimited && !isCanceling && (
                           <p className="text-sm text-muted-foreground">
                             Renews {format(new Date(subscription.periodEnd), "MMM d, yyyy")}
+                          </p>
+                        )}
+                        {isCanceling && subscription?.periodEnd && (
+                          <p className="text-sm text-muted-foreground">
+                            Pro access until {format(new Date(subscription.periodEnd), "MMM d, yyyy")}
                           </p>
                         )}
                         {!isPro && (
@@ -556,20 +593,41 @@ export default function Profile() {
                       </div>
                     </div>
                     {isPro && !isUnlimited && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleManageSubscription}
-                        disabled={portalLoading}
-                        data-testid="btn-manage-subscription"
-                        className="shrink-0"
-                      >
-                        {portalLoading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                      <div className="flex flex-col gap-2 shrink-0">
+                        {isCanceling ? (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={handleReactivateSubscription}
+                            disabled={reactivateLoading}
+                            data-testid="btn-reactivate-subscription"
+                          >
+                            {reactivateLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Reactivate"}
+                          </Button>
                         ) : (
-                          <>Manage <ExternalLink className="w-3.5 h-3.5 ml-1.5" /></>
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleManageSubscription}
+                              disabled={portalLoading}
+                              data-testid="btn-manage-subscription"
+                            >
+                              {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><span>Manage</span><ExternalLink className="w-3.5 h-3.5 ml-1.5" /></>}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleCancelSubscription}
+                              disabled={cancelLoading}
+                              data-testid="btn-cancel-subscription"
+                              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-xs"
+                            >
+                              {cancelLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Cancel plan"}
+                            </Button>
+                          </>
                         )}
-                      </Button>
+                      </div>
                     )}
                   </div>
                 </CardContent>

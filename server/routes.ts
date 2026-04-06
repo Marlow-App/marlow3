@@ -29,7 +29,7 @@ function safeUser(user: any) {
 
 function isProUser(user: any, email?: string): boolean {
   if (email === UNLIMITED_EMAIL) return true;
-  return user?.subscriptionTier === "pro" && user?.subscriptionStatus === "active";
+  return user?.subscriptionTier === "pro" && (user?.subscriptionStatus === "active" || user?.subscriptionStatus === "canceling");
 }
 
 export async function registerRoutes(
@@ -713,6 +713,52 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error creating portal session:", error);
       res.status(500).json({ message: "Failed to open billing portal" });
+    }
+  });
+
+  // Cancel subscription at period end
+  app.post("/api/stripe/cancel", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user?.stripeSubscriptionId) {
+        return res.status(400).json({ message: "No active subscription found" });
+      }
+      const stripe = await getUncachableStripeClient();
+      await stripe.subscriptions.update(user.stripeSubscriptionId, { cancel_at_period_end: true });
+      await storage.updateUserSubscription(userId, {
+        subscriptionTier: "pro",
+        subscriptionStatus: "canceling",
+        stripeSubscriptionId: user.stripeSubscriptionId,
+        subscriptionPeriodEnd: user.subscriptionPeriodEnd ?? null,
+      });
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Error canceling subscription:", error);
+      res.status(500).json({ message: "Failed to cancel subscription" });
+    }
+  });
+
+  // Reactivate (undo cancel_at_period_end)
+  app.post("/api/stripe/reactivate", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user?.stripeSubscriptionId) {
+        return res.status(400).json({ message: "No subscription found" });
+      }
+      const stripe = await getUncachableStripeClient();
+      await stripe.subscriptions.update(user.stripeSubscriptionId, { cancel_at_period_end: false });
+      await storage.updateUserSubscription(userId, {
+        subscriptionTier: "pro",
+        subscriptionStatus: "active",
+        stripeSubscriptionId: user.stripeSubscriptionId,
+        subscriptionPeriodEnd: user.subscriptionPeriodEnd ?? null,
+      });
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Error reactivating subscription:", error);
+      res.status(500).json({ message: "Failed to reactivate subscription" });
     }
   });
 

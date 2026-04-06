@@ -37,10 +37,11 @@ export class WebhookHandlers {
         const periodEnd = subscription.current_period_end
           ? new Date(subscription.current_period_end * 1000)
           : null;
+        const isCanceling = isActive && subscription.cancel_at_period_end === true;
 
         await storage.updateUserSubscription(resolvedUserId, {
           subscriptionTier: isActive ? 'pro' : 'free',
-          subscriptionStatus: subscription.status,
+          subscriptionStatus: isCanceling ? 'canceling' : subscription.status,
           stripeSubscriptionId: subscription.id,
           subscriptionPeriodEnd: periodEnd,
         });
