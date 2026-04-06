@@ -648,8 +648,8 @@ function JournalCalendar({ recordings, initialDate }: { recordings: any[]; initi
       <div
         className="px-5 pb-4 pt-3"
         style={{
-          backgroundImage: "repeating-linear-gradient(transparent, transparent 38px, #e8d9bc55 38px, #e8d9bc55 39px)",
-          backgroundPosition: "0 12px",
+          backgroundImage: "repeating-linear-gradient(transparent, transparent 50px, #e8d9bc55 50px, #e8d9bc55 52px)",
+          backgroundPosition: "0 32px",
         }}
       >
         {/* Day headers */}
