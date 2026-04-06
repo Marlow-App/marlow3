@@ -255,109 +255,122 @@ export default function Landing() {
 
                 {/* Character rows */}
                 <div className="space-y-2">
-                  {/* 你 — Tone Poor */}
+                  {/* 你 — Tone 0 */}
                   <div className="flex items-center gap-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-lg px-3 py-2.5">
                     <div className="flex flex-col items-center w-10 shrink-0">
                       <span className="text-xs font-medium text-blue-500">ní</span>
                       <span className="text-xl font-bold text-red-600">你</span>
                     </div>
-                    <div className="flex gap-2 flex-1 flex-wrap">
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-muted-foreground">Initial</span>
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">Great</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-muted-foreground">Final</span>
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">Great</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-muted-foreground">Tone</span>
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400">Poor</span>
-                      </div>
+                    <div className="flex gap-3 flex-1">
+                      {[["Initial","100","text-emerald-600"],["Final","100","text-emerald-600"],["Tone","0","text-primary"]].map(([d,v,c]) => (
+                        <div key={d} className="flex flex-col items-center gap-0.5">
+                          <span className="text-[10px] text-muted-foreground">{d}</span>
+                          <span className={`text-sm font-bold tabular-nums ${c}`}>{v}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
-                  {/* 好 — All Great */}
+                  {/* 好 — All 100 */}
                   <div className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2.5">
                     <div className="flex flex-col items-center w-10 shrink-0">
                       <span className="text-xs font-medium text-blue-500">hǎo</span>
                       <span className="text-xl font-bold text-green-600">好</span>
                     </div>
-                    <div className="flex gap-2 flex-1 flex-wrap">
-                      {["Initial","Final","Tone"].map(d => (
-                        <div key={d} className="flex items-center gap-1">
-                          <span className="text-xs text-muted-foreground">{d}</span>
-                          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">Great</span>
+                    <div className="flex gap-3 flex-1">
+                      {[["Initial","100"],["Final","100"],["Tone","100"]].map(([d,v]) => (
+                        <div key={d} className="flex flex-col items-center gap-0.5">
+                          <span className="text-[10px] text-muted-foreground">{d}</span>
+                          <span className="text-sm font-bold tabular-nums text-emerald-600">{v}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Error detail card (what opens when you tap 你) */}
-                <div className="border border-border/60 rounded-xl p-4 space-y-3 bg-muted/10">
+                {/* Error detail card */}
+                <div className="border border-border/60 rounded-xl p-4 space-y-2.5 bg-muted/10">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 uppercase tracking-wide">Tone</span>
                     <span className="text-xs font-mono text-muted-foreground">T001 · 你</span>
                   </div>
-                  <p className="text-sm font-bold leading-snug">Tone 3 sandhi — first character rises instead of dipping</p>
+                  <p className="text-sm font-bold leading-snug">Tone 3 sandhi</p>
                   <div>
                     <p className="text-[11px] font-black uppercase tracking-widest text-primary mb-1">What's happening</p>
-                    <p className="text-sm text-foreground/80 leading-relaxed">When two Tone 3s appear together (你好), the first one becomes Tone 2. Your 你 stayed as Tone 3 — the pitch dipped instead of rising.</p>
+                    <p className="text-sm text-foreground/80 leading-relaxed">你好 is two Tone 3s — the first must rise (Tone 2). Yours dipped instead.</p>
                   </div>
                   <div>
                     <p className="text-[11px] font-black uppercase tracking-widest text-primary mb-1">How to fix it</p>
-                    <p className="text-sm text-foreground/80 leading-relaxed">Let your voice rise smoothly on 你 before falling on 好. Think of it as Tone 2 + Tone 3.</p>
+                    <p className="text-sm text-foreground/80 leading-relaxed">Rise on 你, then fall on 好. Treat it as Tone 2 + Tone 3.</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Step 4: Overall Comments */}
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="order-2 md:order-2 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
-                <div className="space-y-4">
-                  <p className="text-[16px] font-semibold uppercase text-muted-foreground tracking-wide">Overall Comments</p>
-                  <div className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-medium text-muted-foreground">Fluency</span>
-                      <div className="flex gap-0.5">
-                        {[1,2,3,4,5].map(s => (
-                          <Star key={s} className={`w-4 h-4 ${s <= 4 ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
-                        ))}
-                      </div>
-                      <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">80%</span>
-                    </div>
-                  </div>
-                  <div className="bg-muted/30 rounded-xl p-4">
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold text-xs shrink-0">L</div>
-                      <div>
-                        <p className="text-sm font-medium">Marlow</p>
-                        <p className="text-foreground/80 mt-2 leading-relaxed">
-                          Tones 1 and 4 consistently good, but you tend to mix up Tones 2 and 3.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 pt-2">
-                    <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md">
-                      <span className="font-medium text-xs">Built by linguists</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md">
-                      <span className="font-medium text-xs">Native Chinese speakers</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="order-1 md:order-1 space-y-4">
+            {/* Step 4: Track Progress */}
+            <div className="grid md:grid-cols-2 gap-8 items-start">
+              <div className="order-1 md:order-1 space-y-4 md:pt-2">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">4</div>
-                  <h3 className="text-2xl font-bold font-display">Overall Comments</h3>
+                  <h3 className="text-2xl font-bold font-display">Track Your Progress</h3>
                 </div>
                 <p className="text-muted-foreground text-lg leading-relaxed">
-                  Beyond individual characters, Marlow gives big-picture feedback on patterns it notices — like which tones you consistently nail and which ones trip you up. This helps you focus your practice where it matters most.
+                  Watch your Tone, Initial, and Final scores improve over time. Marlow spots patterns and tells you exactly where to focus next.
                 </p>
+              </div>
+
+              <div className="order-2 md:order-2 bg-card rounded-2xl shadow-lg border border-border/50 p-5 hover:-translate-y-1 transition-transform duration-200 space-y-4">
+                {/* Mini sparkline */}
+                <div>
+                  <p className="text-[12px] font-semibold uppercase text-muted-foreground tracking-wide mb-2">Score over time</p>
+                  <div className="relative h-16">
+                    <svg viewBox="0 0 200 60" className="w-full h-full" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.25" />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M0,52 L33,48 L66,40 L100,36 L133,24 L166,18 L200,10" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M0,52 L33,48 L66,40 L100,36 L133,24 L166,18 L200,10 L200,60 L0,60 Z" fill="url(#chartGrad)" />
+                      {[[0,52],[33,48],[66,40],[100,36],[133,24],[166,18],[200,10]].map(([x,y],i) => (
+                        <circle key={i} cx={x} cy={y} r="2.5" fill="hsl(var(--primary))" />
+                      ))}
+                    </svg>
+                    <div className="absolute bottom-0 left-0 right-0 flex justify-between px-0.5">
+                      {["Jan","Feb","Mar","Apr","May","Jun","Jul"].map(m => (
+                        <span key={m} className="text-[9px] text-muted-foreground">{m}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pronunciation breakdown */}
+                <div className="space-y-2.5">
+                  <p className="text-[12px] font-semibold uppercase text-muted-foreground tracking-wide">Pronunciation Breakdown</p>
+                  {[["Tone","68","bg-primary"],["Initial consonant","85","bg-emerald-500"],["Final vowel","79","bg-amber-500"]].map(([label,pct,bar]) => (
+                    <div key={label} className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-medium">{label}</span>
+                        <span className={`text-xs font-bold tabular-nums ${pct === "68" ? "text-primary" : pct === "85" ? "text-emerald-600" : "text-amber-600"}`}>{pct}%</span>
+                      </div>
+                      <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${bar}`} style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Focus card */}
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200/60 dark:border-orange-800/40">
+                  <div className="w-7 h-7 rounded-lg bg-orange-100 dark:bg-orange-900 flex items-center justify-center shrink-0 mt-0.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold mb-0.5">Focus on Tone <span className="text-orange-600 font-bold">68%</span></p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">T1 flat-high, T2 rises, T3 dips, T4 falls sharply. Keep listening!</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
