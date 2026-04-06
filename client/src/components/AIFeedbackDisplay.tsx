@@ -100,11 +100,10 @@ export function FluencyDisplay({ score }: { score: number }) {
 // ─── SpeechSuperScoreChips ─────────────────────────────────────────────────
 
 const SS_SCORE_LABELS: { key: keyof SpeechSuperScores; label: string }[] = [
-  { key: "tone",         label: "Tone" },
+  { key: "tone",          label: "Tone" },
   { key: "pronunciation", label: "Pronunciation" },
-  { key: "rhythm",       label: "Rhythm" },
-  { key: "speed",        label: "Speed" },
-  { key: "rearTone",     label: "Rear Tone" },
+  { key: "rhythm",        label: "Rhythm" },
+  { key: "speed",         label: "Speed" },
 ];
 
 export function SpeechSuperScoreChips({ scores }: { scores: SpeechSuperScores }) {
@@ -508,8 +507,8 @@ export function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, sp
           );
         })}
       </div>
-      {speechSuperScores && <SpeechSuperScoreChips scores={speechSuperScores} />}
       {fluencyScore != null && <FluencyDisplay score={fluencyScore} />}
+      {speechSuperScores && <SpeechSuperScoreChips scores={speechSuperScores} />}
       <ErrorDetailDialog
         error={openError}
         open={!!openError}
