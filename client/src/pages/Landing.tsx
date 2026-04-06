@@ -235,99 +235,85 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Step 3: Get Rated */}
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="order-2 md:order-2 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[16px] font-semibold uppercase text-muted-foreground tracking-wide">Character Ratings</p>
+            {/* Step 3: Ratings + Corrections (merged) */}
+            <div className="grid md:grid-cols-2 gap-8 items-start">
+              <div className="order-1 md:order-1 space-y-4 md:pt-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">3</div>
+                  <h3 className="text-2xl font-bold font-display">Instant Score + Explanation</h3>
+                </div>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Marlow scores every character across <strong>Initial</strong>, <strong>Final</strong>, and <strong>Tone</strong>. Tap any problem character to see exactly what went wrong and how to fix it — no guessing.
+                </p>
+              </div>
+              <div className="order-2 md:order-2 bg-card rounded-2xl shadow-lg border border-border/50 p-5 hover:-translate-y-1 transition-transform duration-200 space-y-4">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <p className="text-[13px] font-semibold uppercase text-muted-foreground tracking-wide">你好 — Overall 68%</p>
+                  <span className="text-sm font-bold text-amber-600">68%</span>
+                </div>
 
-                    <span className="text-lg font-bold text-amber-600">72%</span>
-                  </div>
-
-                  <div className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2.5">
-                    <div className="flex flex-col items-center w-10">
-                      <span className="text-sm font-medium text-green-500">nǐ</span>
-                      <span className="text-xl font-bold text-green-600">你</span>
+                {/* Character rows */}
+                <div className="space-y-2">
+                  {/* 你 — Tone Poor */}
+                  <div className="flex items-center gap-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-lg px-3 py-2.5">
+                    <div className="flex flex-col items-center w-10 shrink-0">
+                      <span className="text-xs font-medium text-blue-500">ní</span>
+                      <span className="text-xl font-bold text-red-600">你</span>
                     </div>
                     <div className="flex gap-2 flex-1 flex-wrap">
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-muted-foreground">Initial</span>
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">Great</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">Great</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-muted-foreground">Final</span>
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-700">OK</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">Great</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-muted-foreground">Tone</span>
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-100 text-red-700">Poor</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400">Poor</span>
                       </div>
                     </div>
                   </div>
 
+                  {/* 好 — All Great */}
                   <div className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2.5">
-                    <div className="flex flex-col items-center w-10">
-                      <span className="text-sm font-medium text-green-500">hǎo</span>
+                    <div className="flex flex-col items-center w-10 shrink-0">
+                      <span className="text-xs font-medium text-blue-500">hǎo</span>
                       <span className="text-xl font-bold text-green-600">好</span>
                     </div>
                     <div className="flex gap-2 flex-1 flex-wrap">
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-muted-foreground">Initial</span>
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">Great</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-muted-foreground">Final</span>
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">Great</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-muted-foreground">Tone</span>
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">Great</span>
-                      </div>
+                      {["Initial","Final","Tone"].map(d => (
+                        <div key={d} className="flex items-center gap-1">
+                          <span className="text-xs text-muted-foreground">{d}</span>
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">Great</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="order-1 md:order-1 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">3</div>
-                  <h3 className="text-2xl font-bold font-display">Get Rated Character by Character</h3>
-                </div>
-                <p className="text-muted-foreground text-lg leading-relaxed">
-                  Marlow rates every character across three dimensions: <strong>Initial</strong> (how you start the syllable), <strong>Final</strong> (how you end it), and <strong>Tone</strong> (the pitch pattern).
-                </p>
-              </div>
-            </div>
 
-            {/* Step 4: Corrections */}
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
-                <div className="space-y-4">
-                  <p className="text-[16px] font-semibold uppercase text-muted-foreground tracking-wide">Corrections</p>
-                  <div className="space-y-3">
-                    <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg p-3">
-                      <div className="flex items-start gap-2">
-                        <span className="text-lg font-bold text-red-600 shrink-0">你</span>
-                        <p className="text-sm text-foreground/80">
-                          <span className="font-semibold text-red-600">Tone:</span> When two Tone 3's come together, the first one turns into a Tone 2, but a "half" Tone 2: it's shorter and starts higher.
-                        </p>
-                      </div>
-                    </div>
+                {/* Error detail card (what opens when you tap 你) */}
+                <div className="border border-border/60 rounded-xl p-4 space-y-3 bg-muted/10">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 uppercase tracking-wide">Tone</span>
+                    <span className="text-xs font-mono text-muted-foreground">T001 · 你</span>
+                  </div>
+                  <p className="text-sm font-bold leading-snug">Tone 3 sandhi — first character rises instead of dipping</p>
+                  <div>
+                    <p className="text-[11px] font-black uppercase tracking-widest text-primary mb-1">What's happening</p>
+                    <p className="text-sm text-foreground/80 leading-relaxed">When two Tone 3s appear together (你好), the first one becomes Tone 2. Your 你 stayed as Tone 3 — the pitch dipped instead of rising.</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black uppercase tracking-widest text-primary mb-1">How to fix it</p>
+                    <p className="text-sm text-foreground/80 leading-relaxed">Let your voice rise smoothly on 你 before falling on 好. Think of it as Tone 2 + Tone 3.</p>
                   </div>
                 </div>
               </div>
-              <div className="order-1 md:order-2 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">4</div>
-                  <h3 className="text-2xl font-bold font-display">Specific Corrections</h3>
-                </div>
-                <p className="text-muted-foreground text-lg leading-relaxed">
-                  For anything rated less than "Great," Marlow explains exactly what went wrong and how to fix it. You get targeted advice for each character that needs work.
-                </p>
-              </div>
             </div>
 
-            {/* Step 5: Overall Comments */}
+            {/* Step 4: Overall Comments */}
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="order-2 md:order-2 bg-card rounded-2xl shadow-lg border border-border/50 p-6 hover:-translate-y-1 transition-transform duration-200">
                 <div className="space-y-4">
@@ -366,7 +352,7 @@ export default function Landing() {
               </div>
               <div className="order-1 md:order-1 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">5</div>
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">4</div>
                   <h3 className="text-2xl font-bold font-display">Overall Comments</h3>
                 </div>
                 <p className="text-muted-foreground text-lg leading-relaxed">
