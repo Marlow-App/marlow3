@@ -156,8 +156,8 @@ function WeekCalendarStrip({
               flex flex-col items-center gap-0.5 rounded-2xl py-2.5 px-1.5 flex-1 transition-all duration-200
               ${isSelected ? "bg-primary text-primary-foreground shadow-lg scale-105" : ""}
               ${!isSelected && isToday ? "bg-primary/10 ring-2 ring-primary/30" : ""}
-              ${!isSelected && !isToday && isPast && hasRecordings ? "hover:bg-muted cursor-pointer" : ""}
-              ${!isSelected && !isToday && isPast && !hasRecordings ? "hover:bg-muted/60 cursor-pointer" : ""}
+              ${!isSelected && !isToday && isPast && hasRecordings ? "hover:bg-primary/15 cursor-pointer" : ""}
+              ${!isSelected && !isToday && isPast && !hasRecordings ? "hover:bg-primary/10 cursor-pointer" : ""}
               ${isFuture ? "opacity-25 cursor-default" : ""}
             `}
             data-testid={`calendar-day-${dateKey}`}
