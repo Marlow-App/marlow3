@@ -19,8 +19,8 @@ Marlow uses a credit-based (pay-as-you-go) model instead of subscriptions:
 ## SpeechSuper Auto-Review
 
 - **Purpose**: Automatically score learner recordings using SpeechSuper's `sent.eval.cn` API, giving instant per-character tone/initial/final feedback seconds after upload
-- **Endpoint**: `POST https://api.speechsuper.com/sent.eval.cn` — multipart/form-data with `param` JSON field + `audio` WAV binary. Credentials: `SPEECHSUPER_APP_ID`, `SPEECHSUPER_SECRET_KEY`
-- **Auth**: `sig = MD5(applicationId + secretKey + timestamp)` (lowercase hex); `timestamp` is Unix seconds
+- **Endpoint**: `POST https://api.speechsuper.com/sent.eval.cn` — multipart/form-data with `text` JSON field (nested connect/start objects) + `audio` WAV binary + `Request-Index: 0` header. Credentials: `SPEECHSUPER_APP_ID`, `SPEECHSUPER_SECRET_KEY`
+- **Auth**: Two sigs per request (SHA1, ms timestamps): `connectSig = SHA1(appId + timestamp + secretKey)`, `startSig = SHA1(appId + timestamp + userId + secretKey)`. Request uses `text` form field (not `param`) with nested `connect`/`start` JSON. Header: `Request-Index: 0`.
 - **Request params**: `coreType:"sent.eval.cn"`, `refText` (Chinese sentence), `phoneme_output:1` (enables per-phoneme data), `tone_weight:0.2`
 - **Audio format**: Browser recordings (webm/mp4) are transcoded server-side via ffmpeg to 16kHz 16-bit mono WAV (`-f wav`). ffmpeg is available at runtime in the Replit NixOS environment.
 - **Score mapping**: SpeechSuper 0-100 → app 0/50/100: <40→0, <75→50, ≥75→100. Fluency 0-100 → 1-5 in 20-pt bands

@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "crypto";
+import { createHash } from "crypto";
 import { spawn } from "child_process";
 import { ObjectStorageService } from "./replit_integrations/object_storage";
 import type { CharacterRating } from "@shared/schema";
@@ -59,10 +59,20 @@ const LIKELY_TONE_ERROR: Record<number, string> = {
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
-function buildSig(appId: string, secretKey: string, timestamp: string): string {
-  return createHash("md5")
-    .update(appId + secretKey + timestamp, "utf8")
-    .digest("hex");
+function sha1(content: string): string {
+  return createHash("sha1").update(content, "utf8").digest("hex");
+}
+
+function getConnectSig(appId: string, secretKey: string) {
+  const timestamp = new Date().getTime().toString();
+  const sig = sha1(appId + timestamp + secretKey);
+  return { sig, timestamp };
+}
+
+function getStartSig(appId: string, secretKey: string, userId: string) {
+  const timestamp = new Date().getTime().toString();
+  const sig = sha1(appId + timestamp + userId + secretKey);
+  return { sig, timestamp, userId };
 }
 
 // ─── Audio helpers ────────────────────────────────────────────────────────────
@@ -150,33 +160,55 @@ async function callSpeechSuper(
   secretKey: string,
   refText: string
 ): Promise<SSResponse> {
-  const timestamp = String(Math.floor(Date.now() / 1000));
-  const sig = buildSig(appId, secretKey, timestamp);
+  const userId = "marlow";
+  const connectSig = getConnectSig(appId, secretKey);
+  const startSig = getStartSig(appId, secretKey, userId);
 
-  const param = JSON.stringify({
-    app: {
-      userId: "marlow",
-      applicationId: appId,
-      timestamp,
-      sig,
-      requestIndex: randomUUID(),
+  const textParam = JSON.stringify({
+    connect: {
+      cmd: "connect",
+      param: {
+        sdk: {
+          version: 16777472,
+          source: 9,
+          protocol: 2,
+        },
+        app: {
+          applicationId: appId,
+          sig: connectSig.sig,
+          timestamp: connectSig.timestamp,
+        },
+      },
     },
-    audio: {
-      audioType: "wav",
-      channel: 1,
-      sampleBytes: 2,
-      sampleRate: 16000,
-    },
-    request: {
-      coreType: "sent.eval.cn",
-      refText,
-      phoneme_output: 1,
-      tone_weight: 0.2,
+    start: {
+      cmd: "start",
+      param: {
+        app: {
+          applicationId: appId,
+          sig: startSig.sig,
+          userId: startSig.userId,
+          timestamp: startSig.timestamp,
+        },
+        audio: {
+          audioType: "wav",
+          sampleRate: 16000,
+          channel: 1,
+          sampleBytes: 2,
+        },
+        request: {
+          coreType: "sent.eval.cn",
+          refText,
+          phoneme_output: 1,
+          tone_weight: 0.2,
+        },
+      },
     },
   });
 
+  console.log("[SpeechSuper] Sending request for:", refText);
+
   const form = new FormData();
-  form.append("param", param);
+  form.append("text", textParam);
   form.append(
     "audio",
     new Blob([wavBuffer], { type: "audio/wav" }),
@@ -186,14 +218,20 @@ async function callSpeechSuper(
   const response = await fetch("https://api.speechsuper.com/sent.eval.cn", {
     method: "POST",
     body: form,
+    headers: {
+      "Request-Index": "0",
+    },
     signal: AbortSignal.timeout(60_000),
   });
 
+  const responseText = await response.text();
+  console.log("[SpeechSuper] Response status:", response.status, "body:", responseText.slice(0, 500));
+
   if (!response.ok) {
-    throw new Error(`SpeechSuper HTTP ${response.status}: ${await response.text()}`);
+    throw new Error(`SpeechSuper HTTP ${response.status}: ${responseText}`);
   }
 
-  return response.json() as Promise<SSResponse>;
+  return JSON.parse(responseText) as SSResponse;
 }
 
 // ─── Response parsing ─────────────────────────────────────────────────────────
