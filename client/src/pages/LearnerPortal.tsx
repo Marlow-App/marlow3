@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Mic2, Mic, MessageCircle, Clock, ChevronRight, ChevronLeft, Loader2, Calendar, Trash2, RotateCcw } from "lucide-react";
-import { format, formatDistanceToNow, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, isToday, isBefore, startOfDay, isThisWeek, isThisMonth, differenceInMonths } from "date-fns";
+import { format, formatDistanceToNow, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, isToday, isBefore, startOfDay, isThisWeek, isThisMonth, differenceInMonths, isSameDay, parseISO } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useMemo } from "react";
@@ -52,8 +52,8 @@ interface RecordingEntry {
   sentenceText: string;
 }
 
-function JournalCalendar({ recordings }: { recordings: any[] }) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+function JournalCalendar({ recordings, initialDate }: { recordings: any[]; initialDate?: Date }) {
+  const [currentMonth, setCurrentMonth] = useState(initialDate ? startOfMonth(initialDate) : new Date());
 
   const firstRecordingDate = useMemo(() => {
     if (!recordings || recordings.length === 0) return new Date();
@@ -435,9 +435,17 @@ export default function LearnerPortal() {
   const { data: recordings, isLoading } = useRecordings() as { data: any[]; isLoading: boolean };
   const { toast } = useToast();
   const searchString = useSearch();
+  const [, navigate] = useLocation();
+
+  const params = useMemo(() => new URLSearchParams(searchString), [searchString]);
+
+  const dateFilter = useMemo(() => {
+    const d = params.get("date");
+    if (!d) return null;
+    try { return parseISO(d); } catch { return null; }
+  }, [params]);
 
   useEffect(() => {
-    const params = new URLSearchParams(searchString);
     if (params.get("checkout") === "success") {
       toast({ title: "Credits added!", description: "Your purchase was successful." });
     } else if (params.get("checkout") === "cancel") {
@@ -446,6 +454,11 @@ export default function LearnerPortal() {
   }, [searchString]);
 
   const allRecordingsList = recordings || [];
+
+  const filteredList = useMemo(() => {
+    if (!dateFilter) return allRecordingsList;
+    return allRecordingsList.filter((r: any) => isSameDay(new Date(r.createdAt), dateFilter));
+  }, [allRecordingsList, dateFilter]);
 
   if (isLoading) {
     return (
@@ -473,18 +486,37 @@ export default function LearnerPortal() {
           </Link>
         </div>
 
-        <JournalCalendar recordings={recordings || []} />
+        <JournalCalendar recordings={recordings || []} initialDate={dateFilter ?? undefined} />
 
-        {allRecordingsList.length > 0 ? (
-          <GroupedRecordingsList recordings={allRecordingsList} childLookup={allRecordingsList} />
+        {dateFilter && (
+          <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-xl px-4 py-3" data-testid="date-filter-banner">
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="w-4 h-4 text-primary" />
+              <span className="font-medium">Recordings from {format(dateFilter, "MMMM d, yyyy")}</span>
+              <span className="text-muted-foreground">· {filteredList.length} result{filteredList.length !== 1 ? "s" : ""}</span>
+            </div>
+            <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => navigate("/learner-portal")} data-testid="clear-date-filter">
+              Clear filter
+            </Button>
+          </div>
+        )}
+
+        {filteredList.length > 0 ? (
+          <GroupedRecordingsList recordings={filteredList} childLookup={allRecordingsList} />
         ) : (
           <div className="text-center py-14 bg-muted/10 rounded-2xl border border-dashed border-border">
             <Mic2 className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-            <h3 className="text-lg font-medium">No recordings yet</h3>
-            <p className="text-muted-foreground mt-2 mb-5 text-sm">Start your journey by recording your first sentence!</p>
-            <Link href="/record">
-              <Button data-testid="first-recording-btn">Record Now</Button>
-            </Link>
+            <h3 className="text-lg font-medium">{dateFilter ? "No recordings on this day" : "No recordings yet"}</h3>
+            <p className="text-muted-foreground mt-2 mb-5 text-sm">
+              {dateFilter ? "Try a different date or clear the filter." : "Start your journey by recording your first sentence!"}
+            </p>
+            {dateFilter ? (
+              <Button variant="outline" onClick={() => navigate("/learner-portal")} data-testid="clear-date-filter-empty">Show all recordings</Button>
+            ) : (
+              <Link href="/record">
+                <Button data-testid="first-recording-btn">Record Now</Button>
+              </Link>
+            )}
           </div>
         )}
       </div>

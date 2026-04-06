@@ -182,8 +182,13 @@ function WeekCalendarStrip({
   );
 }
 
+const DAY_RECORDING_CAP = 45;
+
 function DayRecordingsPanel({ date, recordings }: { date: Date; recordings: any[] }) {
   const dayRecordings = recordings.filter(r => isSameDay(new Date(r.createdAt), date));
+  const capped = dayRecordings.slice(0, DAY_RECORDING_CAP);
+  const hasMore = dayRecordings.length > DAY_RECORDING_CAP;
+  const dateParam = format(date, "yyyy-MM-dd");
 
   return (
     <div className="animate-in slide-in-from-top-2 duration-300" data-testid="day-recordings-panel">
@@ -198,29 +203,38 @@ function DayRecordingsPanel({ date, recordings }: { date: Date; recordings: any[
           <p className="text-sm text-muted-foreground">No recordings on this day</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {dayRecordings.map(recording => {
-            const score = recording.feedback?.[0]?.overallScore;
-            return (
-              <Link key={recording.id} href={`/recordings/${recording.id}`} className="block">
-                <div className="flex items-center gap-3 bg-card border border-border/60 rounded-xl px-4 py-3.5 hover:shadow-md transition-all duration-200 cursor-pointer" data-testid={`day-recording-${recording.id}`}>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-base truncate">{recording.sentenceText}</p>
-                    {getPhraseEnglish(recording.sentenceText) && (
-                      <p className="text-xs text-muted-foreground truncate">{getPhraseEnglish(recording.sentenceText)}</p>
-                    )}
+        <>
+          <div className="space-y-3">
+            {capped.map(recording => {
+              const score = recording.feedback?.[0]?.overallScore;
+              return (
+                <Link key={recording.id} href={`/recordings/${recording.id}`} className="block">
+                  <div className="flex items-center gap-3 bg-card border border-border/60 rounded-xl px-4 py-3.5 hover:shadow-md transition-all duration-200 cursor-pointer" data-testid={`day-recording-${recording.id}`}>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-base truncate">{recording.sentenceText}</p>
+                      {getPhraseEnglish(recording.sentenceText) && (
+                        <p className="text-xs text-muted-foreground truncate">{getPhraseEnglish(recording.sentenceText)}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {score != null && (
+                        <span className={`text-sm font-bold ${getScoreTextColor(score)}`}>{score}%</span>
+                      )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {score != null && (
-                      <span className={`text-sm font-bold ${getScoreTextColor(score)}`}>{score}%</span>
-                    )}
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+                </Link>
+              );
+            })}
+          </div>
+          {hasMore && (
+            <Link href={`/learner-portal?date=${dateParam}`} className="block mt-3">
+              <div className="flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-primary/30 text-primary text-sm font-medium hover:bg-primary/5 transition-colors cursor-pointer" data-testid="day-recordings-view-more">
+                View all {dayRecordings.length} recordings →
+              </div>
+            </Link>
+          )}
+        </>
       )}
     </div>
   );
