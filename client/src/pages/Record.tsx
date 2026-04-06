@@ -218,39 +218,23 @@ export default function RecordPage() {
     setFeedbackSentenceText("");
   };
 
-  if (feedbackRecordingId !== null) {
-    return (
-      <Layout>
-        <div className="max-w-3xl mx-auto space-y-4 animate-in">
-          <div className="flex items-center gap-1">
-            <button onClick={handlePracticeAgain} className="p-1 -ml-1 rounded-md hover:bg-muted transition-colors" data-testid="back-to-record-btn">
-              <ChevronLeft className="w-9 h-9 text-foreground" strokeWidth={3} />
-            </button>
-            <h1 className="text-3xl font-bold font-display">Your Results</h1>
-          </div>
-          <Card className="border-border/60 shadow-sm">
-            <CardContent className="p-5">
-              <RecordingFeedback
-                recordingId={feedbackRecordingId}
-                sentenceText={feedbackSentenceText}
-                onPracticeAgain={handlePracticeAgain}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
       <div className="max-w-3xl mx-auto space-y-3 animate-in">
         <div className="space-y-4">
           <div className="flex items-center gap-1">
-            <button onClick={() => window.history.back()} className="p-1 -ml-1 rounded-md hover:bg-muted transition-colors" data-testid="back-btn">
-              <ChevronLeft className="w-9 h-9 text-foreground" strokeWidth={3} />
-            </button>
-            <h1 className="text-3xl font-bold font-display">{rerecordOf ? "Re-record" : "New Recording"}</h1>
+            {feedbackRecordingId !== null ? (
+              <button onClick={handlePracticeAgain} className="p-1 -ml-1 rounded-md hover:bg-muted transition-colors" data-testid="back-to-record-btn">
+                <ChevronLeft className="w-9 h-9 text-foreground" strokeWidth={3} />
+              </button>
+            ) : (
+              <button onClick={() => window.history.back()} className="p-1 -ml-1 rounded-md hover:bg-muted transition-colors" data-testid="back-btn">
+                <ChevronLeft className="w-9 h-9 text-foreground" strokeWidth={3} />
+              </button>
+            )}
+            <h1 className="text-3xl font-bold font-display">
+              {feedbackRecordingId !== null ? "Your Results" : rerecordOf ? "Re-record" : "New Recording"}
+            </h1>
           </div>
 
           <div className="flex items-center justify-between gap-2">
@@ -278,6 +262,18 @@ export default function RecordPage() {
           </div>
         </div>
 
+        {feedbackRecordingId !== null ? (
+          <Card className="border-border/60 shadow-sm">
+            <CardContent className="p-5">
+              <RecordingFeedback
+                recordingId={feedbackRecordingId}
+                sentenceText={feedbackSentenceText}
+                onPracticeAgain={handlePracticeAgain}
+              />
+            </CardContent>
+          </Card>
+        ) : (
+        <>
         {rerecordOf && (
           <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium ${
             redoType === "free"
@@ -454,6 +450,8 @@ export default function RecordPage() {
             </CardContent>
           </Card>
         </div>
+        </>
+        )}
       </div>
     </Layout>
   );
