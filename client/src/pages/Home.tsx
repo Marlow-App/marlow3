@@ -9,7 +9,6 @@ import { useTourSpotlight } from "@/contexts/TourSpotlightContext";
 import { AudioRecorder } from "@/components/AudioRecorder";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Drawer,
   DrawerContent,
@@ -18,8 +17,14 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { Link, useLocation } from "wouter";
-import { Mic2, PlayCircle, Clock, UserCircle, Zap, Loader2, X, Compass, BookOpen, Volume2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import {
+  Mic2, PlayCircle, UserCircle, Zap, Loader2, X,
+  Compass, BookOpen, Volume2, ChevronRight,
+} from "lucide-react";
+import {
+  format, formatDistanceToNow, startOfWeek, addDays,
+  isSameDay, isBefore, startOfDay,
+} from "date-fns";
 import { getDailyChallenge, phraseToText, getPhraseEnglish } from "@/data/phrases";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 import { usePhraseAudio } from "@/hooks/use-phrase-audio";
@@ -56,25 +61,15 @@ function getDailyWord(words: string[]): string | null {
 }
 
 function useAppTour() {
-  const [showTour, setShowTour] = useState(() => {
-    return !localStorage.getItem("appTourSeen");
-  });
-
-  const dismissTour = () => {
-    localStorage.setItem("appTourSeen", "1");
-    setShowTour(false);
-  };
-
+  const [showTour, setShowTour] = useState(() => !localStorage.getItem("appTourSeen"));
+  const dismissTour = () => { localStorage.setItem("appTourSeen", "1"); setShowTour(false); };
   return { showTour, dismissTour };
 }
 
 function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
   const { setSpotlightHref, openMobileMenu } = useTourSpotlight();
   const clickedHref = useRef<string | null>(null);
-
-  useEffect(() => {
-    return () => setSpotlightHref(null);
-  }, [setSpotlightHref]);
+  useEffect(() => { return () => setSpotlightHref(null); }, [setSpotlightHref]);
 
   const tourItems = [
     { href: "/record", icon: Mic2, label: "Record New", desc: "Record yourself speaking Chinese phrases and get instant AI feedback." },
@@ -113,16 +108,122 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
               </ul>
             </div>
           </div>
-          <button
-            onClick={onDismiss}
-            className="p-1 rounded-full hover:bg-primary/10 transition-colors shrink-0"
-            data-testid="tour-dismiss-btn"
-          >
+          <button onClick={onDismiss} className="p-1 rounded-full hover:bg-primary/10 transition-colors shrink-0" data-testid="tour-dismiss-btn">
             <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function WeekCalendarStrip({
+  recordings,
+  selectedDate,
+  onSelectDate,
+}: {
+  recordings: any[];
+  selectedDate: Date | null;
+  onSelectDate: (date: Date | null) => void;
+}) {
+  const today = startOfDay(new Date());
+  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  const daysWithRecordings = new Set(
+    recordings.map(r => format(new Date(r.createdAt), "yyyy-MM-dd"))
+  );
+
+  return (
+    <div className="flex justify-between items-center gap-1" data-testid="week-calendar-strip">
+      {days.map(day => {
+        const dateKey = format(day, "yyyy-MM-dd");
+        const isToday = isSameDay(day, today);
+        const isPast = isBefore(day, today) || isToday;
+        const hasRecordings = daysWithRecordings.has(dateKey);
+        const isSelected = selectedDate !== null && isSameDay(day, selectedDate);
+        const isFuture = !isPast;
+
+        return (
+          <button
+            key={dateKey}
+            type="button"
+            onClick={() => {
+              if (isFuture) return;
+              onSelectDate(isSelected ? null : day);
+            }}
+            disabled={isFuture}
+            className={`
+              flex flex-col items-center gap-0.5 rounded-2xl py-2.5 px-1.5 flex-1 transition-all duration-200
+              ${isSelected ? "bg-primary text-primary-foreground shadow-lg scale-105" : ""}
+              ${!isSelected && isToday ? "bg-primary/10 ring-2 ring-primary/30" : ""}
+              ${!isSelected && !isToday && isPast && hasRecordings ? "hover:bg-muted cursor-pointer" : ""}
+              ${!isSelected && !isToday && isPast && !hasRecordings ? "hover:bg-muted/60 cursor-pointer" : ""}
+              ${isFuture ? "opacity-25 cursor-default" : ""}
+            `}
+            data-testid={`calendar-day-${dateKey}`}
+          >
+            <span className={`text-[10px] font-semibold uppercase tracking-widest leading-none ${isSelected ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+              {format(day, "EEE").slice(0, 2)}
+            </span>
+            <span className={`text-lg font-bold leading-tight ${isSelected ? "text-primary-foreground" : isToday ? "text-primary" : ""}`}>
+              {format(day, "d")}
+            </span>
+            <div className="h-2 flex items-center justify-center">
+              {hasRecordings ? (
+                <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-primary-foreground/80" : "bg-primary"}`} />
+              ) : (
+                <span className="w-1.5 h-1.5" />
+              )}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function DayRecordingsPanel({ date, recordings }: { date: Date; recordings: any[] }) {
+  const dayRecordings = recordings.filter(r => isSameDay(new Date(r.createdAt), date));
+
+  return (
+    <div className="animate-in slide-in-from-top-2 duration-300" data-testid="day-recordings-panel">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+          {format(date, "EEEE, MMMM d")}
+        </p>
+        <span className="text-xs text-muted-foreground">{dayRecordings.length} recording{dayRecordings.length !== 1 ? "s" : ""}</span>
+      </div>
+      {dayRecordings.length === 0 ? (
+        <div className="text-center py-6 bg-muted/20 rounded-2xl border border-dashed border-border">
+          <p className="text-sm text-muted-foreground">No recordings on this day</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {dayRecordings.map(recording => {
+            const score = recording.feedback?.[0]?.overallScore;
+            return (
+              <Link key={recording.id} href={`/recordings/${recording.id}`}>
+                <div className="flex items-center gap-3 bg-card border border-border/60 rounded-xl px-4 py-3 hover:shadow-md transition-all duration-200 cursor-pointer" data-testid={`day-recording-${recording.id}`}>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-base truncate">{recording.sentenceText}</p>
+                    {getPhraseEnglish(recording.sentenceText) && (
+                      <p className="text-xs text-muted-foreground truncate">{getPhraseEnglish(recording.sentenceText)}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {score != null && (
+                      <span className={`text-sm font-bold ${getScoreTextColor(score)}`}>{score}%</span>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -133,6 +234,7 @@ export default function Home() {
   const { data: recordings, isLoading } = useRecordings();
   const { data: practiceList } = useQuery<PracticeItem[]>({ queryKey: ["/api/practice-list"] });
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const { toast } = useToast();
   const { uploadFile, isUploading } = useUpload();
   const createRecording = useCreateRecording();
@@ -143,7 +245,7 @@ export default function Home() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-[50vh]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         </div>
       </Layout>
     );
@@ -160,21 +262,15 @@ export default function Home() {
     try {
       const uploadRes = await uploadFile(file);
       if (!uploadRes) throw new Error("Upload failed");
-
       const newRecording = await createRecording.mutateAsync({
         audioUrl: uploadRes.objectPath,
         sentenceText: challengeText,
       });
-
       setDrawerOpen(false);
       navigate(`/record?feedbackId=${newRecording.id}&sentenceText=${encodeURIComponent(challengeText)}`);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Failed to submit recording. Please try again.";
-      toast({
-        title: "Error",
-        description: errorMsg,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: errorMsg, variant: "destructive" });
     }
   };
 
@@ -183,42 +279,14 @@ export default function Home() {
       <Layout>
         <div className="space-y-8 animate-in">
           <header>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+              {format(new Date(), "EEEE, d MMMM yyyy")}
+            </p>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground font-display">
               {greeting}, {user?.firstName || "Reviewer"}
             </h1>
-            <p className="text-muted-foreground mt-2 text-lg">
-              {pendingRecordings?.length ? `There are ${pendingRecordings.length} recordings waiting for your expertise.` : "All recordings have been reviewed. Great job!"}
-            </p>
           </header>
-
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/10">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="text-4xl font-bold text-primary mb-1">
-                      {pendingRecordings?.length || 0}
-                    </div>
-                    <div className="text-muted-foreground font-medium">Pending Reviews</div>
-                  </div>
-                  <Link href="/reviewer-hub">
-                    <Button variant="outline" size="sm">Go to Hub</Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-4xl font-bold text-foreground mb-1">
-                  {recordings?.filter(r => r.status === 'reviewed').length || 0}
-                </div>
-                <div className="text-muted-foreground font-medium">Your Completed Reviews</div>
-              </CardContent>
-            </Card>
-          </section>
-
           <section>
-            <h2 className="text-2xl font-bold font-display mb-6">Quick Actions</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Link href="/reviewer-hub">
                 <Button className="w-full justify-start h-16 text-lg" variant="outline">
@@ -239,73 +307,90 @@ export default function Home() {
     );
   }
 
+  const allRecordings = recordings ?? [];
+
   return (
     <Layout>
       <div className="space-y-6 animate-in">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground font-display">
-              {greeting}, {user?.firstName || "Learner"}
-            </h1>
-            <p className="text-muted-foreground mt-2 text-lg">
-              Ready to practice your tones today?
-            </p>
-          </div>
-          <Link href="/record">
-            <Button size="lg" className="rounded-full shadow-lg shadow-primary/25 bg-primary hover:bg-primary/90">
-              <Mic2 className="mr-2 h-5 w-5" />
-              Record New
-            </Button>
-          </Link>
-        </header>
-        {showTour && !isReviewer && <AppTourBanner onDismiss={dismissTour} />}
-      </div>
 
-      <div className="space-y-8 mt-8">
-        <section data-testid="daily-challenge-section">
-          <div className="flex items-center gap-2 mb-4">
-            <Zap className="w-5 h-5 text-primary" />
-            <h2 className="text-2xl font-bold font-display">Daily Challenge</h2>
+        {/* Hero header */}
+        <div className="relative rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/10 px-6 pt-6 pb-5 overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary))_0%,transparent_60%)]" />
+          <div className="relative">
+            <p className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-widest mb-1" data-testid="home-date-label">
+              {format(new Date(), "EEEE, d MMMM yyyy")}
+            </p>
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground font-display leading-tight" data-testid="home-greeting">
+                {greeting},<br />{user?.firstName || "Learner"}!
+              </h1>
+              <Link href="/record">
+                <Button size="sm" className="rounded-full shadow-md shadow-primary/20 shrink-0 mt-1" data-testid="hero-record-btn">
+                  <Mic2 className="mr-1.5 h-4 w-4" />
+                  Record
+                </Button>
+              </Link>
+            </div>
+
+            {/* Week calendar strip */}
+            <WeekCalendarStrip
+              recordings={allRecordings}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+            />
           </div>
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20" data-testid="daily-challenge-card">
-            <CardContent className="pt-6">
+        </div>
+
+        {/* Day recordings panel (slides in when a day is selected) */}
+        {selectedDate && (
+          <DayRecordingsPanel date={selectedDate} recordings={allRecordings} />
+        )}
+
+        {showTour && <AppTourBanner onDismiss={dismissTour} />}
+
+        {/* Daily Challenge */}
+        <section data-testid="daily-challenge-section">
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="w-4 h-4 text-primary" />
+            <h2 className="text-lg font-bold font-display">Daily Challenge</h2>
+          </div>
+          <Card className="bg-gradient-to-br from-primary/8 to-primary/3 border-primary/15 overflow-hidden" data-testid="daily-challenge-card">
+            <CardContent className="p-5">
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
                     <Link href="/profile?highlight=chineseLevel">
-                      <Badge variant="outline" className="text-xs cursor-pointer hover:bg-primary/10 hover:border-primary/40 transition-colors" data-testid="daily-challenge-level">
+                      <span className="text-xs font-semibold bg-primary/10 text-primary px-2.5 py-1 rounded-full cursor-pointer hover:bg-primary/20 transition-colors" data-testid="daily-challenge-level">
                         {dailyChallenge.level} ✎
-                      </Badge>
+                      </span>
                     </Link>
-                    <div className="flex items-center gap-0.5" data-testid="daily-challenge-play-btns">
-                      <button
-                        onClick={() => playPhrase(challengeText)}
-                        disabled={anyLoading}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-primary/10 text-primary/70 hover:text-primary transition-colors text-[15px] font-bold"
-                        data-testid="daily-challenge-play-btn"
-                      >
-                        {isPhraseLoading(challengeText) ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <Volume2 className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => playPhrase(challengeText)}
+                      disabled={anyLoading}
+                      className="flex items-center gap-1 p-1.5 rounded-full hover:bg-primary/10 text-primary/60 hover:text-primary transition-colors"
+                      data-testid="daily-challenge-play-btn"
+                    >
+                      {isPhraseLoading(challengeText) ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Volume2 className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
                   <Button
-                    size="lg"
-                    className="rounded-full shadow-md shrink-0"
+                    size="sm"
+                    className="rounded-full shadow-sm shrink-0"
                     data-testid="daily-challenge-record-btn"
                     onClick={() => setDrawerOpen(true)}
                   >
-                    <Mic2 className="mr-2 h-5 w-5" />
+                    <Mic2 className="mr-1.5 h-4 w-4" />
                     Record This
                   </Button>
                 </div>
                 <div data-testid="daily-challenge-characters" className="overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
                   <SandhiPhraseDisplay characters={dailyChallenge.characters} charSize="text-2xl" pinyinSize="text-xs" />
                 </div>
-                <p className="text-base text-muted-foreground" data-testid="daily-challenge-english">
+                <p className="text-sm text-muted-foreground" data-testid="daily-challenge-english">
                   {dailyChallenge.english}
                 </p>
               </div>
@@ -313,70 +398,7 @@ export default function Home() {
           </Card>
         </section>
 
-        {(() => {
-          const items = practiceList ?? [];
-          const item = getDailyPracticeItem(items);
-          if (!item) return null;
-          const { error } = item;
-          const practiceWord = getDailyWord(error.practiceWords ?? []);
-          if (!practiceWord) return null;
-          const wordPinyin = pinyin(practiceWord, { toneType: "symbol", type: "string" });
-          const translation = getPracticeWordTranslation(practiceWord);
-          const catColor = CATEGORY_COLORS[error.category] ?? "";
-          const catLabel = CATEGORY_LABELS[error.category] ?? error.category;
-          return (
-            <section data-testid="practice-drill-section">
-              <div className="flex items-center gap-2 mb-4">
-                <BookOpen className="w-5 h-5 text-primary" />
-                <h2 className="text-2xl font-bold font-display">Practice Drill</h2>
-                <Link href="/practice-list" className="ml-auto text-sm text-primary font-medium hover:underline" data-testid="practice-drill-see-all">
-                  See all →
-                </Link>
-              </div>
-              <Card className="border-border/60" data-testid="practice-drill-card">
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-5">
-                    <button
-                      type="button"
-                      onClick={() => playPhrase(practiceWord)}
-                      disabled={anyLoading}
-                      className="flex flex-col items-center shrink-0 bg-muted/40 hover:bg-primary/10 rounded-xl px-4 py-3 min-w-[72px] transition-colors group disabled:opacity-50"
-                      aria-label={`Pronounce ${practiceWord}`}
-                      data-testid="practice-drill-speak-btn"
-                    >
-                      <span className="text-xs text-muted-foreground font-medium mb-0.5">{wordPinyin}</span>
-                      <span className="text-3xl font-bold leading-tight group-hover:text-primary transition-colors">{practiceWord}</span>
-                      {isPhraseLoading(practiceWord) ? (
-                        <Loader2 className="w-4 h-4 text-primary mt-1.5 animate-spin" />
-                      ) : (
-                        <Volume2 className="w-4 h-4 text-muted-foreground group-hover:text-primary mt-1.5 transition-colors" />
-                      )}
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${catColor}`}>{catLabel}</span>
-                        <span className="text-xs font-mono text-muted-foreground">{error.id}</span>
-                      </div>
-                      <p className="font-semibold text-lg leading-snug">{error.commonError}</p>
-                      {translation && (
-                        <p className="text-sm text-muted-foreground mt-0.5">"{translation}"</p>
-                      )}
-                      {error.simpleExplanation && (
-                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{error.simpleExplanation}</p>
-                      )}
-                      <Link href="/practice-list">
-                        <Button variant="outline" size="sm" className="mt-3" data-testid="practice-drill-go-btn">
-                          Practice this error
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-          );
-        })()}
-
+        {/* Recording Drawer */}
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerContent className="md:left-1/4 md:right-1/4 md:rounded-[10px]" data-testid="recording-drawer">
             <DrawerHeader className="text-center px-8 pt-6">
@@ -395,88 +417,122 @@ export default function Home() {
           </DrawerContent>
         </Drawer>
 
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold font-display">Your Progress</h2>
-            <Link href="/learner-portal" className="text-sm text-primary font-medium hover:underline">My Recordings</Link>
-          </div>
-          
-          <div className="grid grid-cols-1 gap-6">
-            <Link href="/learner-portal">
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" data-testid="stat-total">
-                <CardContent className="pt-6">
-                  <div className="text-4xl font-bold text-primary mb-1">
-                    {recordings?.length || 0}
+        {/* Practice Drill */}
+        {(() => {
+          const items = practiceList ?? [];
+          const item = getDailyPracticeItem(items);
+          if (!item) return null;
+          const { error } = item;
+          const practiceWord = getDailyWord(error.practiceWords ?? []);
+          if (!practiceWord) return null;
+          const wordPinyin = pinyin(practiceWord, { toneType: "symbol", type: "string" });
+          const translation = getPracticeWordTranslation(practiceWord);
+          const catColor = CATEGORY_COLORS[error.category] ?? "";
+          const catLabel = CATEGORY_LABELS[error.category] ?? error.category;
+          return (
+            <section data-testid="practice-drill-section">
+              <div className="flex items-center gap-2 mb-3">
+                <BookOpen className="w-4 h-4 text-primary" />
+                <h2 className="text-lg font-bold font-display">Practice Drill</h2>
+                <Link href="/practice-list" className="ml-auto text-sm text-primary font-medium hover:underline" data-testid="practice-drill-see-all">
+                  See all →
+                </Link>
+              </div>
+              <Card className="border-border/60" data-testid="practice-drill-card">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-5">
+                    <button
+                      type="button"
+                      onClick={() => playPhrase(practiceWord)}
+                      disabled={anyLoading}
+                      className="flex flex-col items-center shrink-0 bg-muted/40 hover:bg-primary/10 rounded-2xl px-4 py-3 min-w-[72px] transition-colors group disabled:opacity-50"
+                      aria-label={`Pronounce ${practiceWord}`}
+                      data-testid="practice-drill-speak-btn"
+                    >
+                      <span className="text-xs text-muted-foreground font-medium mb-0.5">{wordPinyin}</span>
+                      <span className="text-3xl font-bold leading-tight group-hover:text-primary transition-colors">{practiceWord}</span>
+                      {isPhraseLoading(practiceWord) ? (
+                        <Loader2 className="w-4 h-4 text-primary mt-1.5 animate-spin" />
+                      ) : (
+                        <Volume2 className="w-4 h-4 text-muted-foreground group-hover:text-primary mt-1.5 transition-colors" />
+                      )}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${catColor}`}>{catLabel}</span>
+                        <span className="text-xs font-mono text-muted-foreground">{error.id}</span>
+                      </div>
+                      <p className="font-semibold text-base leading-snug">{error.commonError}</p>
+                      {translation && (
+                        <p className="text-sm text-muted-foreground mt-0.5">"{translation}"</p>
+                      )}
+                      {error.simpleExplanation && (
+                        <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">{error.simpleExplanation}</p>
+                      )}
+                      <Link href="/practice-list">
+                        <Button variant="outline" size="sm" className="mt-3 rounded-full" data-testid="practice-drill-go-btn">
+                          Practice this error
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
-                  <div className="text-muted-foreground font-medium">Total Recordings</div>
                 </CardContent>
               </Card>
-            </Link>
-          </div>
-        </section>
+            </section>
+          );
+        })()}
 
+        {/* Recent Activity */}
         <section>
-          <h2 className="text-2xl font-bold font-display mb-6">Recent Activity</h2>
-          
-          <div className="grid gap-4">
-            {recordings && recordings.length > 0 ? (
-              recordings.map((recording) => {
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold font-display">Recent Activity</h2>
+            <Link href="/learner-portal" className="text-sm text-primary font-medium hover:underline">See all</Link>
+          </div>
+
+          {allRecordings.length > 0 ? (
+            <div className="space-y-2">
+              {allRecordings.slice(0, 5).map(recording => {
                 const score = recording.feedback?.[0]?.overallScore;
                 return (
                   <Link key={recording.id} href={`/recordings/${recording.id}`}>
-                    <Card className="hover:shadow-md transition-shadow duration-200 cursor-pointer overflow-hidden">
-                      <div className="h-1 w-full bg-muted/40">
-                        <div
-                          className={`h-full transition-all duration-700 ${
-                            score != null ? getScoreBgColor(score) : "bg-primary/30 w-full"
-                          }`}
-                          style={score != null ? { width: `${score}%` } : undefined}
-                        />
+                    <div
+                      className="flex items-center gap-3 bg-card border border-border/60 rounded-2xl px-4 py-3.5 hover:shadow-md hover:border-primary/20 transition-all duration-200 cursor-pointer"
+                      data-testid={`recent-recording-${recording.id}`}
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <Mic2 className="w-4 h-4 text-primary" />
                       </div>
-                      <CardContent className="p-6">
-                        <div className="flex flex-col sm:flex-row gap-5 justify-between items-start sm:items-center">
-                          <div className="flex items-start gap-4 flex-1 min-w-0">
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-primary/10 text-primary">
-                              <Mic2 className="w-6 h-6" />
-                            </div>
-                            <div>
-                              <h3 className="text-xl font-medium mb-1">{recording.sentenceText}</h3>
-                              {getPhraseEnglish(recording.sentenceText) && (
-                                <p className="text-base text-muted-foreground mb-1">{getPhraseEnglish(recording.sentenceText)}</p>
-                              )}
-                              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-3.5 h-3.5" />
-                                  {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}
-                                </span>
-                                {score != null && (
-                                  <span className={`text-xs font-bold ${getScoreTextColor(score)}`}>
-                                    {score}%
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-base truncate leading-tight">{recording.sentenceText}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {score != null && (
+                          <span className={`text-sm font-bold ${getScoreTextColor(score)}`}>{score}%</span>
+                        )}
+                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                    </div>
                   </Link>
                 );
-              })
-            ) : (
-              <div className="text-center py-16 bg-muted/30 rounded-2xl border border-dashed border-muted-foreground/20">
-                <Mic2 className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-medium text-foreground">No recordings yet</h3>
-                <p className="text-muted-foreground mt-1 max-w-sm mx-auto mb-6">
-                  Start your journey to perfect tones by recording your first sentence.
-                </p>
-                <Link href="/record">
-                  <Button variant="outline">Start Recording</Button>
-                </Link>
-              </div>
-            )}
-          </div>
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-muted/20 rounded-3xl border border-dashed border-muted-foreground/20">
+              <Mic2 className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
+              <h3 className="text-base font-semibold text-foreground">No recordings yet</h3>
+              <p className="text-muted-foreground mt-1 max-w-xs mx-auto mb-5 text-sm">
+                Start your journey to perfect tones by recording your first sentence.
+              </p>
+              <Link href="/record">
+                <Button variant="outline" size="sm" className="rounded-full">Start Recording</Button>
+              </Link>
+            </div>
+          )}
         </section>
+
       </div>
     </Layout>
   );
