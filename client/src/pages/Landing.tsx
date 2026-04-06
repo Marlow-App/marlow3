@@ -309,7 +309,7 @@ export default function Landing() {
 
             {/* Step 4: Track Progress */}
             <div className="grid md:grid-cols-2 gap-8 items-start">
-              <div className="order-1 md:order-1 space-y-4 md:pt-2">
+              <div className="order-1 md:order-2 space-y-4 md:pt-2">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold font-display text-lg">4</div>
                   <h3 className="text-2xl font-bold font-display">Track Your Progress</h3>
@@ -319,7 +319,7 @@ export default function Landing() {
                 </p>
               </div>
 
-              <div className="order-2 md:order-2 bg-card rounded-2xl shadow-lg border border-border/50 p-5 hover:-translate-y-1 transition-transform duration-200 space-y-4">
+              <div className="order-2 md:order-1 bg-card rounded-2xl shadow-lg border border-border/50 p-5 hover:-translate-y-1 transition-transform duration-200 space-y-4">
                 {/* Mini sparkline */}
                 <div>
                   <p className="text-[12px] font-semibold uppercase text-muted-foreground tracking-wide mb-2">Score over time</p>
@@ -419,11 +419,11 @@ export default function Landing() {
 
             <div className="relative bg-card rounded-2xl border border-border/50 pt-12 px-7 pb-7 hover:shadow-lg transition-shadow hover:-translate-y-1 duration-200">
               <div className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg ring-4 ring-muted/20">
-                <RotateCcw className="w-7 h-7 text-white" />
+                <BookOpen className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-bold font-display mb-3">Unlimited Practice with Pro</h3>
+              <h3 className="text-xl font-bold font-display mb-3">Master Mandarin's Tone Quirks</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Free accounts get 5 recordings a day to try things out. Upgrade to <strong>Pro</strong> for unlimited recordings, unlimited error insights, and unlimited Practice List items — from just $9.99/month.
+                Mandarin is full of tone change rules that textbooks gloss over. Marlow has built-in tips for every pattern — Tone 3 sandhi, the half-third, 不 and 一 tone changes, neutral tones, and more — so nothing catches you off guard.
               </p>
             </div>
           </div>
