@@ -1066,9 +1066,6 @@ export default function RecordingDetail() {
                     <p className="text-base text-muted-foreground mb-4">{getPhraseEnglish(recording.sentenceText)}</p>
                   )}
                   <div className="flex flex-wrap items-center gap-3">
-                    <Badge variant={recording.status === 'reviewed' ? 'default' : 'secondary'} className="px-3 py-1">
-                      {recording.status.toUpperCase()}
-                    </Badge>
                     {recording.user?.chineseLevel && (
                       <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md" data-testid="learner-level-badge">
                         <GraduationCap className="w-3.5 h-3.5" />
@@ -1363,9 +1360,6 @@ export default function RecordingDetail() {
                         data-testid={`toggle-child-${child.id}`}
                       >
                         <div className="flex items-center gap-3">
-                          <Badge variant={child.status === "reviewed" ? "secondary" : "outline"} className="shrink-0">
-                            {child.status === "reviewed" ? "Reviewed" : "Awaiting review"}
-                          </Badge>
                           {latestFeedback?.overallScore != null && (
                             <ScoreBadge score={latestFeedback.overallScore} />
                           )}

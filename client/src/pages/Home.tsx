@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { getScoreBgColor, getScoreTextColor } from "@/lib/scoreColor";
 import { useAuth } from "@/hooks/use-auth";
-import { useRecordings, usePendingRecordings, useCreateRecording } from "@/hooks/use-recordings";
+import { useRecordings, useCreateRecording } from "@/hooks/use-recordings";
 import { useUpload } from "@/hooks/use-upload";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/Layout";
@@ -18,7 +18,7 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { Link, useLocation } from "wouter";
-import { Mic2, PlayCircle, Clock, CheckCircle2, AlertCircle, UserCircle, Zap, Loader2, X, Compass, BookOpen, Volume2 } from "lucide-react";
+import { Mic2, PlayCircle, Clock, UserCircle, Zap, Loader2, X, Compass, BookOpen, Volume2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDailyChallenge, phraseToText, getPhraseEnglish } from "@/data/phrases";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
@@ -46,8 +46,8 @@ function AppTourBanner({ onDismiss }: { onDismiss: () => void }) {
   }, [setSpotlightHref]);
 
   const tourItems = [
-    { href: "/record", icon: Mic2, label: "Record New", desc: "Record yourself speaking Chinese phrases and submit for review." },
-    { href: "/learner-portal", icon: PlayCircle, label: "My Progress", desc: "Track your recordings and see detailed feedback from reviewers." },
+    { href: "/record", icon: Mic2, label: "Record New", desc: "Record yourself speaking Chinese phrases and get instant AI feedback." },
+    { href: "/learner-portal", icon: PlayCircle, label: "My Progress", desc: "Track your recordings and review your AI pronunciation scores." },
     { href: "/practice-list", icon: BookOpen, label: "Practice List", desc: "Review your saved errors and drill the sounds you find most challenging." },
     { href: "/profile", icon: UserCircle, label: "Profile", desc: "Set your Chinese level, manage your credits, and customize your experience." },
   ];
@@ -100,7 +100,6 @@ export default function Home() {
   const [, navigate] = useLocation();
   const isReviewer = user?.role === "reviewer";
   const { data: recordings, isLoading } = useRecordings();
-  const { data: pendingRecordings } = usePendingRecordings();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { toast } = useToast();
   const { uploadFile, isUploading } = useUpload();
@@ -306,34 +305,24 @@ export default function Home() {
             <Link href="/learner-portal" className="text-sm text-primary font-medium hover:underline">My Recordings</Link>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Link href="/learner-portal?tab=completed">
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" data-testid="stat-reviewed">
-                <CardContent className="pt-6">
-                  <div className="text-4xl font-bold text-primary mb-1">
-                    {recordings?.filter(r => r.status === 'reviewed').length || 0}
-                  </div>
-                  <div className="text-muted-foreground font-medium">Reviewed Recordings</div>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link href="/learner-portal?tab=waiting">
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" data-testid="stat-pending">
-                <CardContent className="pt-6">
-                  <div className="text-4xl font-bold text-foreground mb-1">
-                    {recordings?.filter(r => r.status === 'pending').length || 0}
-                  </div>
-                  <div className="text-muted-foreground font-medium">Pending Review</div>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link href="/learner-portal?tab=waiting">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Link href="/learner-portal">
               <Card className="cursor-pointer hover:shadow-md transition-shadow" data-testid="stat-total">
                 <CardContent className="pt-6">
-                  <div className="text-4xl font-bold text-foreground mb-1">
+                  <div className="text-4xl font-bold text-primary mb-1">
                     {recordings?.length || 0}
                   </div>
                   <div className="text-muted-foreground font-medium">Total Recordings</div>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/learner-portal">
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" data-testid="stat-reviewed">
+                <CardContent className="pt-6">
+                  <div className="text-4xl font-bold text-foreground mb-1">
+                    {recordings?.filter(r => r.feedback?.some((f: any) => f.overallScore != null)).length || 0}
+                  </div>
+                  <div className="text-muted-foreground font-medium">AI Scored</div>
                 </CardContent>
               </Card>
             </Link>
@@ -346,7 +335,6 @@ export default function Home() {
           <div className="grid gap-4">
             {recordings && recordings.length > 0 ? (
               recordings.map((recording) => {
-                const isReviewed = recording.status === 'reviewed';
                 const score = recording.feedback?.[0]?.overallScore;
                 return (
                   <Link key={recording.id} href={`/recordings/${recording.id}`}>
@@ -354,18 +342,16 @@ export default function Home() {
                       <div className="h-1 w-full bg-muted/40">
                         <div
                           className={`h-full transition-all duration-700 ${
-                            isReviewed && score !== null && score !== undefined
-                              ? getScoreBgColor(score)
-                              : "bg-primary/30 w-full"
+                            score != null ? getScoreBgColor(score) : "bg-primary/30 w-full"
                           }`}
-                          style={isReviewed && score !== null && score !== undefined ? { width: `${score}%` } : undefined}
+                          style={score != null ? { width: `${score}%` } : undefined}
                         />
                       </div>
                       <CardContent className="p-6">
                         <div className="flex flex-col sm:flex-row gap-5 justify-between items-start sm:items-center">
                           <div className="flex items-start gap-4 flex-1 min-w-0">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isReviewed ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"}`}>
-                              {isReviewed ? <PlayCircle className="w-6 h-6" /> : <Mic2 className="w-6 h-6" />}
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-primary/10 text-primary">
+                              <Mic2 className="w-6 h-6" />
                             </div>
                             <div>
                               <h3 className="text-xl font-medium mb-1">{recording.sentenceText}</h3>
@@ -377,16 +363,7 @@ export default function Home() {
                                   <Clock className="w-3.5 h-3.5" />
                                   {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}
                                 </span>
-                                {isReviewed ? (
-                                  <Badge variant="outline" className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800">
-                                    <CheckCircle2 className="w-3 h-3 mr-1" /> Reviewed
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">
-                                    <AlertCircle className="w-3 h-3 mr-1" /> Waiting review
-                                  </Badge>
-                                )}
-                                {isReviewed && score !== null && score !== undefined && (
+                                {score != null && (
                                   <span className={`text-xs font-bold ${getScoreTextColor(score)}`}>
                                     {score}%
                                   </span>

@@ -5,12 +5,11 @@ import { Link, useLocation, useSearch } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mic2, Mic, PlayCircle, MessageCircle, Clock, CheckCircle2, AlertCircle, ChevronRight, ChevronLeft, Loader2, MapPin, Calendar, Trash2, RotateCcw } from "lucide-react";
+import { Mic2, Mic, MessageCircle, Clock, ChevronRight, ChevronLeft, Loader2, Calendar, Trash2, RotateCcw } from "lucide-react";
 import { format, formatDistanceToNow, startOfMonth, endOfMonth, eachDayOfInterval, subMonths, addMonths, isToday, isBefore, startOfDay, isThisWeek, isThisMonth, differenceInMonths } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useMemo } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useMutation } from "@tanstack/react-query";
 import { getPhraseEnglish } from "@/data/phrases";
@@ -333,7 +332,6 @@ function RecordingCard({ recording }: { recording: any }) {
   });
 
   const isRefunded = recording.creditsRefunded && recording.creditCost > 0;
-  const isReviewed = recording.status === "reviewed";
   const score = recording.feedback?.[0]?.overallScore ?? null;
 
   return (
@@ -343,18 +341,16 @@ function RecordingCard({ recording }: { recording: any }) {
       <div className="h-1 w-full bg-muted/40">
         <div
           className={`h-full transition-all duration-700 ${
-            isReviewed && score !== null
-              ? getScoreBgColor(score)
-              : "bg-primary/30 w-full"
+            score !== null ? getScoreBgColor(score) : "bg-primary/30 w-full"
           }`}
-          style={isReviewed && score !== null ? { width: `${score}%` } : undefined}
+          style={score !== null ? { width: `${score}%` } : undefined}
         />
       </div>
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row gap-5 justify-between items-start md:items-center">
           <div className="flex items-start gap-4 flex-1 min-w-0">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${isReviewed ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"}`}>
-              {isReviewed ? <PlayCircle className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+            <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-primary/10 text-primary">
+              <Mic className="w-6 h-6" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-xl font-medium mb-1">{recording.sentenceText}</h3>
@@ -366,22 +362,12 @@ function RecordingCard({ recording }: { recording: any }) {
                   <Clock className="w-3.5 h-3.5" />
                   {formatDistanceToNow(new Date(recording.createdAt), { addSuffix: true })}
                 </span>
-                {isReviewed ? (
-                  <Badge variant="outline" className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800">
-                    <CheckCircle2 className="w-3 h-3 mr-1" /> Reviewed
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">
-                    <AlertCircle className="w-3 h-3 mr-1" />
-                    {recording.parentRecordingId ? "Re-recording pending" : "Waiting review"}
-                  </Badge>
-                )}
                 {isRefunded && (
                   <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800" data-testid={`refunded-badge-${recording.id}`}>
                     <RotateCcw className="w-3 h-3 mr-1" /> Refunded
                   </Badge>
                 )}
-                {isReviewed && recording.feedback?.[0] && (
+                {recording.feedback?.[0] && (
                   <RatingBadge rating={recording.feedback[0].rating} overallScore={recording.feedback[0].overallScore} />
                 )}
               </div>
@@ -394,33 +380,15 @@ function RecordingCard({ recording }: { recording: any }) {
                   preload="metadata"
                 />
               </div>
-              {isReviewed && recording.feedback?.[0] && (
+              {recording.feedback?.[0]?.textFeedback && (
                 <div className="mt-2 bg-primary/5 rounded-lg p-2.5 border border-primary/10">
                   <div className="flex items-start gap-2">
                     <MessageCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-xs font-medium text-primary">
-                          {recording.feedback[0].reviewer
-                            ? `${recording.feedback[0].reviewer.firstName || ""} ${recording.feedback[0].reviewer.lastName || ""}`.trim() || "Reviewer"
-                            : "Native Speaker Feedback"}
-                        </p>
-                        {recording.feedback[0].reviewer?.city && (
-                          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                            <MapPin className="w-2.5 h-2.5" />
-                            {recording.feedback[0].reviewer.city}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-foreground/80 mt-1 italic line-clamp-2">
-                        &ldquo;{recording.feedback[0].textFeedback}&rdquo;
-                      </p>
-                    </div>
+                    <p className="text-xs text-foreground/80 italic line-clamp-2">
+                      &ldquo;{recording.feedback[0].textFeedback}&rdquo;
+                    </p>
                   </div>
                 </div>
-              )}
-              {!isReviewed && (
-                <p className="text-xs text-muted-foreground italic mt-2">Waiting for native speaker review…</p>
               )}
             </div>
           </div>
@@ -468,12 +436,6 @@ export default function LearnerPortal() {
   const { toast } = useToast();
   const searchString = useSearch();
 
-  const initialTab = useMemo(() => {
-    const params = new URLSearchParams(searchString);
-    const tab = params.get("tab");
-    return tab === "completed" ? "completed" : "waiting";
-  }, []);
-
   useEffect(() => {
     const params = new URLSearchParams(searchString);
     if (params.get("checkout") === "success") {
@@ -484,30 +446,6 @@ export default function LearnerPortal() {
   }, [searchString]);
 
   const allRecordingsList = recordings || [];
-
-  const pendingRecordings = useMemo(
-    () => recordings?.filter((r: any) => r.status === "pending") || [],
-    [recordings]
-  );
-
-  const reviewedRecordings = useMemo(
-    () => recordings?.filter((r: any) => r.status === "reviewed") || [],
-    [recordings]
-  );
-
-  // Pending re-recordings whose parent is already reviewed are shown nested
-  // in the Completed tab — hide them from Waiting Review to avoid duplication
-  const reviewedIds = useMemo(
-    () => new Set(reviewedRecordings.map((r: any) => r.id)),
-    [reviewedRecordings]
-  );
-
-  const visiblePendingRecordings = useMemo(
-    () => pendingRecordings.filter(
-      (r: any) => !(r.parentRecordingId && reviewedIds.has(r.parentRecordingId))
-    ),
-    [pendingRecordings, reviewedIds]
-  );
 
   if (isLoading) {
     return (
@@ -537,48 +475,9 @@ export default function LearnerPortal() {
 
         <JournalCalendar recordings={recordings || []} />
 
-        <Tabs defaultValue={initialTab} className="w-full" data-testid="recordings-tabs">
-          <TabsList className="grid w-full grid-cols-2 h-auto p-1 rounded-xl">
-            <TabsTrigger value="waiting" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md" data-testid="tab-waiting">
-              Waiting Review
-              <Badge variant="secondary" className="ml-auto text-xs">
-                {visiblePendingRecordings.length}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="flex items-center gap-2 py-3 px-4 text-sm font-semibold rounded-lg data-[state=active]:shadow-md" data-testid="tab-completed">
-              Completed
-              <Badge variant="outline" className="ml-auto text-xs">
-                {reviewedRecordings.length}
-              </Badge>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="waiting" className="mt-4">
-            {visiblePendingRecordings.length > 0 ? (
-              <GroupedRecordingsList recordings={visiblePendingRecordings} />
-            ) : (
-              <div className="text-center py-10 bg-muted/10 rounded-2xl border border-dashed border-border">
-                <CheckCircle2 className="w-8 h-8 text-green-500/40 mx-auto mb-2" />
-                <h3 className="text-base font-medium">All caught up!</h3>
-                <p className="text-sm text-muted-foreground mt-1">No recordings waiting for review.</p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="completed" className="mt-4">
-            {reviewedRecordings.length > 0 ? (
-              <GroupedRecordingsList recordings={reviewedRecordings} childLookup={allRecordingsList} />
-            ) : (
-              <div className="text-center py-10 bg-muted/10 rounded-2xl border border-dashed border-border">
-                <MessageCircle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                <h3 className="text-base font-medium">No feedback yet</h3>
-                <p className="text-sm text-muted-foreground mt-1">Your reviewed recordings will appear here.</p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-
-        {(!recordings || recordings.length === 0) && (
+        {allRecordingsList.length > 0 ? (
+          <GroupedRecordingsList recordings={allRecordingsList} childLookup={allRecordingsList} />
+        ) : (
           <div className="text-center py-14 bg-muted/10 rounded-2xl border border-dashed border-border">
             <Mic2 className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
             <h3 className="text-lg font-medium">No recordings yet</h3>
