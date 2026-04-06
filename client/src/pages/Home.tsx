@@ -182,7 +182,7 @@ function WeekCalendarStrip({
   );
 }
 
-const DAY_RECORDING_CAP = 45;
+const DAY_RECORDING_CAP = 5;
 
 function DayRecordingsPanel({ date, recordings }: { date: Date; recordings: any[] }) {
   const dayRecordings = recordings.filter(r => isSameDay(new Date(r.createdAt), date));
