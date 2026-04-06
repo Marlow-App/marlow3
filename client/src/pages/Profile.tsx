@@ -592,7 +592,10 @@ export default function Profile() {
                         )}
                       </div>
                     </div>
-                    {isPro && (
+                    {isPro && isUnlimited && (
+                      <span className="text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-lg shrink-0">Developer access</span>
+                    )}
+                    {isPro && !isUnlimited && (
                       <div className="flex flex-col gap-2 shrink-0">
                         {isCanceling ? (
                           <Button
