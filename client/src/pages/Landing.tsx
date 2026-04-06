@@ -88,7 +88,7 @@ export default function Landing() {
         <div className="grid md:grid-cols-2 gap-12 items-center relative z-10">
           <div className="space-y-8 animate-in">
             <h1 className="text-5xl md:text-7xl font-display font-bold leading-[1.1] tracking-tight text-balance">
-              Master Chinese with <span className="text-primary">Real Feedback</span>
+              Master Chinese with <span className="text-primary">Real</span> Feedback
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
               Don't guess if you sound right. Marlow's feedback system — developed by linguists and native Chinese speakers — tells you exactly what to fix.
