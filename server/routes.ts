@@ -403,7 +403,7 @@ export async function registerRoutes(
             overallScore: iseResult.overallScore,
             speechSuperScores: iseResult.speechSuperScores,
             isAiFeedback: true,
-          } as any);
+          });
           // Refund credits if score qualifies
           if (iseResult.overallScore >= REFUND_THRESHOLD) {
             storage.refundCredits(recording.id).catch(console.error);
@@ -538,7 +538,7 @@ export async function registerRoutes(
         overallScore: iseResult.overallScore,
         speechSuperScores: iseResult.speechSuperScores,
         isAiFeedback: true,
-      } as any);
+      });
 
       if (iseResult.overallScore >= REFUND_THRESHOLD) {
         storage.refundCredits(recording.id).catch(console.error);
