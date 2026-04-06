@@ -88,10 +88,10 @@ export default function Landing() {
         <div className="grid md:grid-cols-2 gap-12 items-center relative z-10">
           <div className="space-y-8 animate-in">
             <h1 className="text-5xl md:text-7xl font-display font-bold leading-[1.1] tracking-tight text-balance">
-              Master Chinese Tones with <span className="text-primary">Human</span> Feedback.
+              Master Chinese with <span className="text-primary">Real Feedback</span>
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
-              Don't guess if you sound right. Get personalized feedback from native speakers trained in linguistics and language teaching.
+              Don't guess if you sound right. Marlow's feedback system — developed by linguists and native Chinese speakers — tells you exactly what to fix.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <a href="/api/login?role=learner">
@@ -128,7 +128,7 @@ export default function Landing() {
                   <div className="flex gap-3">
                     <div className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold text-xs">E</div>
                     <div>
-                      <p className="text-sm font-medium">Native Speaker</p>
+                      <p className="text-sm font-medium">Marlow</p>
                       <p className="text-foreground/80 mt-1">
                         Your "shì" in "rènshí" was a bit too high. Try dropping the pitch sharply. Listen to my recording below.
                       </p>
@@ -156,7 +156,7 @@ export default function Landing() {
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">How It Works</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Every recording gets detailed, character-by-character feedback from a <span className="text-primary">linguistically trained</span> native speaker.
+              Every recording gets detailed, character-by-character analysis from <span className="text-primary">Marlow's system</span>, developed by linguists and native Chinese speakers.
             </p>
           </div>
 
@@ -294,7 +294,7 @@ export default function Landing() {
                   <h3 className="text-2xl font-bold font-display">Get Rated Character by Character</h3>
                 </div>
                 <p className="text-muted-foreground text-lg leading-relaxed">
-                  A native speaker rates every character across three dimensions: <strong>Initial</strong> (how you start the syllable), <strong>Final</strong> (how you end it), and <strong>Tone</strong> (the pitch pattern).
+                  Marlow rates every character across three dimensions: <strong>Initial</strong> (how you start the syllable), <strong>Final</strong> (how you end it), and <strong>Tone</strong> (the pitch pattern).
                 </p>
               </div>
             </div>
@@ -322,7 +322,7 @@ export default function Landing() {
                   <h3 className="text-2xl font-bold font-display">Specific Corrections</h3>
                 </div>
                 <p className="text-muted-foreground text-lg leading-relaxed">
-                  For anything rated less than "Great," the reviewer explains exactly what went wrong and how to fix it. You get targeted advice for each character that needs work.
+                  For anything rated less than "Great," Marlow explains exactly what went wrong and how to fix it. You get targeted advice for each character that needs work.
                 </p>
               </div>
             </div>
@@ -347,7 +347,7 @@ export default function Landing() {
                     <div className="flex gap-3">
                       <div className="w-8 h-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center font-bold text-xs shrink-0">L</div>
                       <div>
-                        <p className="text-sm font-medium">Native Speaker from Changchun</p>
+                        <p className="text-sm font-medium">Marlow</p>
                         <p className="text-foreground/80 mt-2 leading-relaxed">
                           Tones 1 and 4 consistently good, but you tend to mix up Tones 2 and 3.
                         </p>
@@ -356,10 +356,10 @@ export default function Landing() {
                   </div>
                   <div className="flex items-center gap-2 pt-2">
                     <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md">
-                      <span className="font-medium text-xs">Mandarin Speaker</span>
+                      <span className="font-medium text-xs">Built by linguists</span>
                     </div>
                     <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-md">
-                      <span className="font-medium text-xs">10+ years teaching</span>
+                      <span className="font-medium text-xs">Native Chinese speakers</span>
                     </div>
                   </div>
                 </div>
@@ -370,7 +370,7 @@ export default function Landing() {
                   <h3 className="text-2xl font-bold font-display">Overall Comments</h3>
                 </div>
                 <p className="text-muted-foreground text-lg leading-relaxed">
-                  Beyond individual characters, your reviewer gives big-picture feedback on patterns they notice — like which tones you consistently nail and which ones trip you up. This helps you focus your practice where it matters most.
+                  Beyond individual characters, Marlow gives big-picture feedback on patterns it notices — like which tones you consistently nail and which ones trip you up. This helps you focus your practice where it matters most.
                 </p>
               </div>
             </div>
@@ -414,7 +414,7 @@ export default function Landing() {
               </div>
               <h3 className="text-xl font-bold font-display mb-3">Save Errors to Your Practice List</h3>
               <p className="text-muted-foreground leading-relaxed">
-                When a reviewer flags a mistake, save it straight to your <strong>Practice List</strong>. Drill those words on their own — and quickly spot if the same error keeps coming up.
+                When Marlow flags a mistake, save it straight to your <strong>Practice List</strong>. Drill those words on their own — and quickly spot if the same error keeps coming up.
               </p>
             </div>
 
@@ -578,7 +578,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="text-center mb-16 max-w-2xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Why Marlow works</h2>
-            <p className="text-muted-foreground text-lg">AI isn't enough for tonal languages. You need human ears to catch the subtle nuances.</p>
+            <p className="text-muted-foreground text-lg">Generic AI isn't enough for tonal languages. Marlow's system was built by linguists and native Chinese speakers who know the nuances.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -593,8 +593,8 @@ export default function Landing() {
               <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary mb-6">
                 <MessageCircle className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold mb-3">Human Feedback</h3>
-              <p className="text-muted-foreground">Get corrections from real native speakers who can explain exactly what went wrong.</p>
+              <h3 className="text-xl font-bold mb-3">Expert Feedback</h3>
+              <p className="text-muted-foreground">Get corrections from Marlow's system — built by linguists who can explain exactly what went wrong and why.</p>
             </div>
             <div className="bg-card p-8 rounded-2xl shadow-sm border border-border/50 hover:shadow-lg transition-all duration-300">
               <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mb-6">
