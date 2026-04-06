@@ -391,13 +391,138 @@ const SEED_ERRORS = [
     practiceWords: ["门儿", "玩儿", "花儿"],
     isCustom: false,
   },
+  {
+    id: "F010",
+    category: "final" as const,
+    commonError: "-an and -ang confused",
+    example: "饭 (fàn) vs 方 (fāng)",
+    scientificExplanation: "-an /an/ ends with an alveolar nasal n (tongue tip touches the ridge behind upper teeth).\n\n-ang /aŋ/ ends with a velar nasal ŋ (tongue back rises to soft palate).\n\nLearners often use one ending in both contexts, collapsing the contrast.",
+    simpleExplanation: "-an ends with the tip of your tongue touching the roof of your mouth, like English \"can\".\n\n-ang ends with the back of your tongue, like the end of \"song\".\n\nThey're not interchangeable — native speakers clearly hear the difference.",
+    howToFix: "For -an: close your lips slightly, tongue tip touches the upper ridge, sound closes at the front.\n\nFor -ang: keep your mouth open a little longer, let the sound fade at the back of your throat without touching the front.\n\nDrill minimal pairs slowly: fàn / fāng, kàn / kāng.",
+    minimalPairs: "饭 / 方, 看 / 康, 班 / 帮, 安 / 昂",
+    practiceWords: ["饭", "方", "看", "康"],
+    isCustom: false,
+  },
+  {
+    id: "F011",
+    category: "final" as const,
+    commonError: "-ao glide not fully completed",
+    example: "好 (hǎo)",
+    scientificExplanation: "-ao /au/ is a diphthong that glides from a low open vowel /a/ to a high back rounded vowel /u/.\n\nLearners often truncate the glide, producing only the /a/ part or a short /ao/ without fully rounding the lips at the end.",
+    simpleExplanation: "Your mouth starts open (like \"ah\") but doesn't round into the \"o/w\" sound at the end.\n\nThe whole glide should travel from open to rounded.",
+    howToFix: "Start with your mouth wide open — \"aaa\".\n\nThen gradually bring your lips into a rounded position (like saying \"o\" or \"oo\").\n\nThe ending doesn't need to be a full \"o\" — just a noticeable rounding movement.",
+    minimalPairs: "好 / 哈, 猫 / 嘛, 包 / 八",
+    practiceWords: ["好", "猫", "包", "到"],
+    isCustom: false,
+  },
+  {
+    id: "F012",
+    category: "final" as const,
+    commonError: "-ui simplified — the u glide is dropped",
+    example: "对 (duì)",
+    scientificExplanation: "-ui is short for -uei /uei/: a sequence of rounded vowel /u/ → mid vowel /e/ → high front /i/.\n\nLearners often reduce this to just /i/ or /ei/, dropping the initial rounded glide.",
+    simpleExplanation: "You're skipping the \"w\" rounding at the start.\n\n-ui sounds like \"way\" in English, but with a tighter \"oo\" start — not just \"-i\" or \"-ee\".",
+    howToFix: "Before the vowel, briefly round your lips as if saying \"w\" or \"oo\".\n\nThen glide through the middle vowel to end on \"ee\".\n\nFull path: u → e → i (or roughly: oo → eh → ee).",
+    minimalPairs: "对 / 的, 会 / 和, 水 / 四",
+    practiceWords: ["对", "会", "水", "退"],
+    isCustom: false,
+  },
+  {
+    id: "F013",
+    category: "final" as const,
+    commonError: "-un simplified — the u glide is dropped",
+    example: "春 (chūn)",
+    scientificExplanation: "-un is short for -uen /uən/: starting with rounded /u/, moving through a mid vowel, and ending with alveolar nasal /n/.\n\nLearners often reduce this to -en or skip the initial u/w rounding.",
+    simpleExplanation: "Like -ui, you're missing the rounded \"oo\" start before the nasal ending.\n\n-un should start with rounded lips (like \"oo\") then close into \"-n\".",
+    howToFix: "Round your lips as if saying \"oo\" first.\n\nThen say \"-en\" (middle vowel + nasal).\n\nCombined: \"oo\" + \"en\" → \"uen\" said quickly.\n\nMake sure the rounded onset is there.",
+    minimalPairs: "春 / 陈, 论 / 林, 村 / 参",
+    practiceWords: ["春", "论", "村", "婚"],
+    isCustom: false,
+  },
+  {
+    id: "F014",
+    category: "final" as const,
+    commonError: "üe mispronounced — ü sounds like u",
+    example: "月 (yuè)",
+    scientificExplanation: "üe /yɛ/ begins with the front rounded vowel ü /y/ (like German ü or French u), which does not exist in English.\n\nLearners typically replace ü with a back rounded /u/, making üe sound like \"weh\" instead of the correct front-rounded \"üeh\".",
+    simpleExplanation: "The ü in üe is like saying \"ee\" while rounding your lips — it's not the same as \"oo\".\n\nMost English speakers substitute the easier back-rounded \"u\", which makes the syllable sound off.",
+    howToFix: "Start by saying \"ee\" (as in \"see\"). Hold that tongue position.\n\nNow round your lips while keeping your tongue where it is.\n\nThat's ü. Now add \"eh\" (open vowel) after it.\n\nü + eh = üe.",
+    minimalPairs: "月 / 喂, 学 / 说, 雪 / 说",
+    practiceWords: ["月", "学", "雪", "缺"],
+    isCustom: false,
+  },
+
+  // ─── INITIALS (additional) ─────────────────────────────────────────────────
+  {
+    id: "I011",
+    category: "initial" as const,
+    commonError: "s and sh not clearly distinguished",
+    example: "四 (sì) vs 是 (shì)",
+    scientificExplanation: "Mandarin s /s/ is a voiceless alveolar fricative: tongue tip near the upper teeth ridge, NOT curled back.\n\nMandarin sh /ʂ/ is a voiceless retroflex fricative: tongue tip curled slightly back.\n\nLearners who have practised retroflex consonants sometimes overcorrect and apply retroflexion to s, blurring the s/sh contrast.",
+    simpleExplanation: "You may be curling your tongue for s when it should stay flat.\n\ns is tongue flat and forward — like English \"s\".\n\nsh is tongue curled slightly back.",
+    howToFix: "For s: keep your tongue tip flat, just behind your upper teeth. Do NOT curl it.\n\nFor sh: curl the tongue tip slightly back toward the roof of your mouth.\n\nDrill: sì / shì, sān / shān, sāo / shāo.",
+    minimalPairs: "四 / 是, 三 / 山, 扫 / 烧",
+    practiceWords: ["四", "是", "三", "山"],
+    isCustom: false,
+  },
+  {
+    id: "I012",
+    category: "initial" as const,
+    commonError: "n and l confused",
+    example: "那 (nà) vs 啦 (la)",
+    scientificExplanation: "Mandarin n /n/ is a voiced alveolar nasal: airflow exits through the nose, tongue tip touches the upper alveolar ridge.\n\nMandarin l /l/ is a voiced alveolar lateral: airflow exits around the sides of the tongue, which blocks the centre.\n\nLearners often confuse these two, especially those from Southern Chinese dialect backgrounds or whose native language doesn't distinguish them.",
+    simpleExplanation: "Both n and l look similar in the mouth, but the difference is where the air goes:\n\nn → air out through the nose (hum it: mmmm-n)\nl → air out around the sides of the tongue (tongue tip stays up in the centre)",
+    howToFix: "For n: touch your tongue tip to the ridge behind upper teeth. Let air hum out through your nose.\n\nFor l: same tongue position, but close off the nose and let air flow around the sides of your tongue.\n\nTry: nā vs lā — feel the nasal hum for n but not for l.",
+    minimalPairs: "那 / 啦, 女 / 旅, 年 / 连, 牛 / 流",
+    practiceWords: ["那", "啦", "年", "连"],
+    isCustom: false,
+  },
+  {
+    id: "I013",
+    category: "initial" as const,
+    commonError: "d/t aspiration contrast not clear",
+    example: "大 (dà) vs 他 (tā)",
+    scientificExplanation: "Mandarin contrasts unaspirated d /t/ and aspirated t /tʰ/.\n\nd is voiceless unaspirated: no burst of air after release.\nt is voiceless aspirated: strong burst of air after release.\n\nEnglish speakers often add voicing to d (making it like English d) and/or underaspirate t, blurring the distinction.",
+    simpleExplanation: "Mandarin d/t is about air puff, not voicing:\n\nd = very soft \"t\" sound — almost no air comes out\nt = strong \"t\" with a clear puff of air",
+    howToFix: "d: put your tongue on the alveolar ridge, release softly with no air burst. Think: soft and tight.\n\nt: same position, but release with a strong puff of air. Think: burst open.\n\nHold a piece of paper: it should move with t but barely with d.",
+    minimalPairs: "大 / 他, 地 / 题, 道 / 套",
+    practiceWords: ["大", "他", "地", "题"],
+    isCustom: false,
+  },
+  {
+    id: "I014",
+    category: "initial" as const,
+    commonError: "g/k aspiration contrast not clear",
+    example: "哥 (gē) vs 可 (kě)",
+    scientificExplanation: "Mandarin contrasts unaspirated g /k/ and aspirated k /kʰ/, both voiceless velar stops.\n\ng is voiceless unaspirated: the back of the tongue touches the soft palate, released without a burst of air.\n\nk is voiceless aspirated: same position but with a strong burst of air.\n\nEnglish speakers often voice g (like English g) or under-aspirate k.",
+    simpleExplanation: "Like d/t, Mandarin g and k are not about voicing — they're about air:\n\ng = no air puff\nk = strong air puff",
+    howToFix: "g: press the back of your tongue against the soft palate, release without blowing air. Keep it voiceless.\n\nk: same position, but release with a sharp burst of air.\n\nDrill: gē / kě, gāo / kāo — feel the difference in airflow.",
+    minimalPairs: "哥 / 可, 高 / 考, 国 / 阔",
+    practiceWords: ["哥", "可", "高", "考"],
+    isCustom: false,
+  },
+  {
+    id: "I015",
+    category: "initial" as const,
+    commonError: "h too harsh or inconsistent",
+    example: "好 (hǎo)",
+    scientificExplanation: "Mandarin h /x/ is a voiceless velar fricative: the back of the tongue comes close to the soft palate, creating friction as air passes through.\n\nIt is stronger and more guttural than English h /h/, which is a simple glottal fricative with minimal friction.\n\nLearners sometimes substitute English h (too soft) or produce an overly harsh German-style ch (too strong).",
+    simpleExplanation: "English \"h\" is basically just a soft breath.\n\nMandarin h has more friction — it comes from the back of the throat, like a gentle clearing of the throat.\n\nThink of it as halfway between English \"h\" and the sound in \"Bach\" (German).",
+    howToFix: "Place the back of your tongue near your soft palate.\n\nPush air through the narrow gap to create friction — you should feel it in the back of your throat.\n\nDon't go too far: it should sound like a strong breathy h, not a full gargling sound.\n\nPractice: hā, hē, hū — feel the consistent friction.",
+    minimalPairs: "好 / 奥, 喝 / 饿, 号 / 傲",
+    practiceWords: ["好", "喝", "号", "河"],
+    isCustom: false,
+  },
 ];
 
 export async function seedPronunciationErrors() {
   const existing = await db.select({ id: pronunciationErrors.id }).from(pronunciationErrors);
-  if (existing.length > 0) return;
+  const existingIds = new Set(existing.map(e => e.id));
+  const toInsert = SEED_ERRORS.filter(e => !existingIds.has(e.id));
 
-  console.log("[seed] Seeding pronunciation errors...");
-  await db.insert(pronunciationErrors).values(SEED_ERRORS);
-  console.log(`[seed] Seeded ${SEED_ERRORS.length} pronunciation errors.`);
+  if (toInsert.length === 0) return;
+
+  console.log(`[seed] Adding ${toInsert.length} new pronunciation error(s)...`);
+  await db.insert(pronunciationErrors).values(toInsert);
+  console.log(`[seed] Done. Total seed errors: ${SEED_ERRORS.length}.`);
 }

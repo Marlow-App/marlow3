@@ -29,26 +29,60 @@ function mapFluency(score: number): number {
 // ─── Pronunciation error library IDs ─────────────────────────────────────────
 
 const INITIAL_PHONE_TO_ERROR: Record<string, string> = {
+  // Retroflex group
   zh: "I001", ch: "I001", sh: "I001",
+  // Palatal group
   q:  "I002",
   x:  "I003",
+  // Retroflex approximant
   r:  "I004",
+  // Sibilants
   c:  "I005",
   z:  "I006",
+  s:  "I011",
+  // Palatal affricate
   j:  "I007",
+  // Bilabial stops (aspiration contrast)
   b:  "I008", p: "I008",
+  // Alveolar stops (aspiration contrast)
+  d:  "I013", t: "I013",
+  // Velar stops (aspiration contrast)
+  g:  "I014", k: "I014",
+  // Velar fricative
+  h:  "I015",
+  // Nasals / laterals
+  n:  "I012", l: "I012",
 };
 
 const FINAL_PHONE_TO_ERROR: Record<string, string> = {
+  // Front rounded vowel
   v:   "F001",
+  // Mid-back unrounded vowel
   e:   "F002",
-  eng: "F003", ing: "F003",
+  // Velar nasal finals
+  eng: "F003", ing: "F003", in: "F003",
+  // ian glide
   ian: "F004",
+  // uo diphthong
   uo:  "F005",
+  // ong velar nasal
   ong: "F006",
+  // ai diphthong
   ai:  "F007",
+  // iao triphthong
   iao: "F008",
+  // er-hua
   er:  "F009",
+  // an/ang confusion
+  an:  "F010", ang: "F010",
+  // ao diphthong
+  ao:  "F011",
+  // ui (uei) glide
+  ui:  "F012",
+  // un (uen) glide
+  un:  "F013",
+  // üe (front rounded + e)
+  ve:  "F014",
 };
 
 const LIKELY_TONE_ERROR: Record<number, string> = {
