@@ -19,7 +19,7 @@ Marlow uses a credit-based (pay-as-you-go) model instead of subscriptions:
 ## SpeechSuper Auto-Review
 
 - **Purpose**: Automatically score learner recordings using SpeechSuper's `sent.eval.cn` API, giving instant per-character tone/initial/final feedback seconds after upload
-- **Endpoint**: `POST https://api.speechsuper.com/cn.sent.eval` — multipart/form-data with `param` JSON field + `audio` WAV binary. Credentials: `SPEECHSUPER_APP_ID`, `SPEECHSUPER_SECRET_KEY`
+- **Endpoint**: `POST https://api.speechsuper.com/sent.eval.cn` — multipart/form-data with `param` JSON field + `audio` WAV binary. Credentials: `SPEECHSUPER_APP_ID`, `SPEECHSUPER_SECRET_KEY`
 - **Auth**: `sig = MD5(applicationId + secretKey + timestamp)` (lowercase hex); `timestamp` is Unix seconds
 - **Request params**: `coreType:"sent.eval.cn"`, `refText` (Chinese sentence), `phoneme_output:1` (enables per-phoneme data), `tone_weight:0.2`
 - **Audio format**: Browser recordings (webm/mp4) are transcoded server-side via ffmpeg to 16kHz 16-bit mono WAV (`-f wav`). ffmpeg is available at runtime in the Replit NixOS environment.

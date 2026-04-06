@@ -182,7 +182,7 @@ async function callSpeechSuper(
     "audio.wav"
   );
 
-  const response = await fetch("https://api.speechsuper.com/cn.sent.eval", {
+  const response = await fetch("https://api.speechsuper.com/sent.eval.cn", {
     method: "POST",
     body: form,
     signal: AbortSignal.timeout(60_000),
