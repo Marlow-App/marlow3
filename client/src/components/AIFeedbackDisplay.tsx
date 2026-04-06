@@ -11,6 +11,21 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useRecording } from "@/hooks/use-recordings";
 import type { CharacterRating, PronunciationError, SpeechSuperScores } from "@shared/schema";
+import { UpsellModal } from "@/components/UpsellModal";
+import { useSubscription } from "@/hooks/use-subscription";
+import { FREE_ERROR_POPUPS_PER_DAY } from "@shared/credits";
+
+function getPopupCount(): number {
+  const today = new Date().toISOString().slice(0, 10);
+  const key = `marlow_popups_${today}`;
+  return parseInt(localStorage.getItem(key) ?? "0", 10);
+}
+
+function incrementPopupCount(): void {
+  const today = new Date().toISOString().slice(0, 10);
+  const key = `marlow_popups_${today}`;
+  localStorage.setItem(key, String(getPopupCount() + 1));
+}
 
 // ─── Shared types ──────────────────────────────────────────────────────────
 
@@ -392,9 +407,12 @@ export function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, sp
   recordingId?: number;
 }) {
   const { toast } = useToast();
+  const { data: subscription } = useSubscription();
+  const isPro = subscription?.tier === "pro" && (subscription?.status === "active" || !!subscription?.isUnlimited);
   const [openError, setOpenError] = useState<PronunciationError | null>(null);
   const [openErrorChar, setOpenErrorChar] = useState<string | undefined>(undefined);
   const [addingErrorId, setAddingErrorId] = useState<string | null>(null);
+  const [upsellReason, setUpsellReason] = useState<"popups" | "practice_list" | undefined>(undefined);
   const chinesePinyinOnly = pinyinData?.filter(p => p.py) || [];
 
   const { data: practiceList = [] } = useQuery<PracticeListItem[]>({ queryKey: ["/api/practice-list"] });
@@ -404,18 +422,47 @@ export function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, sp
 
   const openErrorDialog = (errorId: string | undefined, char: string) => {
     const err = lookupError(errorId);
-    if (err) { setOpenError(err); setOpenErrorChar(char); }
+    if (!err) return;
+    if (!isPro) {
+      const count = getPopupCount();
+      if (count >= FREE_ERROR_POPUPS_PER_DAY) {
+        setUpsellReason("popups");
+        return;
+      }
+      incrementPopupCount();
+    }
+    setOpenError(err);
+    setOpenErrorChar(char);
   };
 
   const addToPractice = async (errorId: string, char: string) => {
     if (addingErrorId) return;
     setAddingErrorId(errorId);
     try {
-      await apiRequest("POST", "/api/practice-list", { errorId, character: char, recordingId });
+      const res = await fetch("/api/practice-list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ errorId, character: char, recordingId }),
+      });
+      if (res.status === 403) {
+        const data = await res.json().catch(() => ({}));
+        if (data.code === "PRACTICE_LIST_LIMIT") {
+          setUpsellReason("practice_list");
+          return;
+        }
+        throw new Error(data.message || "Not authorized.");
+      }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to add to Practice List.");
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/practice-list"] });
       toast({ title: "Added to Practice List", description: "Find it under Practice List in the sidebar." });
-    } catch {
-      toast({ title: "Error", description: "Failed to add to Practice List.", variant: "destructive" });
+    } catch (err: any) {
+      if (err.message !== "PRACTICE_LIST_LIMIT") {
+        toast({ title: "Error", description: err.message || "Failed to add to Practice List.", variant: "destructive" });
+      }
     } finally {
       setAddingErrorId(null);
     }
@@ -515,6 +562,11 @@ export function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, sp
         onClose={() => setOpenError(null)}
         character={openErrorChar}
         recordingId={recordingId}
+      />
+      <UpsellModal
+        open={!!upsellReason}
+        onClose={() => setUpsellReason(undefined)}
+        reason={upsellReason}
       />
     </div>
   );

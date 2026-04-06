@@ -14,7 +14,7 @@ export class WebhookHandlers {
     const sync = await getStripeSync();
     await sync.processWebhook(payload, signature);
 
-    // Additionally handle checkout.session.completed for credit purchases
+    // Handle subscription lifecycle events
     try {
       const stripe = await getUncachableStripeClient();
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -22,19 +22,51 @@ export class WebhookHandlers {
 
       const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
 
-      if (event.type === 'checkout.session.completed') {
-        const session = event.data.object as any;
-        if (session.mode === 'payment' && session.payment_status === 'paid') {
-          const userId = session.metadata?.userId;
-          const credits = parseInt(session.metadata?.credits ?? '0', 10);
-          if (userId && credits > 0) {
-            await storage.addCredits(userId, credits, session.id);
-          }
-        }
+      if (
+        event.type === 'customer.subscription.created' ||
+        event.type === 'customer.subscription.updated'
+      ) {
+        const subscription = event.data.object as any;
+        const customerId = subscription.customer as string;
+        const userId = subscription.metadata?.userId;
+
+        const resolvedUserId = userId || (await storage.getUserByStripeCustomerId(customerId))?.id;
+        if (!resolvedUserId) return;
+
+        const isActive = subscription.status === 'active' || subscription.status === 'trialing';
+        const periodEnd = subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000)
+          : null;
+
+        await storage.updateUserSubscription(resolvedUserId, {
+          subscriptionTier: isActive ? 'pro' : 'free',
+          subscriptionStatus: subscription.status,
+          stripeSubscriptionId: subscription.id,
+          subscriptionPeriodEnd: periodEnd,
+        });
+
+        console.log(`[Stripe] Subscription ${event.type} for user ${resolvedUserId}: ${subscription.status}`);
+      }
+
+      if (event.type === 'customer.subscription.deleted') {
+        const subscription = event.data.object as any;
+        const customerId = subscription.customer as string;
+        const userId = subscription.metadata?.userId;
+
+        const resolvedUserId = userId || (await storage.getUserByStripeCustomerId(customerId))?.id;
+        if (!resolvedUserId) return;
+
+        await storage.updateUserSubscription(resolvedUserId, {
+          subscriptionTier: 'free',
+          subscriptionStatus: 'canceled',
+          stripeSubscriptionId: subscription.id,
+          subscriptionPeriodEnd: null,
+        });
+
+        console.log(`[Stripe] Subscription canceled for user ${resolvedUserId}`);
       }
     } catch (err) {
-      // Signature verification may have already been done by sync; log but don't throw
-      console.error('Credit webhook processing error:', err);
+      console.error('Subscription webhook processing error:', err);
     }
   }
 }

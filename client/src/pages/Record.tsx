@@ -8,14 +8,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLocation, Link } from "wouter";
-import { ChevronLeft, Info, X, Loader2, CircleDollarSign, Volume2 } from "lucide-react";
+import { ChevronLeft, Info, X, Loader2, Volume2 } from "lucide-react";
 import { RecordingFeedback } from "@/components/RecordingFeedback";
 import { getPhrasesForLevel, phraseToText, toToneChars, PHRASE_BANK, type Phrase } from "@/data/phrases";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
-import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { countChineseChars, MAX_CHARS, REFUND_THRESHOLD } from "@shared/credits";
+import { countChineseChars, MAX_CHARS } from "@shared/credits";
 import { usePhraseAudio } from "@/hooks/use-phrase-audio";
+import { UpsellModal } from "@/components/UpsellModal";
 
 function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoadingPhrase, anyLoading }: {
   phrase: Phrase;
@@ -97,13 +97,9 @@ export default function RecordPage() {
   const userLevel = user?.chineseLevel || "Beginner";
 
   const [rerecordOf, setRerecordOf] = useState<number | null>(null);
-  const [redoType, setRedoType] = useState<"free" | "discount" | null>(null);
   const [feedbackRecordingId, setFeedbackRecordingId] = useState<number | null>(null);
   const [feedbackSentenceText, setFeedbackSentenceText] = useState<string>("");
-
-  const { data: creditData } = useQuery<{ creditBalance: number; freeCreditsBalance: number; isUnlimited: boolean }>({
-    queryKey: ['/api/credits/balance'],
-  });
+  const [showUpsell, setShowUpsell] = useState(false);
 
   const dailyPhrases = getPhrasesForLevel(userLevel, 10);
 
@@ -112,10 +108,8 @@ export default function RecordPage() {
     const phraseParam = params.get("phrase");
     const rerecordOfParam = params.get("rerecordOf");
     const sentenceTextParam = params.get("sentenceText");
-    const redoParam = params.get("redo");
     const feedbackIdParam = params.get("feedbackId");
 
-    // Arriving from daily challenge — jump straight to feedback view
     if (feedbackIdParam && sentenceTextParam) {
       const id = parseInt(feedbackIdParam);
       if (!isNaN(id)) {
@@ -129,7 +123,6 @@ export default function RecordPage() {
       const id = parseInt(rerecordOfParam);
       if (!isNaN(id)) {
         setRerecordOf(id);
-        setRedoType(redoParam === "free" ? "free" : redoParam === "discount" ? "discount" : null);
         setText(sentenceTextParam);
         return;
       }
@@ -166,13 +159,7 @@ export default function RecordPage() {
   const activeText = rerecordOf ? text : (selectedPhrase ? phraseToText(selectedPhrase) : text);
   const typedToneChars = useMemo(() => (!selectedPhrase && text.trim()) ? toToneChars(text.trim()) : [], [text, selectedPhrase]);
   const charCost = countChineseChars(activeText);
-  const discountedCost = rerecordOf
-    ? (redoType === "free" ? 0 : Math.ceil(charCost * 0.7))
-    : charCost;
-  const balance = creditData?.creditBalance ?? 0;
-  const isUnlimited = creditData?.isUnlimited ?? false;
-  const canAfford = isUnlimited || balance >= discountedCost;
-  const tooLong = !isUnlimited && charCost > MAX_CHARS;
+  const tooLong = charCost > MAX_CHARS;
 
   const handleRecordingComplete = async (file: File) => {
     if (!activeText.trim()) {
@@ -193,15 +180,6 @@ export default function RecordPage() {
       return;
     }
 
-    if (!canAfford) {
-      toast({
-        title: "Not enough credits",
-        description: `This recording costs ${discountedCost} credit${discountedCost > 1 ? "s" : ""} but you only have ${balance}. Buy more credits in your profile.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       const uploadRes = await uploadFile(file);
       if (!uploadRes) throw new Error("Upload failed");
@@ -214,7 +192,12 @@ export default function RecordPage() {
 
       setFeedbackSentenceText(activeText);
       setFeedbackRecordingId(newRecording.id);
-    } catch (error) {
+    } catch (error: any) {
+      const msg = error?.message || "";
+      if (msg.startsWith("429:") || msg.includes("DAILY_LIMIT")) {
+        setShowUpsell(true);
+        return;
+      }
       const errorMsg = error instanceof Error ? error.message : "Failed to submit recording. Please try again.";
       toast({
         title: "Error",
@@ -248,7 +231,7 @@ export default function RecordPage() {
             </h1>
           </div>
 
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
             <Link href="/profile?highlight=chineseLevel">
               <Button
                 variant="outline"
@@ -258,17 +241,6 @@ export default function RecordPage() {
               >
                 {userLevel} ✎
               </Button>
-            </Link>
-
-            {/* Credit balance pill */}
-            <Link href="/profile?tab=credits">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer" data-testid="credit-balance-pill">
-                <CircleDollarSign className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold text-foreground" data-testid="credit-balance-count">
-                  {isUnlimited ? "∞" : balance}
-                </span>
-                <span className="text-xs font-normal text-foreground">credits</span>
-              </div>
             </Link>
           </div>
         </div>
@@ -286,15 +258,8 @@ export default function RecordPage() {
         ) : (
         <>
         {rerecordOf && (
-          <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium ${
-            redoType === "free"
-              ? "bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
-              : "bg-primary/5 border-primary/20 text-primary"
-          }`} data-testid="rerecord-banner">
-            <X className="w-4 h-4 shrink-0 opacity-0 pointer-events-none" aria-hidden />
-            {redoType === "free"
-              ? "Free redo — no credits deducted"
-              : `30% off — costs ${discountedCost} credit${discountedCost !== 1 ? "s" : ""} instead of ${charCost}`}
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-primary/5 border-primary/20 text-primary text-sm font-medium" data-testid="rerecord-banner">
+            Re-recording — your new attempt will be compared to your original.
           </div>
         )}
 
@@ -381,33 +346,11 @@ export default function RecordPage() {
                       <p className="text-2xl font-medium text-foreground">{text}</p>
                     )}
 
-                    {/* Cost preview */}
-                    {charCost > 0 && !isUnlimited && (
-                      <div className="mt-3 flex items-center gap-2 flex-wrap">
-                        <div className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
-                          tooLong
-                            ? "bg-destructive/10 text-destructive"
-                            : canAfford
-                              ? "bg-primary/10 text-primary"
-                              : "bg-destructive/10 text-destructive"
-                        }`} data-testid="credit-cost-preview">
-                          <CircleDollarSign className="w-3 h-3" />
-                          <span>
-                            {tooLong
-                              ? `${charCost} chars — max ${MAX_CHARS}`
-                              : canAfford
-                                ? (redoType === "free"
-                                    ? "Free redo"
-                                    : `Costs ${discountedCost} credit${discountedCost > 1 ? "s" : ""}`)
-                                : `Need ${discountedCost} credits (you have ${balance})`
-                            }
-                          </span>
-                        </div>
-                        {canAfford && !tooLong && redoType !== "free" && (
-                          <span className="text-[10px] text-muted-foreground">
-                            95%+ score → credits refunded
-                          </span>
-                        )}
+                    {tooLong && (
+                      <div className="mt-3">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-destructive/10 text-destructive">
+                          {charCost} chars — max {MAX_CHARS}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -446,12 +389,7 @@ export default function RecordPage() {
               <div className="bg-muted/30 p-3 border-b border-border/50 flex gap-2 items-center">
                 <Info className="w-4 h-4 text-primary shrink-0" />
                 <p className="text-sm text-muted-foreground">
-                  {charCost === 0
-                    ? <>Speak naturally and clearly with your microphone close. Score {REFUND_THRESHOLD}%+ and your credits are refunded.</>
-                    : redoType === "free"
-                      ? <>Free re-record — no credits will be used.</>
-                      : <>This recording costs <span className="font-semibold text-foreground">{discountedCost} credit{discountedCost !== 1 ? "s" : ""}</span>{rerecordOf && redoType === "discount" ? " (30% off)" : ""}. Score {REFUND_THRESHOLD}%+ and they're refunded automatically.</>
-                  }
+                  Speak naturally and clearly with your microphone close. You'll get instant AI pronunciation feedback.
                 </p>
               </div>
               <AudioRecorder
@@ -464,6 +402,12 @@ export default function RecordPage() {
         </>
         )}
       </div>
+
+      <UpsellModal
+        open={showUpsell}
+        onClose={() => setShowUpsell(false)}
+        reason="recordings"
+      />
     </Layout>
   );
 }

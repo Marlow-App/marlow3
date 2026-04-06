@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Layout } from "@/components/Layout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -14,15 +14,15 @@ import { useUpload } from "@/hooks/use-upload";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Loader2, Shield, CircleDollarSign, TrendingUp, RotateCcw, ShoppingCart, Star } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, Zap, Shield, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
 import { NATIVE_LANGUAGES, FOCUS_AREA_OPTIONS } from "@/pages/Onboarding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { useDisplayPrefs } from "@/hooks/use-display-prefs";
-import { CREDIT_PACKS, REFUND_THRESHOLD, SIGNUP_BONUS, DAILY_REWARD } from "@shared/credits";
+import { SUBSCRIPTION_PLANS, FREE_RECORDINGS_PER_DAY, FREE_PRACTICE_LIST_MAX, FREE_ERROR_POPUPS_PER_DAY } from "@shared/credits";
 import { Badge } from "@/components/ui/badge";
+import { useSubscription } from "@/hooks/use-subscription";
 import { format } from "date-fns";
 
 const CHINESE_LEVELS = [
@@ -58,23 +58,13 @@ function sortedJson(arr: string[]) {
   return JSON.stringify([...arr].sort());
 }
 
-function txTypeLabel(type: string): { label: string; color: string; icon: typeof CircleDollarSign } {
-  switch (type) {
-    case "signup_bonus":  return { label: "Signup bonus",   color: "text-emerald-600", icon: Star };
-    case "daily_reward":  return { label: "Daily reward",   color: "text-blue-600",    icon: TrendingUp };
-    case "purchase":      return { label: "Purchase",       color: "text-primary",     icon: ShoppingCart };
-    case "spend":         return { label: "Recording",      color: "text-amber-600",   icon: CircleDollarSign };
-    case "refund":        return { label: "Refund",         color: "text-emerald-600", icon: RotateCcw };
-    default:              return { label: type,             color: "text-foreground",  icon: CircleDollarSign };
-  }
-}
-
 export default function Profile() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { uploadFile, isUploading } = useUpload();
   const { showPinyin, showSandhi, showTips, setShowPinyin, setShowSandhi, setShowTips } = useDisplayPrefs();
+  const { data: subscription } = useSubscription();
 
   const [activeTab, setActiveTab] = useState<string>("profile");
   const [formData, setFormData] = useState({
@@ -91,24 +81,16 @@ export default function Profile() {
 
   const [cityOpen, setCityOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState<number | null>(null);
+  const [subscribeLoading, setSubscribeLoading] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState<boolean>((user as any)?.emailNotifications ?? false);
   const chineseLevelRef = useRef<HTMLDivElement>(null);
   const [highlightLevel, setHighlightLevel] = useState(false);
 
-  const { data: creditData } = useQuery<{ creditBalance: number; freeCreditsBalance: number; isUnlimited: boolean }>({
-    queryKey: ['/api/credits/balance'],
-  });
-
-  const { data: transactions } = useQuery<any[]>({
-    queryKey: ['/api/credits/transactions'],
-    enabled: activeTab === "credits",
-  });
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (tab === "settings" || tab === "credits") {
+    if (tab === "settings" || tab === "subscription") {
       setActiveTab(tab);
     } else if (params.get("highlight") === "chineseLevel") {
       setActiveTab("profile");
@@ -204,25 +186,35 @@ export default function Profile() {
     }
   };
 
-  const handleBuyCredits = async (usd: number) => {
-    setCheckoutLoading(usd);
+  const handleSubscribe = async (planId: string) => {
+    setSubscribeLoading(planId);
     try {
-      const res = await apiRequest("POST", "/api/stripe/checkout", { usd });
+      const res = await apiRequest("POST", "/api/stripe/subscribe", { plan: planId });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (err) {
+      if (data.url) window.location.href = data.url;
+    } catch {
       toast({ title: "Checkout failed", description: "Please try again.", variant: "destructive" });
     } finally {
-      setCheckoutLoading(null);
+      setSubscribeLoading(null);
     }
   };
 
-  const isReviewer = user?.role === 'reviewer';
-  const balance = creditData?.creditBalance ?? 0;
-  const freeBalance = creditData?.freeCreditsBalance ?? 0;
-  const isUnlimited = creditData?.isUnlimited ?? false;
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const res = await apiRequest("POST", "/api/stripe/portal", {});
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch {
+      toast({ title: "Failed to open billing portal", description: "Please try again.", variant: "destructive" });
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
+  const isReviewer = user?.role === "reviewer";
+  const isPro = subscription?.tier === "pro" && (subscription?.status === "active" || !!subscription?.isUnlimited);
+  const isUnlimited = !!subscription?.isUnlimited;
 
   return (
     <Layout>
@@ -230,10 +222,10 @@ export default function Profile() {
         <h1 className="text-3xl font-bold font-display">Your Profile</h1>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className={`grid w-full ${isReviewer ? 'grid-cols-2' : 'grid-cols-3'}`}>
+          <TabsList className={`grid w-full ${isReviewer ? "grid-cols-2" : "grid-cols-3"}`}>
             <TabsTrigger value="profile" data-testid="tab-profile">Profile</TabsTrigger>
             <TabsTrigger value="settings" data-testid="tab-settings">Settings</TabsTrigger>
-            {!isReviewer && <TabsTrigger value="credits" data-testid="tab-credits">Credits</TabsTrigger>}
+            {!isReviewer && <TabsTrigger value="subscription" data-testid="tab-subscription">Subscription</TabsTrigger>}
           </TabsList>
 
           {/* ── Profile Tab ── */}
@@ -486,7 +478,7 @@ export default function Profile() {
                   <div className="space-y-1 pr-4">
                     <Label htmlFor="toggle-tips" className="text-base font-medium">Show pronunciation tips</Label>
                     <p className="text-sm text-muted-foreground">
-                      Show tone tips below each phrase — helpful hints on how to pronounce each tone correctly, including T3 sandhi rules.
+                      Show tone tips below each phrase — helpful hints on how to pronounce each tone correctly.
                     </p>
                   </div>
                   <Switch
@@ -533,155 +525,152 @@ export default function Profile() {
             </Card>
           </TabsContent>
 
-          {/* ── Credits Tab (learners only) ── */}
+          {/* ── Subscription Tab (learners only) ── */}
           {!isReviewer && (
-            <TabsContent value="credits" className="mt-6 space-y-6">
-              {/* Balance card */}
-              <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent" data-testid="credit-balance-card">
-                <CardContent className="pt-6">
+            <TabsContent value="subscription" className="mt-6 space-y-6">
+              {/* Current status card */}
+              <Card className={`border-2 ${isPro ? "border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-transparent" : "border-border/60"}`} data-testid="subscription-status-card">
+                <CardContent className="pt-6 pb-5">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                        <CircleDollarSign className="w-9 h-9 text-primary" />
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isPro ? "bg-primary/10" : "bg-muted/50"}`}>
+                        {isPro ? <Zap className="w-7 h-7 text-primary" /> : <Shield className="w-7 h-7 text-muted-foreground" />}
                       </div>
                       <div>
-                        <p className="text-base font-semibold uppercase tracking-wider text-muted-foreground">Your balance</p>
-                        <p className="text-5xl font-bold font-display text-foreground" data-testid="profile-credit-balance">
-                          {isUnlimited ? "∞" : balance}
-                        </p>
-                        <p className="text-lg font-normal text-foreground">credits</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-2xl font-bold font-display">{isPro ? "Pro" : "Free"}</p>
+                          {isPro && (
+                            <Badge className="bg-primary text-primary-foreground text-xs">Active</Badge>
+                          )}
+                        </div>
+                        {isPro && subscription?.periodEnd && !isUnlimited && (
+                          <p className="text-sm text-muted-foreground">
+                            Renews {format(new Date(subscription.periodEnd), "MMM d, yyyy")}
+                          </p>
+                        )}
+                        {!isPro && (
+                          <p className="text-sm text-muted-foreground">
+                            {FREE_RECORDINGS_PER_DAY} recordings/day · {FREE_PRACTICE_LIST_MAX} practice items
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <div className="text-right space-y-1">
-                      <div className="flex items-center gap-1.5 text-base text-muted-foreground">
-                        <Shield className="w-4.5 h-4.5" />
-                        <span>{freeBalance} free</span>
-                      </div>
-                      <p className="text-base text-muted-foreground">1 credit = 1 character</p>
-                      <p className="text-base text-muted-foreground">{REFUND_THRESHOLD}%+ score → refunded</p>
-                    </div>
+                    {isPro && !isUnlimited && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleManageSubscription}
+                        disabled={portalLoading}
+                        data-testid="btn-manage-subscription"
+                        className="shrink-0"
+                      >
+                        {portalLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>Manage <ExternalLink className="w-3.5 h-3.5 ml-1.5" /></>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* How credits work */}
+              {/* Free tier limits */}
+              {!isPro && (
+                <Card className="border-border/60">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Free Plan Limits</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm text-muted-foreground">
+                    <div className="flex items-center justify-between">
+                      <span>Daily recordings</span>
+                      <span className="font-semibold text-foreground">{FREE_RECORDINGS_PER_DAY} / day</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Error insights</span>
+                      <span className="font-semibold text-foreground">{FREE_ERROR_POPUPS_PER_DAY} / day</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Practice List items</span>
+                      <span className="font-semibold text-foreground">{FREE_PRACTICE_LIST_MAX} total</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Plan selection (only shown for non-pro users) */}
+              {!isPro && (
+                <div>
+                  <h2 className="text-xl font-semibold mb-3">Upgrade to Pro</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {SUBSCRIPTION_PLANS.map(plan => (
+                      <Card
+                        key={plan.id}
+                        className={`relative border-2 transition-all ${plan.highlight === "best_value" ? "border-primary/40" : "border-border/60"}`}
+                        data-testid={`plan-card-${plan.id}`}
+                      >
+                        {plan.highlight === "best_value" && (
+                          <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                            <Badge className="bg-primary text-primary-foreground text-xs px-3">Best Value</Badge>
+                          </div>
+                        )}
+                        <CardContent className="pt-6 pb-5 text-center space-y-3">
+                          <p className="text-base font-semibold">{plan.label}</p>
+                          <div>
+                            <span className="text-4xl font-bold font-display">${plan.priceUsd}</span>
+                            <span className="text-muted-foreground text-sm">/{plan.interval}</span>
+                          </div>
+                          {plan.highlight === "best_value" && (
+                            <p className="text-xs text-emerald-600 font-medium">Save ~17% vs monthly</p>
+                          )}
+                          <Button
+                            className="w-full rounded-full"
+                            variant={plan.highlight === "best_value" ? "default" : "outline"}
+                            onClick={() => handleSubscribe(plan.id)}
+                            disabled={!!subscribeLoading}
+                            data-testid={`btn-subscribe-${plan.id}`}
+                          >
+                            {subscribeLoading === plan.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              "Subscribe"
+                            )}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Pro features list */}
               <Card className="border-border/60">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-xl">How credits work</CardTitle>
+                  <CardTitle className="text-base">Pro Plan Includes</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3 text-lg text-muted-foreground">
-                  <div className="flex items-start gap-2">
-                    <Star className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
-                    <span>You received <strong>{SIGNUP_BONUS} free credits</strong> when you joined.</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <TrendingUp className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
-                    <span><strong>+{DAILY_REWARD} free credit per day</strong> (up to 3 banked at a time).</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CircleDollarSign className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
-                    <span>Recording a phrase costs <strong>1 credit per Chinese character</strong> (max {10} chars per session).</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <RotateCcw className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
-                    <span>Score <strong>{REFUND_THRESHOLD}% or higher</strong> on a recording and your credits are automatically refunded.</span>
-                  </div>
+                <CardContent className="space-y-2 text-sm">
+                  {[
+                    "Unlimited recordings per day",
+                    "Unlimited error category insights",
+                    "Unlimited Practice List items",
+                    "Full pronunciation breakdown per character",
+                    "Support for native speakers who review your recordings",
+                  ].map(f => (
+                    <div key={f} className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>{f}</span>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
-
-              {/* Credit packs */}
-              <div>
-                <h2 className="text-2xl font-semibold mb-3">Buy credits</h2>
-                <Card className="border-border/60 overflow-hidden">
-                  <table className="w-full text-base">
-                    <thead>
-                      <tr className="border-b border-border/50 bg-muted/30">
-                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Price</th>
-                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Credits</th>
-                        <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Value</th>
-                        <th className="px-4 py-3"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/50">
-                      {CREDIT_PACKS.map(pack => (
-                        <tr key={pack.usd} className="hover:bg-muted/20 transition-colors" data-testid={`credit-pack-${pack.usd}`}>
-                          <td className="px-4 py-3.5 font-semibold">${pack.usd}</td>
-                          <td className="px-4 py-3.5">
-                            <span className="font-semibold">{pack.credits}</span>
-                            {pack.highlight && (
-                              <span className={`ml-3 text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${
-                                pack.highlight === "most_popular"
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-amber-400 text-amber-950"
-                              }`}>
-                                {pack.highlight === "most_popular" ? "Most Popular" : "Best Value"}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-3 py-3 text-muted-foreground text-sm hidden sm:table-cell w-24">
-                            {(pack.usd / pack.credits * 100).toFixed(1)}¢ each
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <Button
-                              disabled={checkoutLoading === pack.usd}
-                              onClick={() => handleBuyCredits(pack.usd)}
-                              data-testid={`buy-pack-${pack.usd}`}
-                              className="min-w-[100px] font-bold bg-primary hover:bg-primary/85 active:bg-primary/75 text-primary-foreground transition-colors"
-                            >
-                              {checkoutLoading === pack.usd ? (
-                                <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Processing...</>
-                              ) : (
-                                "Buy"
-                              )}
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </Card>
-              </div>
-
-              {/* Transaction history */}
-              <div>
-                <h2 className="text-2xl font-semibold mb-3">Transaction history</h2>
-                {!transactions || transactions.length === 0 ? (
-                  <p className="text-lg text-muted-foreground py-6 text-center">No transactions yet.</p>
-                ) : (
-                  <Card className="border-border/60 divide-y divide-border/50">
-                    {transactions.slice(0, 20).map((tx: any) => {
-                      const { label, color, icon: Icon } = txTypeLabel(tx.type);
-                      const isPositive = tx.amount > 0;
-                      return (
-                        <div key={tx.id} className="flex items-center justify-between px-4 py-3.5" data-testid={`tx-row-${tx.id}`}>
-                          <div className="flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-full flex items-center justify-center bg-muted/50 ${color}`}>
-                              <Icon className="w-4.5 h-4.5" />
-                            </div>
-                            <div>
-                              <p className="text-base font-medium">{label}</p>
-                              <p className="text-sm text-muted-foreground">{format(new Date(tx.createdAt), "MMM d, yyyy")}</p>
-                            </div>
-                          </div>
-                          <span className={`text-base font-bold ${isPositive ? "text-emerald-600" : "text-amber-600"}`}>
-                            {isPositive ? "+" : ""}{tx.amount}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </Card>
-                )}
-              </div>
             </TabsContent>
           )}
         </Tabs>
       </div>
 
-      {/* Fixed save bar — slides in when form is dirty */}
+      {/* Fixed save bar */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-out ${
-          isDirty ? "translate-y-0" : "translate-y-full"
-        }`}
+        className={`fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 ease-out ${isDirty ? "translate-y-0" : "translate-y-full"}`}
         data-testid="profile-save-bar"
       >
         <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-t border-border shadow-lg">

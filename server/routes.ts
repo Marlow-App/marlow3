@@ -7,9 +7,8 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import { authStorage } from "./replit_integrations/auth/storage";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripe/stripeClient";
-import { db } from "./db";
 import { generatePhraseAudio, getPhraseAudioFile } from "./elevenlabs";
-import { countChineseChars, MAX_CHARS, REFUND_THRESHOLD, CREDIT_PACKS } from "@shared/credits";
+import { countChineseChars, MAX_CHARS, FREE_RECORDINGS_PER_DAY, FREE_PRACTICE_LIST_MAX, SUBSCRIPTION_PLANS } from "@shared/credits";
 import { sendFeedbackNotification, sendRecordingNotification } from "./email";
 import { scoreMandarin } from "./speechsuper";
 
@@ -28,15 +27,17 @@ function safeUser(user: any) {
   return safe;
 }
 
+function isProUser(user: any, email?: string): boolean {
+  if (email === UNLIMITED_EMAIL) return true;
+  return user?.subscriptionTier === "pro" && user?.subscriptionStatus === "active";
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // Setup Auth
   await setupAuth(app);
   registerAuthRoutes(app);
-
-  // Setup Object Storage
   registerObjectStorageRoutes(app);
 
   // === Consent ===
@@ -101,9 +102,6 @@ export async function registerRoutes(
         onboardingComplete: true,
       });
 
-      // Grant signup bonus idempotently
-      await storage.grantSignupBonus(userId);
-
       res.json(updatedUser);
     } catch (error) {
       console.error("Error saving onboarding:", error);
@@ -111,46 +109,32 @@ export async function registerRoutes(
     }
   });
 
-  // === Credits ===
+  // === Subscription ===
 
-  app.get("/api/credits/balance", isAuthenticated, async (req, res) => {
+  app.get("/api/subscription/status", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).claims.sub;
       const userEmail = (req.user as any).claims.email;
 
       if (userEmail === UNLIMITED_EMAIL) {
-        return res.json({ creditBalance: 999, freeCreditsBalance: 0, isUnlimited: true });
+        return res.json({ tier: "pro", status: "active", periodEnd: null, isUnlimited: true });
       }
-
-      // Fire-and-forget daily reward
-      storage.grantDailyReward(userId).catch(console.error);
 
       const user = await storage.getUser(userId);
       res.json({
-        creditBalance: user?.creditBalance ?? 0,
-        freeCreditsBalance: user?.freeCreditsBalance ?? 0,
+        tier: user?.subscriptionTier ?? "free",
+        status: user?.subscriptionStatus ?? null,
+        periodEnd: user?.subscriptionPeriodEnd ?? null,
         isUnlimited: false,
       });
     } catch (error) {
-      console.error("Error getting credit balance:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/credits/transactions", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).claims.sub;
-      const transactions = await storage.getCreditTransactions(userId);
-      res.json(transactions);
-    } catch (error) {
-      console.error("Error getting transactions:", error);
+      console.error("Error getting subscription status:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
 
   // === Recordings ===
 
-  // List my recordings (for learners) or all recordings (for reviewers)
   app.get(api.recordings.list.path, isAuthenticated, async (req, res) => {
     try {
       const user = (req.user as any);
@@ -188,7 +172,6 @@ export async function registerRoutes(
     }
   });
 
-  // List all pending recordings (Control Center)
   app.get(api.recordings.listPending.path, isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).claims.sub;
@@ -199,7 +182,7 @@ export async function registerRoutes(
       const pending = await storage.getAllPendingRecordings();
       const pendingWithUser = await Promise.all(pending.map(async (r: any) => {
         const user = await storage.getUser(r.userId);
-        const isPro = user?.chineseLevel === "Advanced";
+        const isPro = user?.subscriptionTier === "pro";
         return { ...r, user: safeUser(user), isPro };
       }));
       res.json(pendingWithUser);
@@ -209,7 +192,6 @@ export async function registerRoutes(
     }
   });
 
-  // List all recordings (Admin/Reviewer view for completed)
   app.get("/api/all-recordings", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).claims.sub;
@@ -240,7 +222,6 @@ export async function registerRoutes(
     }
   });
 
-  // Get single recording
   app.get(api.recordings.get.path, isAuthenticated, async (req, res) => {
     try {
       const recording = await storage.getRecording(Number(req.params.id));
@@ -259,7 +240,6 @@ export async function registerRoutes(
     }
   });
 
-  // Get child re-recordings for a recording
   app.get("/api/recordings/:id/children", isAuthenticated, async (req, res) => {
     try {
       const parentId = Number(req.params.id);
@@ -317,63 +297,47 @@ export async function registerRoutes(
       const userId = (req.user as any).claims.sub;
       const userEmail = (req.user as any).claims.email;
 
-      const isUnlimited = userEmail === UNLIMITED_EMAIL;
+      const dbUser = await storage.getUser(userId);
+      const isPro = isProUser(dbUser, userEmail);
 
       const charCount = countChineseChars(recordingData.sentenceText);
 
+      if (charCount > MAX_CHARS) {
+        return res.status(400).json({
+          message: `Recording text too long. Maximum ${MAX_CHARS} Chinese characters allowed.`,
+          charCount,
+          max: MAX_CHARS,
+        });
+      }
+
+      if (charCount === 0) {
+        return res.status(400).json({ message: "Please include at least one Chinese character." });
+      }
+
+      // Check daily recording limit for free users
+      if (!isPro) {
+        const todayCount = await storage.countTodayRecordings(userId);
+        if (todayCount >= FREE_RECORDINGS_PER_DAY) {
+          return res.status(429).json({
+            message: `Free accounts can only make ${FREE_RECORDINGS_PER_DAY} recordings per day. Upgrade to Pro for unlimited recordings.`,
+            code: "DAILY_LIMIT_REACHED",
+          });
+        }
+      }
+
       // Validate re-record parent if provided
       let parentRecordingId: number | undefined;
-      let rerecordDiscount: "free" | "thirty_pct" | null = null;
       if (rerecordOf) {
         const parent = await storage.getRecording(rerecordOf);
         if (!parent || parent.userId !== userId) {
           return res.status(403).json({ message: "Invalid parent recording." });
         }
         parentRecordingId = parent.id;
-        rerecordDiscount = parent.status === "pending" ? "free" : "thirty_pct";
       }
 
-      if (!isUnlimited) {
-        if (charCount > MAX_CHARS) {
-          return res.status(400).json({
-            message: `Recording text too long. Maximum ${MAX_CHARS} Chinese characters allowed.`,
-            charCount,
-            max: MAX_CHARS,
-          });
-        }
+      const recording = await storage.createRecording(userId, recordingData, parentRecordingId);
 
-        if (charCount === 0) {
-          return res.status(400).json({ message: "Please include at least one Chinese character." });
-        }
-
-        const discountedCost = rerecordDiscount === "free"
-          ? 0
-          : rerecordDiscount === "thirty_pct"
-            ? Math.ceil(charCount * 0.7)
-            : charCount;
-
-        const user = await storage.getUser(userId);
-        const balance = user?.creditBalance ?? 0;
-        if (balance < discountedCost) {
-          return res.status(402).json({
-            message: `Not enough credits. This recording costs ${discountedCost} credit${discountedCost > 1 ? 's' : ''} but you only have ${balance}.`,
-            required: discountedCost,
-            balance,
-          });
-        }
-      }
-
-      const fullCost = isUnlimited ? 0 : charCount;
-      const creditCost = isUnlimited ? 0
-        : rerecordDiscount === "free" ? 0
-        : rerecordDiscount === "thirty_pct" ? Math.ceil(fullCost * 0.7)
-        : fullCost;
-
-      const recording = isUnlimited || creditCost === 0
-        ? await storage.createRecording(userId, recordingData, creditCost, parentRecordingId)
-        : await storage.createRecordingAndDeductCredits(userId, recordingData, creditCost, parentRecordingId);
-
-      // Notify reviewers of new recording (fire-and-forget)
+      // Notify reviewers (fire-and-forget)
       Promise.resolve().then(async () => {
         try {
           const learner = await storage.getUser(userId);
@@ -386,11 +350,9 @@ export async function registerRoutes(
         }
       });
 
-      // Respond immediately so the client can show inline feedback (polling handles the result)
       res.status(201).json(recording);
 
-      // SpeechSuper auto-review (fire-and-forget — client polls for the result)
-      // Recordings are webm/mp4 from MediaRecorder; server-side ffmpeg transcodes to 16kHz WAV before sending.
+      // SpeechSuper auto-review (fire-and-forget)
       Promise.resolve().then(async () => {
         try {
           const iseResult = await scoreMandarin(recording.audioUrl, recording.sentenceText);
@@ -404,10 +366,6 @@ export async function registerRoutes(
             speechSuperScores: iseResult.speechSuperScores,
             isAiFeedback: true,
           });
-          // Refund credits if score qualifies
-          if (iseResult.overallScore >= REFUND_THRESHOLD) {
-            storage.refundCredits(recording.id).catch(console.error);
-          }
           console.log(`[SpeechSuper] Auto-review complete for recording ${recording.id}, score=${iseResult.overallScore}`);
         } catch (err) {
           console.error("[SpeechSuper] Auto-review failed (silent):", err);
@@ -476,12 +434,7 @@ export async function registerRoutes(
         isAiFeedback: false,
       });
 
-      // Refund credits if score >= REFUND_THRESHOLD
-      if (overallScore !== null && overallScore >= REFUND_THRESHOLD) {
-        storage.refundCredits(recordingId).catch(console.error);
-      }
-
-      // Notify learner of new feedback (fire-and-forget)
+      // Notify learner (fire-and-forget)
       Promise.resolve().then(async () => {
         try {
           const rec = await storage.getRecording(recordingId);
@@ -506,8 +459,7 @@ export async function registerRoutes(
     }
   });
 
-  // Retroactive AI review — lets the recording owner trigger ISE scoring for a recording
-  // that doesn't have AI feedback yet (e.g. recordings submitted before ISE was live).
+  // Retroactive AI review
   app.post("/api/recordings/:id/ai-review", isAuthenticated, async (req, res) => {
     try {
       const recordingId = Number(req.params.id);
@@ -519,13 +471,6 @@ export async function registerRoutes(
       }
       if (recording.userId !== userId) {
         return res.status(403).json({ message: "You can only request AI review for your own recordings" });
-      }
-
-      // Check if AI feedback already exists
-      const existingFeedback = (recording as any).feedback ?? [];
-      const hasAiFeedback = existingFeedback.some((f: any) => f.isAiFeedback);
-      if (hasAiFeedback) {
-        return res.status(409).json({ message: "AI review already exists for this recording" });
       }
 
       const iseResult = await scoreMandarin(recording.audioUrl, recording.sentenceText);
@@ -540,19 +485,15 @@ export async function registerRoutes(
         isAiFeedback: true,
       });
 
-      if (iseResult.overallScore >= REFUND_THRESHOLD) {
-        storage.refundCredits(recording.id).catch(console.error);
-      }
-
-      console.log(`[iFLYTEK ISE] Retroactive review complete for recording ${recording.id}, score=${iseResult.overallScore}`);
+      console.log(`[SpeechSuper] Retroactive review complete for recording ${recording.id}, score=${iseResult.overallScore}`);
       res.status(201).json(fb);
     } catch (err) {
-      console.error("[iFLYTEK ISE] Retroactive review failed:", err);
+      console.error("[SpeechSuper] Retroactive review failed:", err);
       res.status(500).json({ message: "AI review failed. Please try again." });
     }
   });
 
-  // Update feedback (reviewer only, own feedback)
+  // Update feedback
   app.patch("/api/feedback/:id", isAuthenticated, async (req, res) => {
     try {
       const feedbackId = Number(req.params.id);
@@ -616,12 +557,6 @@ export async function registerRoutes(
       updateData.overallScore = overallScore;
 
       const updated = await storage.updateFeedback(feedbackId, updateData);
-
-      // Refund credits if score >= REFUND_THRESHOLD (idempotent — won't double-refund)
-      if (overallScore !== null && overallScore >= REFUND_THRESHOLD) {
-        storage.refundCredits(existing.recordingId).catch(console.error);
-      }
-
       res.json(updated);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -632,7 +567,7 @@ export async function registerRoutes(
     }
   });
 
-  // Delete feedback (reviewer only, own feedback)
+  // Delete feedback
   app.delete("/api/feedback/:id", isAuthenticated, async (req, res) => {
     try {
       const feedbackId = Number(req.params.id);
@@ -653,6 +588,7 @@ export async function registerRoutes(
   });
 
   // === User Profile ===
+
   const profileUpdateSchema = z.object({
     chineseLevel: z.string().max(100).optional(),
     nativeLanguage: z.string().max(100).optional(),
@@ -661,6 +597,9 @@ export async function registerRoutes(
     teachingExperience: z.number().int().min(0).max(100).optional(),
     dialects: z.array(z.string()).optional(),
     emailNotifications: z.boolean().optional(),
+    firstName: z.string().max(100).optional(),
+    lastName: z.string().max(100).optional(),
+    profileImageUrl: z.string().max(500).optional(),
   });
 
   app.patch("/api/auth/user", isAuthenticated, async (req, res) => {
@@ -683,7 +622,7 @@ export async function registerRoutes(
     }
   });
 
-  // === Stripe Payment Routes ===
+  // === Stripe Subscription Routes ===
 
   app.get("/api/stripe/publishable-key", async (_req, res) => {
     try {
@@ -695,15 +634,15 @@ export async function registerRoutes(
     }
   });
 
-  // Credit pack checkout (one-time payment)
-  app.post("/api/stripe/checkout", isAuthenticated, async (req, res) => {
+  // Subscription checkout
+  app.post("/api/stripe/subscribe", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).claims.sub;
-      const { usd } = req.body;
+      const { plan } = req.body;
 
-      const pack = CREDIT_PACKS.find(p => p.usd === usd);
-      if (!pack) {
-        return res.status(400).json({ message: "Invalid credit pack" });
+      const planConfig = SUBSCRIPTION_PLANS.find(p => p.id === plan);
+      if (!planConfig) {
+        return res.status(400).json({ message: "Invalid plan. Choose 'monthly' or 'yearly'." });
       }
 
       const user = await storage.getUser(userId);
@@ -730,27 +669,50 @@ export async function registerRoutes(
         line_items: [{
           price_data: {
             currency: 'usd',
-            unit_amount: pack.usd * 100,
+            unit_amount: Math.round(planConfig.priceUsd * 100),
+            recurring: { interval: planConfig.interval },
             product_data: {
-              name: `${pack.credits} Marlow Credits`,
-              description: `${pack.credits} credits for tone practice recordings`,
+              name: `Marlow Pro — ${planConfig.label}`,
+              description: `Unlimited recordings, error insights, and practice list`,
             },
           },
           quantity: 1,
         }],
-        mode: 'payment',
-        success_url: `${baseUrl}/checkout/success?credits=${pack.credits}`,
-        cancel_url: `${baseUrl}/profile`,
-        metadata: {
-          userId: user.id,
-          credits: String(pack.credits),
+        mode: 'subscription',
+        success_url: `${baseUrl}/checkout/success?plan=${plan}`,
+        cancel_url: `${baseUrl}/profile?tab=subscription`,
+        subscription_data: {
+          metadata: { userId: user.id, plan },
         },
       });
 
       res.json({ url: session.url });
     } catch (error) {
-      console.error("Error creating checkout session:", error);
+      console.error("Error creating subscription session:", error);
       res.status(500).json({ message: "Failed to create checkout session" });
+    }
+  });
+
+  // Customer portal (manage / cancel subscription)
+  app.post("/api/stripe/portal", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user?.stripeCustomerId) {
+        return res.status(400).json({ message: "No subscription found" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const session = await stripe.billingPortal.sessions.create({
+        customer: user.stripeCustomerId,
+        return_url: `${baseUrl}/profile?tab=subscription`,
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Error creating portal session:", error);
+      res.status(500).json({ message: "Failed to open billing portal" });
     }
   });
 
@@ -842,10 +804,28 @@ export async function registerRoutes(
   app.post("/api/practice-list", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).claims.sub;
+      const userEmail = (req.user as any).claims.email;
       const { errorId, character, recordingId } = req.body;
+
       if (!errorId || typeof errorId !== "string") {
         return res.status(400).json({ message: "errorId is required" });
       }
+
+      const dbUser = await storage.getUser(userId);
+      const isPro = isProUser(dbUser, userEmail);
+
+      if (!isPro) {
+        const currentCount = await storage.getPracticeListCount(userId);
+        // Allow if already in list (upsert)
+        const alreadyIn = await storage.isPracticeListItem(userId, errorId);
+        if (!alreadyIn && currentCount >= FREE_PRACTICE_LIST_MAX) {
+          return res.status(403).json({
+            message: `Free accounts can only save ${FREE_PRACTICE_LIST_MAX} errors to your Practice List. Upgrade to Pro for unlimited.`,
+            code: "PRACTICE_LIST_LIMIT",
+          });
+        }
+      }
+
       const item = await storage.addToPracticeList(userId, errorId, character || undefined, recordingId ? Number(recordingId) : undefined);
       res.status(201).json(item);
     } catch (err) {
