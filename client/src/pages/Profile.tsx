@@ -592,7 +592,7 @@ export default function Profile() {
                         )}
                       </div>
                     </div>
-                    {isPro && !isUnlimited && (
+                    {isPro && (
                       <div className="flex flex-col gap-2 shrink-0">
                         {isCanceling ? (
                           <Button
