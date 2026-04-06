@@ -314,10 +314,14 @@ export default function Landing() {
                       </defs>
                       <path d="M0,50 L33,43 L66,34 L100,40 L133,28 L166,19 L200,12" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M0,50 L33,43 L66,34 L100,40 L133,28 L166,19 L200,12 L200,60 L0,60 Z" fill="url(#chartGrad)" />
-                      {[[0,50],[33,43],[66,34],[100,40],[133,28],[166,19],[200,12]].map(([x,y],i) => (
-                        <circle key={i} cx={x} cy={y} r="2.5" fill="hsl(var(--primary))" />
-                      ))}
                     </svg>
+                    {[[0,50],[33,43],[66,34],[100,40],[133,28],[166,19],[200,12]].map(([x,y],i) => (
+                      <div
+                        key={i}
+                        className="absolute w-2 h-2 rounded-full bg-primary -translate-x-1/2 -translate-y-1/2"
+                        style={{ left: `${(x / 200) * 100}%`, top: `${(y / 60) * 100}%` }}
+                      />
+                    ))}
                     <div className="absolute bottom-0 left-0 right-0 flex justify-between px-0.5">
                       {["Jan","Feb","Mar","Apr","May","Jun","Jul"].map(m => (
                         <span key={m} className="text-[9px] text-muted-foreground">{m}</span>
