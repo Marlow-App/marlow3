@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import { spawn } from "child_process";
 import { ObjectStorageService } from "./replit_integrations/object_storage";
 import type { CharacterRating } from "@shared/schema";
@@ -159,6 +159,7 @@ async function callSpeechSuper(
       applicationId: appId,
       timestamp,
       sig,
+      requestIndex: randomUUID(),
     },
     audio: {
       audioType: "wav",
