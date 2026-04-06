@@ -253,38 +253,19 @@ export default function Landing() {
                   <span className="text-sm font-bold text-amber-600">68%</span>
                 </div>
 
-                {/* Character rows */}
-                <div className="space-y-2">
-                  {/* 你 — Tone 0 */}
-                  <div className="flex items-center gap-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-lg px-3 py-2.5">
-                    <div className="flex flex-col items-center w-10 shrink-0">
-                      <span className="text-xs font-medium text-blue-500">ní</span>
-                      <span className="text-xl font-bold text-red-600">你</span>
-                    </div>
-                    <div className="flex gap-3 flex-1">
-                      {[["Initial","100","text-emerald-600"],["Final","100","text-emerald-600"],["Tone","0","text-primary"]].map(([d,v,c]) => (
-                        <div key={d} className="flex flex-col items-center gap-0.5">
-                          <span className="text-[10px] text-muted-foreground">{d}</span>
-                          <span className={`text-sm font-bold tabular-nums ${c}`}>{v}</span>
-                        </div>
-                      ))}
-                    </div>
+                {/* Character row — 你 only */}
+                <div className="flex items-center gap-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-lg px-3 py-2.5">
+                  <div className="flex flex-col items-center w-10 shrink-0">
+                    <span className="text-xs font-medium text-blue-500">ní</span>
+                    <span className="text-xl font-bold text-red-600">你</span>
                   </div>
-
-                  {/* 好 — All 100 */}
-                  <div className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2.5">
-                    <div className="flex flex-col items-center w-10 shrink-0">
-                      <span className="text-xs font-medium text-blue-500">hǎo</span>
-                      <span className="text-xl font-bold text-green-600">好</span>
-                    </div>
-                    <div className="flex gap-3 flex-1">
-                      {[["Initial","100"],["Final","100"],["Tone","100"]].map(([d,v]) => (
-                        <div key={d} className="flex flex-col items-center gap-0.5">
-                          <span className="text-[10px] text-muted-foreground">{d}</span>
-                          <span className="text-sm font-bold tabular-nums text-emerald-600">{v}</span>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="flex gap-4 flex-1">
+                    {[["Initial","87","text-emerald-600"],["Final","91","text-emerald-600"],["Tone","24","text-primary"]].map(([d,v,c]) => (
+                      <div key={d} className="flex flex-col items-center gap-0.5">
+                        <span className="text-[10px] text-muted-foreground">{d}</span>
+                        <span className={`text-sm font-bold tabular-nums ${c}`}>{v}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -331,9 +312,9 @@ export default function Landing() {
                           <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
                         </linearGradient>
                       </defs>
-                      <path d="M0,52 L33,48 L66,40 L100,36 L133,24 L166,18 L200,10" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M0,52 L33,48 L66,40 L100,36 L133,24 L166,18 L200,10 L200,60 L0,60 Z" fill="url(#chartGrad)" />
-                      {[[0,52],[33,48],[66,40],[100,36],[133,24],[166,18],[200,10]].map(([x,y],i) => (
+                      <path d="M0,50 L33,43 L66,34 L100,40 L133,28 L166,19 L200,12" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M0,50 L33,43 L66,34 L100,40 L133,28 L166,19 L200,12 L200,60 L0,60 Z" fill="url(#chartGrad)" />
+                      {[[0,50],[33,43],[66,34],[100,40],[133,28],[166,19],[200,12]].map(([x,y],i) => (
                         <circle key={i} cx={x} cy={y} r="2.5" fill="hsl(var(--primary))" />
                       ))}
                     </svg>
@@ -367,8 +348,13 @@ export default function Landing() {
                     <TrendingUp className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold mb-0.5">Focus on Tone <span className="text-orange-600 font-bold">68%</span></p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">T1 flat-high, T2 rises, T3 dips, T4 falls sharply. Keep listening!</p>
+                    <p className="text-xs font-semibold mb-1">Focus on Tone <span className="text-orange-600 font-bold">68%</span></p>
+                    <ul className="space-y-0.5">
+                      <li className="text-xs text-muted-foreground flex items-start gap-1.5">
+                        <span className="text-orange-400 shrink-0">·</span>
+                        Tone 4 not falling sharply enough — drop from high to low in one swift motion
+                      </li>
+                    </ul>
                   </div>
                 </div>
               </div>
