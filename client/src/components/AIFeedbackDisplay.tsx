@@ -390,7 +390,7 @@ export function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, er
       <div className="grid gap-2">
         {ratings.map((cr, idx) => {
           const charPy = chinesePinyinOnly[idx] || null;
-          const toneScore = cr.tone;
+          const toneScore = cr.toneScoreRaw ?? cr.tone;
           const phoneScore = cr.phoneScoreRaw ?? Math.round((cr.initial + cr.final) / 2);
           const toneErr = lookupError(cr.toneError);
           const initErr = lookupError(cr.initialError);

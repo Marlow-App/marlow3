@@ -18,8 +18,9 @@ import { countChineseChars } from "@shared/credits";
 import {
   TONE_COLORS, PinyinChar, getCharPinyin, FluencyDisplay,
   useAllErrors, PracticeListItem, ScoreBar,
-  ErrorDetailDialog, AIErrorRow, AICharacterRatingDisplay,
+  ErrorDetailDialog, AIErrorRow,
 } from "@/components/AIFeedbackDisplay";
+import { AIFeedbackRatings } from "@/components/RecordingFeedback";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -496,6 +497,7 @@ function EditableFeedbackCard({
   isReviewer,
   pinyinData,
   recordingId,
+  sentenceText,
   characters,
   rerecordUrl,
   rerecordLabel,
@@ -505,6 +507,7 @@ function EditableFeedbackCard({
   isReviewer: boolean;
   pinyinData: PinyinChar[];
   recordingId: number;
+  sentenceText: string;
   characters: string[];
   rerecordUrl?: string | null;
   rerecordLabel?: string | null;
@@ -707,7 +710,7 @@ function EditableFeedbackCard({
               <>
                 {item.characterRatings && Array.isArray(item.characterRatings) && item.characterRatings.length > 0 && (
                   item.isAiFeedback ? (
-                    <AICharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} pinyinData={pinyinData} fluencyScore={item.fluencyScore} errors={errors} recordingId={recordingId} />
+                    <AIFeedbackRatings feedback={item} sentenceText={sentenceText} recordingId={recordingId} />
                   ) : (
                     <CharacterRatingDisplay ratings={item.characterRatings as CharacterRating[]} isReviewer={isReviewer} pinyinData={pinyinData} fluencyScore={item.fluencyScore} errors={errors} />
                   )
@@ -1121,6 +1124,7 @@ export default function RecordingDetail() {
                         isReviewer={user?.role === 'reviewer'}
                         pinyinData={pinyinData}
                         recordingId={parentRecording.id}
+                        sentenceText={parentRecording.sentenceText}
                         characters={characters}
                       />
                     ))}
@@ -1146,6 +1150,7 @@ export default function RecordingDetail() {
                               isReviewer={user?.role === 'reviewer'}
                               pinyinData={pinyinData}
                               recordingId={recordingId}
+                              sentenceText={recording.sentenceText}
                               characters={characters}
                               rerecordUrl={isOwner && idx === 0 ? rerecordUrl : null}
                               rerecordLabel={isOwner && idx === 0 ? rerecordLabel : null}
@@ -1165,6 +1170,7 @@ export default function RecordingDetail() {
                       isReviewer={user?.role === 'reviewer'}
                       pinyinData={pinyinData}
                       recordingId={recordingId}
+                      sentenceText={recording.sentenceText}
                       characters={characters}
                       rerecordUrl={isOwner && idx === 0 ? rerecordUrl : null}
                       rerecordLabel={isOwner && idx === 0 ? rerecordLabel : null}
@@ -1209,6 +1215,7 @@ export default function RecordingDetail() {
                             isReviewer={true}
                             pinyinData={pinyinData}
                             recordingId={parentRecording.id}
+                            sentenceText={parentRecording.sentenceText}
                             characters={characters}
                           />
                         ))}
@@ -1309,6 +1316,7 @@ export default function RecordingDetail() {
                         isReviewer={false}
                         pinyinData={pinyinData}
                         recordingId={parentRecording.id}
+                        sentenceText={parentRecording.sentenceText}
                         characters={characters}
                       />
                     ))}
@@ -1382,6 +1390,7 @@ export default function RecordingDetail() {
                                 isReviewer={false}
                                 pinyinData={childPinyin}
                                 recordingId={child.id}
+                                sentenceText={child.sentenceText}
                                 characters={childChars}
                               />
                             ))

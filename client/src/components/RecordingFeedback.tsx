@@ -11,7 +11,7 @@ import type { CharacterRating } from "@shared/schema";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-interface AiFeedbackItem {
+export interface AiFeedbackItem {
   id: number;
   isAiFeedback: boolean;
   overallScore: number | null;
@@ -26,7 +26,64 @@ interface RecordingResponse {
   feedback: AiFeedbackItem[];
 }
 
-// ─── Component ──────────────────────────────────────────────────────────────
+// ─── Shared display component ────────────────────────────────────────────────
+
+export function AIFeedbackRatings({
+  feedback,
+  sentenceText,
+  recordingId,
+  showHeader = false,
+}: {
+  feedback: AiFeedbackItem;
+  sentenceText: string;
+  recordingId: number;
+  showHeader?: boolean;
+}) {
+  const { data: errors = [] } = useAllErrors();
+  const pinyinData = useMemo(
+    (): PinyinChar[] => getCharPinyin(sentenceText).filter(p => p.py !== ""),
+    [sentenceText],
+  );
+  const ratings = feedback.characterRatings ?? [];
+  const overallScore = feedback.overallScore ?? null;
+
+  return (
+    <div className="space-y-3" data-testid="ai-feedback-ratings">
+      {showHeader && (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <Bot className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-foreground">AI Review</span>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium">Auto</Badge>
+            </div>
+            {overallScore !== null && (
+              <span
+                className={`text-2xl font-bold ${getScoreTextColor(overallScore)}`}
+                data-testid="inline-overall-score"
+              >
+                {overallScore}%
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+      {ratings.length > 0 && (
+        <AICharacterRatingDisplay
+          ratings={ratings}
+          pinyinData={pinyinData}
+          fluencyScore={feedback.fluencyScore}
+          errors={errors}
+          recordingId={recordingId}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Polling wrapper (Record page) ───────────────────────────────────────────
 
 export function RecordingFeedback({
   recordingId,
@@ -39,6 +96,7 @@ export function RecordingFeedback({
 }) {
   const [timedOut, setTimedOut] = useState(false);
   const timedOutRef = useRef(false);
+  const [pollEnabled, setPollEnabled] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -47,9 +105,6 @@ export function RecordingFeedback({
     }, 10_000);
     return () => clearTimeout(timer);
   }, []);
-
-  // Controlled polling: poll every 2s until feedback arrives or timeout
-  const [pollEnabled, setPollEnabled] = useState(true);
 
   const { data: recording, isLoading, refetch, isFetching } = useQuery<RecordingResponse>({
     queryKey: [api.recordings.get.path, recordingId],
@@ -63,22 +118,12 @@ export function RecordingFeedback({
     staleTime: 0,
   });
 
-  // Stop polling once AI feedback arrives
-  useEffect(() => {
-    const hasAI = recording?.feedback?.some(f => f.isAiFeedback);
-    if (hasAI) {
-      setPollEnabled(false);
-    }
-  }, [recording]);
-
-  const { data: errors = [] } = useAllErrors();
-
-  const pinyinData = useMemo(
-    (): PinyinChar[] => getCharPinyin(sentenceText).filter(p => p.py !== ""),
-    [sentenceText],
-  );
-
   const aiFeedback = recording?.feedback?.find(f => f.isAiFeedback);
+
+  useEffect(() => {
+    if (aiFeedback) setPollEnabled(false);
+  }, [aiFeedback]);
+
   const isPending = !aiFeedback && recording?.status !== "reviewed";
 
   // ── Loading / pending state ─────────────────────────────────────────────
@@ -137,44 +182,16 @@ export function RecordingFeedback({
 
   // ── Feedback ready state ────────────────────────────────────────────────
 
-  const ratings = aiFeedback?.characterRatings ?? [];
-  const overallScore = aiFeedback?.overallScore ?? null;
+  if (!aiFeedback) return null;
 
   return (
     <div className="space-y-4" data-testid="recording-feedback-panel">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-          <Bot className="w-5 h-5" />
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-foreground">AI Review</span>
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium">Auto</Badge>
-          </div>
-          {overallScore !== null && (
-            <span
-              className={`text-2xl font-bold ${getScoreTextColor(overallScore)}`}
-              data-testid="inline-overall-score"
-            >
-              {overallScore}%
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Character ratings (shared component) */}
-      {ratings.length > 0 && (
-        <AICharacterRatingDisplay
-          ratings={ratings}
-          pinyinData={pinyinData}
-          fluencyScore={aiFeedback?.fluencyScore}
-          errors={errors}
-          recordingId={recordingId}
-        />
-      )}
-
-      {/* Actions */}
+      <AIFeedbackRatings
+        feedback={aiFeedback}
+        sentenceText={sentenceText}
+        recordingId={recordingId}
+        showHeader
+      />
       <div className="flex gap-3 pt-2 flex-wrap">
         <Button
           onClick={onPracticeAgain}
