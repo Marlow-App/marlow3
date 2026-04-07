@@ -16,7 +16,7 @@ function parseObjectPath(fullPath: string) {
   return { bucketName, objectName };
 }
 
-const TTS_CACHE_VERSION = "iflytek_v8";
+const TTS_CACHE_VERSION = "iflytek_v9";
 
 function textToHash(text: string, gender: "M" | "F"): string {
   return createHash("md5").update(TTS_CACHE_VERSION + gender + text).digest("hex").slice(0, 12);
@@ -132,9 +132,9 @@ export async function generatePhraseAudio(text: string, gender: "M" | "F" = "M")
   }
 
   const url = buildSignedUrl(apiKey, apiSecret);
-  // Pad with a trailing comma to force the LAME encoder to flush its final frame.
-  // Short texts (≤8 chars) are prone to cutoff without this.
-  const synthesisText = text + "，";
+  // Pad with trailing spaces so the LAME encoder flushes its final frame without
+  // affecting prosody or intonation of the actual text.
+  const synthesisText = text + "   ";
   const audioBuffer = await synthesizeViaWebSocket(url, synthesisText, appId, voiceName);
 
   if (audioBuffer.length === 0) {
