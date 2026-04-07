@@ -34,9 +34,9 @@ export const recordings = pgTable("recordings", {
 
 export const characterRatingSchema = z.object({
   character: z.string(),
-  initial: z.number().refine(v => [0, 50, 100].includes(v)),
-  final: z.number().refine(v => [0, 50, 100].includes(v)),
-  tone: z.number().refine(v => [0, 50, 100].includes(v)),
+  initial: z.number().min(0).max(100),
+  final: z.number().min(0).max(100),
+  tone: z.number().min(0).max(100),
   initialError: z.string().optional(),
   finalError: z.string().optional(),
   toneError: z.string().optional(),

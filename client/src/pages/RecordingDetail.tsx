@@ -307,12 +307,12 @@ function CharacterRatingDisplay({ ratings, isReviewer, pinyinData, fluencyScore,
                               idx={idx}
                             />
                           ) : (
-                            <span className={`text-sm font-semibold px-2 py-0.5 rounded ${
-                              val === 100 ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
-                              val === 50 ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
+                            <span className={`text-sm font-semibold px-2 py-0.5 rounded tabular-nums ${
+                              val >= 80 ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
+                              val >= 60 ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
                               "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
                             }`} data-testid={`char-rating-${idx}-${dim.key}`}>
-                              {opt?.label || val}
+                              {val}
                             </span>
                           )}
                         </div>
@@ -446,29 +446,36 @@ function CharacterRatingInput({
             <div className="space-y-2">
               {DIMENSIONS.map((dim) => {
                 const currentVal = ratings[charIdx]?.[dim.key] ?? -1;
-                const showError = currentVal === 0 || currentVal === 50;
+                const showError = currentVal >= 0 && currentVal < 75;
                 const linkedError = ratings[charIdx]?.[DIM_ERROR_KEY[dim.key]] as string | undefined;
                 return (
                   <div key={dim.key}>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium shrink-0">
+                      <span className="text-sm font-medium w-10 shrink-0">
                         {dim.chinese}
                       </span>
-                      <div className="flex gap-1 flex-1">
-                        {RATING_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => handleChange(charIdx, dim.key, opt.value)}
-                            className={`flex-1 text-xs font-medium py-1.5 px-1 rounded border transition-all ${
-                              currentVal === opt.value ? opt.activeColor : opt.color
-                            } hover:opacity-80`}
-                            data-testid={`rate-${charIdx}-${dim.key}-${opt.value}`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="1"
+                        placeholder="—"
+                        value={currentVal >= 0 ? currentVal : ''}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === '') { handleChange(charIdx, dim.key, -1); return; }
+                          const n = Math.min(100, Math.max(0, Math.round(parseFloat(v))));
+                          handleChange(charIdx, dim.key, n);
+                        }}
+                        className={`w-16 text-center text-sm font-semibold tabular-nums py-1 px-2 rounded border outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                          currentVal < 0 ? "bg-muted border-border text-muted-foreground" :
+                          currentVal >= 80 ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700" :
+                          currentVal >= 60 ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700" :
+                          "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700"
+                        }`}
+                        data-testid={`rate-${charIdx}-${dim.key}`}
+                      />
+                      <span className="text-xs text-muted-foreground">/ 100</span>
                     </div>
                     {showError && errors.length > 0 && (
                       <ErrorSelect
