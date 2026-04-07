@@ -846,7 +846,6 @@ export default function RecordingDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/recordings", recordingId] });
-      toast({ title: "AI review complete", description: "Pronunciation scores have been added." });
     },
     onError: (err: any) => {
       toast({ title: "AI review failed", description: err?.message ?? "Please try again.", variant: "destructive" });
