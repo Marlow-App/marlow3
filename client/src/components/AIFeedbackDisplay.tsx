@@ -513,41 +513,94 @@ export function AICharacterRatingDisplay({ ratings, pinyinData, fluencyScore, sp
                       />
                     )}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground w-10 shrink-0">Sound</span>
-                      <ScoreBar score={phoneScore} />
-                      <span className={`text-sm font-semibold tabular-nums min-w-[3ch] ${getScoreTextColor(phoneScore)}`} data-testid={`ai-phone-score-${idx}`}>
-                        {phoneScore}%
-                      </span>
+                  {cr.finalScoreRaw !== undefined ? (
+                    <>
+                      {cr.hasInitial && (
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground w-10 shrink-0">Initial</span>
+                            <ScoreBar score={cr.initialScoreRaw ?? cr.initial} />
+                            <span className={`text-sm font-semibold tabular-nums min-w-[3ch] ${getScoreTextColor(cr.initialScoreRaw ?? cr.initial)}`} data-testid={`ai-initial-score-${idx}`}>
+                              {cr.initialScoreRaw ?? cr.initial}%
+                            </span>
+                            {cr.initialSymbol && <span className="text-xs text-muted-foreground font-mono">{cr.initialSymbol}-</span>}
+                          </div>
+                          {initErr && (
+                            <AIErrorRow
+                              error={initErr}
+                              character={cr.character}
+                              symbol={cr.initialSymbol}
+                              label="Initial"
+                              practiceList={practiceList}
+                              addingErrorId={addingErrorId}
+                              onOpen={() => openErrorDialog(cr.initialError, cr.character)}
+                              onAdd={() => addToPractice(initErr.id, cr.character)}
+                              testId={`ai-initial-error-${idx}`}
+                            />
+                          )}
+                        </div>
+                      )}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground w-10 shrink-0">Final</span>
+                          <ScoreBar score={cr.finalScoreRaw} />
+                          <span className={`text-sm font-semibold tabular-nums min-w-[3ch] ${getScoreTextColor(cr.finalScoreRaw)}`} data-testid={`ai-final-score-${idx}`}>
+                            {cr.finalScoreRaw}%
+                          </span>
+                          {cr.finalSymbol && <span className="text-xs text-muted-foreground font-mono">-{cr.finalSymbol}</span>}
+                        </div>
+                        {finalErr && (
+                          <AIErrorRow
+                            error={finalErr}
+                            character={cr.character}
+                            symbol={cr.finalSymbol}
+                            label="Final"
+                            practiceList={practiceList}
+                            addingErrorId={addingErrorId}
+                            onOpen={() => openErrorDialog(cr.finalError, cr.character)}
+                            onAdd={() => addToPractice(finalErr.id, cr.character)}
+                            testId={`ai-final-error-${idx}`}
+                          />
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground w-10 shrink-0">Sound</span>
+                        <ScoreBar score={phoneScore} />
+                        <span className={`text-sm font-semibold tabular-nums min-w-[3ch] ${getScoreTextColor(phoneScore)}`} data-testid={`ai-phone-score-${idx}`}>
+                          {phoneScore}%
+                        </span>
+                      </div>
+                      {initErr && (
+                        <AIErrorRow
+                          error={initErr}
+                          character={cr.character}
+                          symbol={cr.initialSymbol}
+                          label="Initial"
+                          practiceList={practiceList}
+                          addingErrorId={addingErrorId}
+                          onOpen={() => openErrorDialog(cr.initialError, cr.character)}
+                          onAdd={() => addToPractice(initErr.id, cr.character)}
+                          testId={`ai-initial-error-${idx}`}
+                        />
+                      )}
+                      {finalErr && (
+                        <AIErrorRow
+                          error={finalErr}
+                          character={cr.character}
+                          symbol={cr.finalSymbol}
+                          label="Final"
+                          practiceList={practiceList}
+                          addingErrorId={addingErrorId}
+                          onOpen={() => openErrorDialog(cr.finalError, cr.character)}
+                          onAdd={() => addToPractice(finalErr.id, cr.character)}
+                          testId={`ai-final-error-${idx}`}
+                        />
+                      )}
                     </div>
-                    {initErr && (
-                      <AIErrorRow
-                        error={initErr}
-                        character={cr.character}
-                        symbol={cr.initialSymbol}
-                        label="Initial"
-                        practiceList={practiceList}
-                        addingErrorId={addingErrorId}
-                        onOpen={() => openErrorDialog(cr.initialError, cr.character)}
-                        onAdd={() => addToPractice(initErr.id, cr.character)}
-                        testId={`ai-initial-error-${idx}`}
-                      />
-                    )}
-                    {finalErr && (
-                      <AIErrorRow
-                        error={finalErr}
-                        character={cr.character}
-                        symbol={cr.finalSymbol}
-                        label="Final"
-                        practiceList={practiceList}
-                        addingErrorId={addingErrorId}
-                        onOpen={() => openErrorDialog(cr.finalError, cr.character)}
-                        onAdd={() => addToPractice(finalErr.id, cr.character)}
-                        testId={`ai-final-error-${idx}`}
-                      />
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             </div>

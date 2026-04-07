@@ -45,8 +45,11 @@ export const characterRatingSchema = z.object({
   expectedTone: z.number().int().min(1).max(5).optional(),   // tone the character should be (1-5)
   toneScoreRaw: z.number().min(0).max(100).optional(),       // SpeechSuper 0-100 tone accuracy score
   phoneScoreRaw: z.number().min(0).max(100).optional(),      // SpeechSuper 0-100 consonant+vowel quality
+  initialScoreRaw: z.number().min(0).max(100).optional(),    // SpeechSuper 0-100 initial consonant accuracy
+  finalScoreRaw: z.number().min(0).max(100).optional(),      // SpeechSuper 0-100 final (rhyme) accuracy
   initialSymbol: z.string().optional(),                      // initial phone symbol from SpeechSuper (e.g. "zh")
   finalSymbol: z.string().optional(),                        // final phone symbol from SpeechSuper (e.g. "eng")
+  hasInitial: z.boolean().optional(),                        // true if character has an initial consonant
 });
 
 export const speechSuperScoresSchema = z.object({

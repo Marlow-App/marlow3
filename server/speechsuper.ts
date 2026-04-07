@@ -356,11 +356,14 @@ function parseSpeechSuperResult(
       expectedTone,
       toneScoreRaw,
       phoneScoreRaw,
+      initialScoreRaw: initialPhonemes.length > 0 ? Math.round(initialAvg) : undefined,
+      finalScoreRaw: Math.round(finalAvg),
+      hasInitial: initialPhonemes.length > 0,
       initialError,
       finalError,
       toneError,
-      initialSymbol: initialAvg < 75 ? initialSymbol : undefined,
-      finalSymbol: finalAvg < 75 ? finalSymbol : undefined,
+      initialSymbol: initialPhonemes.length > 0 ? initialSymbol : undefined,
+      finalSymbol,
     };
   });
 
