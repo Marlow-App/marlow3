@@ -53,12 +53,18 @@ export type PracticeListItem = { id: number; errorId: string; character?: string
 
 export function getCharPinyin(text: string): PinyinChar[] {
   const chars = Array.from(text);
-  const pinyinArr = pinyin(text, { toneType: "symbol", type: "array" });
-  const toneArr = pinyin(text, { toneType: "num", type: "array" });
+  const isChinese = (ch: string) => /[\u4e00-\u9fff\u3400-\u4dbf]/.test(ch);
+
+  // Run pinyin-pro only on the Chinese characters so there's no index
+  // misalignment when the text contains punctuation like ，or 。
+  const chineseOnly = chars.filter(isChinese).join("");
+  const pinyinArr = pinyin(chineseOnly, { toneType: "symbol", type: "array" });
+  const toneArr = pinyin(chineseOnly, { toneType: "num", type: "array" });
+
   const result: PinyinChar[] = [];
   let pIdx = 0;
   for (const ch of chars) {
-    if (/[\u4e00-\u9fff\u3400-\u4dbf]/.test(ch)) {
+    if (isChinese(ch)) {
       const toneStr = toneArr[pIdx] || "";
       const toneNum = parseInt(toneStr.slice(-1)) || 0;
       result.push({ char: ch, py: pinyinArr[pIdx] || "", tone: toneNum });
