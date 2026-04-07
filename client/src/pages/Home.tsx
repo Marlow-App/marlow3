@@ -32,6 +32,7 @@ import { useQuery } from "@tanstack/react-query";
 import { pinyin } from "pinyin-pro";
 import { getPracticeWordTranslation } from "@/lib/practiceWordTranslations";
 import { type PronunciationError, type PracticeListItem } from "@shared/schema";
+import { ErrorDetailDialog } from "@/components/AIFeedbackDisplay";
 
 type PracticeItem = PracticeListItem & { error: PronunciationError; sentenceText?: string };
 
@@ -266,6 +267,7 @@ export default function Home() {
   const { data: practiceList } = useQuery<PracticeItem[]>({ queryKey: ["/api/practice-list"] });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [practiceDialogItem, setPracticeDialogItem] = useState<PracticeItem | null>(null);
   const { toast } = useToast();
   const { uploadFile, isUploading } = useUpload();
   const createRecording = useCreateRecording();
@@ -524,11 +526,15 @@ export default function Home() {
                       {error.simpleExplanation && (
                         <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">{error.simpleExplanation}</p>
                       )}
-                      <Link href="/practice-list">
-                        <Button variant="outline" size="sm" className="mt-3 rounded-full" data-testid="practice-drill-go-btn">
-                          Practice this error
-                        </Button>
-                      </Link>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 rounded-full"
+                        onClick={() => setPracticeDialogItem(item)}
+                        data-testid="practice-drill-go-btn"
+                      >
+                        Practice this error
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -589,6 +595,14 @@ export default function Home() {
         </section>
 
       </div>
+
+      <ErrorDetailDialog
+        error={practiceDialogItem?.error ?? null}
+        open={!!practiceDialogItem}
+        onClose={() => setPracticeDialogItem(null)}
+        character={practiceDialogItem?.character ?? undefined}
+        recordingId={practiceDialogItem?.recordingId ?? undefined}
+      />
     </Layout>
   );
 }
