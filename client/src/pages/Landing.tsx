@@ -312,10 +312,10 @@ export default function Landing() {
                           <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
                         </linearGradient>
                       </defs>
-                      <path d="M0,50 L66,42 L133,28 L200,14" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M0,50 L66,42 L133,28 L200,14 L200,60 L0,60 Z" fill="url(#chartGrad)" />
+                      <path d="M0,48 L66,36 L133,44 L200,16" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M0,48 L66,36 L133,44 L200,16 L200,60 L0,60 Z" fill="url(#chartGrad)" />
                     </svg>
-                    {[[0,50],[66,42],[133,28],[200,14]].map(([x,y],i) => (
+                    {[[0,48],[66,36],[133,44],[200,16]].map(([x,y],i) => (
                       <div
                         key={i}
                         className="absolute w-2 h-2 rounded-full bg-primary -translate-x-1/2 -translate-y-1/2"
