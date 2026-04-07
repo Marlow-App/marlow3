@@ -2,7 +2,10 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { pinyin } from "pinyin-pro";
-import { Star, Volume2, BookOpen } from "lucide-react";
+import { Star, Volume2, BookOpen, Mic2, Loader2, X } from "lucide-react";
+import { AudioRecorder } from "@/components/AudioRecorder";
+import { useUpload } from "@/hooks/use-upload";
+import { useCreateRecording } from "@/hooks/use-recordings";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { getScoreTextColor, getScoreBgColor } from "@/lib/scoreColor";
@@ -175,6 +178,26 @@ export function ErrorDetailDialog({
   const savedItem = error ? practiceList.find(i => i.errorId === error.id) : undefined;
   const isInList = !!savedItem;
 
+  const [activeRecordWord, setActiveRecordWord] = useState<string | null>(null);
+  const { uploadFile, isUploading } = useUpload();
+  const createRecording = useCreateRecording();
+
+  const handleRecordingComplete = async (file: File) => {
+    if (!activeRecordWord) return;
+    try {
+      const uploadRes = await uploadFile(file);
+      if (!uploadRes) throw new Error("Upload failed");
+      await createRecording.mutateAsync({
+        audioUrl: uploadRes.objectPath,
+        sentenceText: activeRecordWord,
+      });
+      toast({ title: "Submitted!", description: "Recording submitted for AI feedback." });
+      setActiveRecordWord(null);
+    } catch (err) {
+      toast({ title: "Error", description: err instanceof Error ? err.message : "Failed to submit.", variant: "destructive" });
+    }
+  };
+
   const addToList = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/practice-list", {
@@ -229,7 +252,7 @@ export function ErrorDetailDialog({
   const sectionBody = "text-base text-foreground/80 whitespace-pre-wrap leading-relaxed";
 
   return (
-    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+    <Dialog open={open} onOpenChange={v => { if (!v) { setActiveRecordWord(null); onClose(); } }}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" data-testid="error-detail-dialog">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-2">
@@ -283,23 +306,61 @@ export function ErrorDetailDialog({
               <div className="flex flex-wrap gap-3">
                 {error.practiceWords.map((word, i) => {
                   const py = pinyin(word, { toneType: "symbol", type: "string" });
+                  const isActive = activeRecordWord === word;
                   return (
-                    <div key={i} className="flex flex-col items-center gap-0.5 bg-muted/30 rounded-lg px-3 py-2 min-w-[56px]">
+                    <div key={i} className={`flex flex-col items-center gap-0.5 rounded-lg px-3 py-2 min-w-[56px] transition-colors ${isActive ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/30"}`}>
                       <span className="text-xs text-muted-foreground font-medium tracking-wide">{py}</span>
                       <span className="text-xl font-bold leading-tight">{word}</span>
-                      <button
-                        type="button"
-                        onClick={() => speakWord(word)}
-                        className="mt-0.5 text-muted-foreground hover:text-primary transition-colors"
-                        aria-label={`Pronounce ${word}`}
-                        data-testid={`speak-word-${i}`}
-                      >
-                        <Volume2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => speakWord(word)}
+                          className="text-muted-foreground hover:text-primary transition-colors"
+                          aria-label={`Pronounce ${word}`}
+                          data-testid={`speak-word-${i}`}
+                        >
+                          <Volume2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveRecordWord(isActive ? null : word)}
+                          className={`transition-colors ${isActive ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                          aria-label={`Record ${word}`}
+                          data-testid={`record-word-${i}`}
+                        >
+                          <Mic2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
               </div>
+
+              {activeRecordWord && (
+                <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4" data-testid="practice-inline-recorder">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-widest text-primary mb-0.5">Recording</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-bold">{activeRecordWord}</span>
+                        <span className="text-sm text-muted-foreground">{pinyin(activeRecordWord, { toneType: "symbol", type: "string" })}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveRecordWord(null)}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Close recorder"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <AudioRecorder
+                    onRecordingComplete={handleRecordingComplete}
+                    isUploading={isUploading || createRecording.isPending}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
