@@ -312,10 +312,10 @@ export default function Landing() {
                           <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
                         </linearGradient>
                       </defs>
-                      <path d="M0,50 L33,43 L66,34 L100,40 L133,28 L166,19 L200,12" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M0,50 L33,43 L66,34 L100,40 L133,28 L166,19 L200,12 L200,60 L0,60 Z" fill="url(#chartGrad)" />
+                      <path d="M0,50 L66,42 L133,28 L200,14" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M0,50 L66,42 L133,28 L200,14 L200,60 L0,60 Z" fill="url(#chartGrad)" />
                     </svg>
-                    {[[0,50],[33,43],[66,34],[100,40],[133,28],[166,19],[200,12]].map(([x,y],i) => (
+                    {[[0,50],[66,42],[133,28],[200,14]].map(([x,y],i) => (
                       <div
                         key={i}
                         className="absolute w-2 h-2 rounded-full bg-primary -translate-x-1/2 -translate-y-1/2"
@@ -323,7 +323,7 @@ export default function Landing() {
                       />
                     ))}
                     <div className="absolute bottom-0 left-0 right-0 flex justify-between px-0.5">
-                      {["Jan","Feb","Mar","Apr","May","Jun","Jul"].map(m => (
+                      {["Jan","Apr","Jul","Oct"].map(m => (
                         <span key={m} className="text-[9px] text-muted-foreground">{m}</span>
                       ))}
                     </div>
