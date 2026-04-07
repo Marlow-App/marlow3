@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { pinyin } from "pinyin-pro";
@@ -13,6 +13,7 @@ import { getNeutralPatches } from "@/lib/neutralTones";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useRecording } from "@/hooks/use-recordings";
+import { usePhraseAudio } from "@/hooks/use-phrase-audio";
 import type { CharacterRating, PronunciationError, SpeechSuperScores } from "@shared/schema";
 import { UpsellModal } from "@/components/UpsellModal";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -158,12 +159,14 @@ export function ErrorDetailDialog({
   onClose,
   character,
   recordingId: recordingIdProp,
+  defaultRecordWord,
 }: {
   error: PronunciationError | null;
   open: boolean;
   onClose: () => void;
   character?: string;
   recordingId?: number;
+  defaultRecordWord?: string;
 }) {
   const { toast } = useToast();
   const params = useParams<{ id: string }>();
@@ -181,6 +184,15 @@ export function ErrorDetailDialog({
   const [activeRecordWord, setActiveRecordWord] = useState<string | null>(null);
   const { uploadFile, isUploading } = useUpload();
   const createRecording = useCreateRecording();
+  const { playPhrase, isLoading: isPhraseLoading } = usePhraseAudio();
+
+  useEffect(() => {
+    if (open && defaultRecordWord) {
+      setActiveRecordWord(defaultRecordWord);
+    } else if (!open) {
+      setActiveRecordWord(null);
+    }
+  }, [open, defaultRecordWord]);
 
   const handleRecordingComplete = async (file: File) => {
     if (!activeRecordWord) return;
@@ -238,15 +250,6 @@ export function ErrorDetailDialog({
       : error.category === "initial"
       ? "bg-violet-100 dark:bg-violet-950 text-violet-700 dark:text-violet-300"
       : "bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300";
-
-  const speakWord = (word: string) => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(word);
-    utt.lang = "zh-CN";
-    utt.rate = 0.85;
-    window.speechSynthesis.speak(utt);
-  };
 
   const sectionLabel = "text-[12px] font-black uppercase tracking-widest text-primary mb-1.5";
   const sectionBody = "text-base text-foreground/80 whitespace-pre-wrap leading-relaxed";
@@ -314,12 +317,12 @@ export function ErrorDetailDialog({
                       <div className="flex items-center gap-2 mt-0.5">
                         <button
                           type="button"
-                          onClick={() => speakWord(word)}
+                          onClick={() => playPhrase(word)}
                           className="text-muted-foreground hover:text-primary transition-colors"
                           aria-label={`Pronounce ${word}`}
                           data-testid={`speak-word-${i}`}
                         >
-                          <Volume2 className="w-3.5 h-3.5" />
+                          {isPhraseLoading(word) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Volume2 className="w-3.5 h-3.5" />}
                         </button>
                         <button
                           type="button"

@@ -268,6 +268,7 @@ export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [practiceDialogItem, setPracticeDialogItem] = useState<PracticeItem | null>(null);
+  const [practiceDialogRecordWord, setPracticeDialogRecordWord] = useState<string | undefined>(undefined);
   const { toast } = useToast();
   const { uploadFile, isUploading } = useUpload();
   const createRecording = useCreateRecording();
@@ -498,22 +499,35 @@ export default function Home() {
               <Card className="border-border/60" data-testid="practice-drill-card">
                 <CardContent className="p-5">
                   <div className="flex items-start gap-5">
-                    <button
-                      type="button"
-                      onClick={() => playPhrase(practiceWord)}
-                      disabled={anyLoading}
-                      className="flex flex-col items-center shrink-0 bg-muted/40 hover:bg-primary/10 rounded-2xl px-4 py-3 min-w-[72px] transition-colors group disabled:opacity-50"
-                      aria-label={`Pronounce ${practiceWord}`}
-                      data-testid="practice-drill-speak-btn"
-                    >
+                    <div className="flex flex-col items-center shrink-0 bg-muted/40 rounded-2xl px-4 py-3 min-w-[72px]">
                       <span className="text-xs text-muted-foreground font-medium mb-0.5">{wordPinyin}</span>
-                      <span className="text-3xl font-bold leading-tight group-hover:text-primary transition-colors">{practiceWord}</span>
-                      {isPhraseLoading(practiceWord) ? (
-                        <Loader2 className="w-4 h-4 text-primary mt-1.5 animate-spin" />
-                      ) : (
-                        <Volume2 className="w-4 h-4 text-muted-foreground group-hover:text-primary mt-1.5 transition-colors" />
-                      )}
-                    </button>
+                      <span className="text-3xl font-bold leading-tight">{practiceWord}</span>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <button
+                          type="button"
+                          onClick={() => playPhrase(practiceWord)}
+                          disabled={anyLoading}
+                          className="text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                          aria-label={`Pronounce ${practiceWord}`}
+                          data-testid="practice-drill-speak-btn"
+                        >
+                          {isPhraseLoading(practiceWord) ? (
+                            <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                          ) : (
+                            <Volume2 className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setPracticeDialogRecordWord(practiceWord); setPracticeDialogItem(item); }}
+                          className="text-muted-foreground hover:text-primary transition-colors"
+                          aria-label={`Record ${practiceWord}`}
+                          data-testid="practice-drill-record-btn"
+                        >
+                          <Mic2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5">
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${catColor}`}>{catLabel}</span>
@@ -599,9 +613,10 @@ export default function Home() {
       <ErrorDetailDialog
         error={practiceDialogItem?.error ?? null}
         open={!!practiceDialogItem}
-        onClose={() => setPracticeDialogItem(null)}
+        onClose={() => { setPracticeDialogItem(null); setPracticeDialogRecordWord(undefined); }}
         character={practiceDialogItem?.character ?? undefined}
         recordingId={practiceDialogItem?.recordingId ?? undefined}
+        defaultRecordWord={practiceDialogRecordWord}
       />
     </Layout>
   );
