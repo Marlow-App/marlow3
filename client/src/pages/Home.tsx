@@ -458,7 +458,7 @@ export default function Home() {
 
         {/* Recording Drawer */}
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <DrawerContent className="md:left-1/4 md:right-1/4 md:rounded-[10px]" data-testid="recording-drawer">
+          <DrawerContent className="md:left-[calc(25%+8rem)] md:right-[calc(25%-8rem)] md:rounded-[10px]" data-testid="recording-drawer">
             <DrawerHeader className="text-center px-8 pt-6">
               <DrawerTitle>Record Daily Challenge</DrawerTitle>
               <DrawerDescription>{dailyChallenge.english}</DrawerDescription>
