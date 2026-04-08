@@ -103,7 +103,8 @@ const INITIAL_PHONE_TO_ERROR: Record<string, string> = {
 const FINAL_PHONE_TO_ERROR: Record<string, string> = {
   v:   "F001", // iFlytek uses 'v' for ü
   e:   "F002", // e → English uh
-  eng: "F003", ing: "F003", // -eng/-ing velar nasal
+  eng: "F003", // -eng velar nasal (vs -en)
+  ing: "F015", // -ing velar nasal (vs -in)
   ian: "F004", // -ian glide
   uo:  "F005", // -uo diphthong
   ong: "F006", // -ong velar nasal

@@ -310,7 +310,7 @@ const SEED_ERRORS = [
   {
     id: "F003",
     category: "final" as const,
-    commonError: "-eng pronounced like -en",
+    commonError: "-eng nasal ending dropped or replaced with -en",
     example: "冷 (lěng)",
     scientificExplanation: "The final -eng /əŋ/ ends with a velar nasal ŋ, not n.",
     simpleExplanation: "The sound should end in the back of the mouth, not the front.",
@@ -449,6 +449,19 @@ const SEED_ERRORS = [
     howToFix: "Start by saying \"ee\" (as in \"see\"). Hold that tongue position.\n\nNow round your lips while keeping your tongue where it is.\n\nThat's ü. Now add \"eh\" (open vowel) after it.\n\nü + eh = üe.",
     minimalPairs: "月 / 喂, 学 / 说, 雪 / 说",
     practiceWords: ["月", "学", "雪", "缺"],
+    isCustom: false,
+  },
+
+  {
+    id: "F015",
+    category: "final" as const,
+    commonError: "-ing nasal ending dropped or replaced with -in",
+    example: "星 (xīng)",
+    scientificExplanation: "The final -ing /iŋ/ ends with a velar nasal ŋ (tongue back rises to soft palate).\n\n-in /in/ ends with an alveolar nasal n (tongue tip touches the ridge behind the upper teeth).\n\nLearners often substitute the more familiar alveolar n, closing the syllable at the front of the mouth instead of the back.",
+    simpleExplanation: "The ending should happen at the back of your mouth — not the front.\n\n-in ends with your tongue tip touching behind your upper teeth (like English \"in\").\n-ing ends with the back of your tongue lifting up toward your throat (like English \"sing\").",
+    howToFix: "Say the English word \"sing\" and hold the final nasal sound — that's ŋ.\n\nNow replace the vowel: si... + ŋ = xīng.\n\nFeel the back of your tongue making contact, not the front.\n\nDrill minimal pairs: xīn / xīng, lín / líng, jīn / jīng.",
+    minimalPairs: "心 / 星, 林 / 灵, 金 / 京, 亲 / 青",
+    practiceWords: ["星", "心", "林", "金"],
     isCustom: false,
   },
 
