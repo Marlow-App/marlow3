@@ -71,6 +71,10 @@ export async function sendSupportEmail({
   message: string;
   reviewerEmail: string;
 }): Promise<void> {
+  const resend = getResend();
+  if (!resend) {
+    throw new Error("RESEND_API_KEY is not configured — cannot send support email");
+  }
   const senderName = [sender.firstName, sender.lastName].filter(Boolean).join(" ") || "Unknown user";
   const senderEmail = sender.email ?? "No email on file";
   const subject = `[Marlow Support] ${category} from ${senderName}`;
@@ -93,7 +97,7 @@ export async function sendSupportEmail({
       </p>
     </div>
   `;
-  await sendEmail({ to: reviewerEmail, subject, html });
+  await resend.emails.send({ from: FROM_ADDRESS, to: reviewerEmail, subject, html });
 }
 
 export async function sendRecordingNotification(

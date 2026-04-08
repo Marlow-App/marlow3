@@ -960,10 +960,11 @@ export async function registerRoutes(
 
       const reviewers = await storage.getAllReviewersWithEmail();
       if (reviewers.length === 0) {
-        console.warn("[support] No reviewer accounts found to receive support email");
+        console.warn("[support] No reviewer accounts with email found");
+        return res.status(503).json({ message: "No support recipients are configured. Please try again later." });
       }
 
-      await Promise.allSettled(
+      const results = await Promise.allSettled(
         reviewers.map(reviewer =>
           sendSupportEmail({
             sender,
@@ -973,6 +974,13 @@ export async function registerRoutes(
           })
         )
       );
+
+      const anySucceeded = results.some(r => r.status === "fulfilled");
+      if (!anySucceeded) {
+        const firstErr = (results[0] as PromiseRejectedResult).reason;
+        console.error("[support] All support email sends failed:", firstErr);
+        return res.status(500).json({ message: "Failed to send your message. Please try again." });
+      }
 
       res.json({ success: true });
     } catch (error) {
