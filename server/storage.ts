@@ -7,6 +7,7 @@ import {
   creditTransactions,
   pronunciationErrors,
   practiceListItems,
+  supportTickets,
   type InsertRecording,
   type InsertFeedback,
   type InsertFeedbackWithReviewer,
@@ -15,6 +16,7 @@ import {
   type User,
   type PronunciationError,
   type PracticeListItem,
+  type SupportTicket,
 } from "@shared/schema";
 import { eq, desc, and, sql, gte, count } from "drizzle-orm";
 import { authStorage } from "./replit_integrations/auth/storage";
@@ -54,6 +56,9 @@ export interface IStorage {
   isPracticeListItem(userId: string, errorId: string): Promise<boolean>;
   getReviewersWithEmailNotifications(): Promise<User[]>;
   getAllReviewersWithEmail(): Promise<User[]>;
+  createSupportTicket(userId: string, category: string, message: string): Promise<SupportTicket>;
+  listSupportTickets(): Promise<(SupportTicket & { user: User | null; resolvedBy: User | null })[]>;
+  resolveSupportTicket(id: number, resolvedById: string): Promise<SupportTicket | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -447,6 +452,38 @@ export class DatabaseStorage implements IStorage {
           sql`${users.email} IS NOT NULL`
         )
       );
+  }
+
+  async createSupportTicket(userId: string, category: string, message: string): Promise<SupportTicket> {
+    const [ticket] = await db
+      .insert(supportTickets)
+      .values({ userId, category, message, status: "open" })
+      .returning();
+    return ticket;
+  }
+
+  async listSupportTickets(): Promise<(SupportTicket & { user: User | null; resolvedBy: User | null })[]> {
+    const rows = await db
+      .select()
+      .from(supportTickets)
+      .orderBy(desc(supportTickets.createdAt));
+
+    return Promise.all(
+      rows.map(async (ticket) => {
+        const user = ticket.userId ? (await this.getUser(ticket.userId)) ?? null : null;
+        const resolvedBy = ticket.resolvedById ? (await this.getUser(ticket.resolvedById)) ?? null : null;
+        return { ...ticket, user, resolvedBy };
+      })
+    );
+  }
+
+  async resolveSupportTicket(id: number, resolvedById: string): Promise<SupportTicket | undefined> {
+    const [updated] = await db
+      .update(supportTickets)
+      .set({ status: "completed", resolvedById, resolvedAt: new Date() })
+      .where(eq(supportTickets.id, id))
+      .returning();
+    return updated;
   }
 }
 

@@ -104,6 +104,21 @@ export const creditTransactions = pgTable("credit_transactions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const supportTickets = pgTable("support_tickets", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  category: text("category").notNull(),
+  message: text("message").notNull(),
+  status: text("status", { enum: ["open", "completed"] }).default("open").notNull(),
+  resolvedById: varchar("resolved_by_id").references(() => users.id),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type SupportTicket = typeof supportTickets.$inferSelect;
+export const insertSupportTicketSchema = createInsertSchema(supportTickets).omit({ id: true, userId: true, status: true, resolvedById: true, resolvedAt: true, createdAt: true });
+export type InsertSupportTicket = z.infer<typeof insertSupportTicketSchema>;
+
 // Relations
 export const recordingsRelations = relations(recordings, ({ one, many }) => ({
   user: one(users, {

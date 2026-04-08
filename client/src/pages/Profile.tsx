@@ -142,7 +142,7 @@ export default function Profile() {
     onSuccess: () => {
       setSupportCategory("");
       setSupportMessage("");
-      toast({ title: "Message sent", description: "We'll get back to you as soon as we can." });
+      toast({ title: "Message sent", description: "Your issue has been logged as a support ticket. We'll get back to you as soon as we can." });
     },
     onError: () => {
       toast({ title: "Failed to send message", description: "Please try again.", variant: "destructive" });

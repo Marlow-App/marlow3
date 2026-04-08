@@ -958,33 +958,64 @@ export async function registerRoutes(
         return res.status(404).json({ message: "User not found" });
       }
 
-      const reviewers = await storage.getAllReviewersWithEmail();
-      if (reviewers.length === 0) {
-        console.warn("[support] No reviewer accounts with email found");
-        return res.status(503).json({ message: "No support recipients are configured. Please try again later." });
-      }
+      // Persist ticket first — this is the source of truth
+      const ticket = await storage.createSupportTicket(userId, parsed.data.category, parsed.data.message);
 
-      const results = await Promise.allSettled(
-        reviewers.map(reviewer =>
-          sendSupportEmail({
-            sender,
-            category: parsed.data.category,
-            message: parsed.data.message,
-            reviewerEmail: reviewer.email!,
-          })
-        )
-      );
+      // Send email notifications to reviewers (fire-and-forget; ticket is already saved)
+      Promise.resolve().then(async () => {
+        try {
+          const reviewers = await storage.getAllReviewersWithEmail();
+          await Promise.allSettled(
+            reviewers.map(reviewer =>
+              sendSupportEmail({
+                sender: sender!,
+                category: parsed.data.category,
+                message: parsed.data.message,
+                reviewerEmail: reviewer.email!,
+              })
+            )
+          );
+        } catch (err) {
+          console.error("[support] Error sending support email notifications:", err);
+        }
+      });
 
-      const anySucceeded = results.some(r => r.status === "fulfilled");
-      if (!anySucceeded) {
-        const firstErr = (results[0] as PromiseRejectedResult).reason;
-        console.error("[support] All support email sends failed:", firstErr);
-        return res.status(500).json({ message: "Failed to send your message. Please try again." });
-      }
-
-      res.json({ success: true });
+      res.json({ success: true, ticketId: ticket.id });
     } catch (error) {
-      console.error("Error sending support message:", error);
+      console.error("Error creating support ticket:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/support/tickets", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const dbUser = await storage.getUser(userId);
+      if (dbUser?.role !== "reviewer") {
+        return res.status(403).json({ message: "Reviewers only" });
+      }
+      const tickets = await storage.listSupportTickets();
+      res.json(tickets);
+    } catch (error) {
+      console.error("Error listing support tickets:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/support/tickets/:id/resolve", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const dbUser = await storage.getUser(userId);
+      if (dbUser?.role !== "reviewer") {
+        return res.status(403).json({ message: "Reviewers only" });
+      }
+      const ticketId = Number(req.params.id);
+      if (!ticketId) return res.status(400).json({ message: "Invalid ticket ID" });
+      const updated = await storage.resolveSupportTicket(ticketId, userId);
+      if (!updated) return res.status(404).json({ message: "Ticket not found" });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error resolving support ticket:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
