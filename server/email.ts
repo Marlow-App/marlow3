@@ -60,6 +60,42 @@ export async function sendFeedbackNotification(
   await sendEmail({ to: learner.email, subject, html });
 }
 
+export async function sendSupportEmail({
+  sender,
+  category,
+  message,
+  reviewerEmail,
+}: {
+  sender: User;
+  category: string;
+  message: string;
+  reviewerEmail: string;
+}): Promise<void> {
+  const senderName = [sender.firstName, sender.lastName].filter(Boolean).join(" ") || "Unknown user";
+  const senderEmail = sender.email ?? "No email on file";
+  const subject = `[Marlow Support] ${category} from ${senderName}`;
+  const html = `
+    <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto; color: #1a1a1a;">
+      <h2 style="color: #c0392b;">New support message</h2>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <tr>
+          <td style="padding: 6px 12px 6px 0; font-weight: 600; white-space: nowrap; vertical-align: top;">From</td>
+          <td style="padding: 6px 0;">${senderName} &lt;${senderEmail}&gt;</td>
+        </tr>
+        <tr>
+          <td style="padding: 6px 12px 6px 0; font-weight: 600; white-space: nowrap; vertical-align: top;">Category</td>
+          <td style="padding: 6px 0;">${category}</td>
+        </tr>
+      </table>
+      <div style="background: #f5f5f5; border-radius: 8px; padding: 16px 20px; white-space: pre-wrap; font-size: 15px; line-height: 1.6;">${message}</div>
+      <p style="margin-top: 32px; font-size: 12px; color: #888;">
+        Sent via the Marlow in-app support form. Reply directly to the user's email address above.
+      </p>
+    </div>
+  `;
+  await sendEmail({ to: reviewerEmail, subject, html });
+}
+
 export async function sendRecordingNotification(
   reviewer: User,
   recording: Recording,

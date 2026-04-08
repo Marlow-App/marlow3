@@ -10,11 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useMutation } from "@tanstack/react-query";
+import { Textarea } from "@/components/ui/textarea";
 import { useUpload } from "@/hooks/use-upload";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Loader2, Zap, Shield, ExternalLink } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, Zap, Shield, ExternalLink, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NATIVE_LANGUAGES, FOCUS_AREA_OPTIONS } from "@/pages/Onboarding";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -86,6 +88,8 @@ export default function Profile() {
   const [cancelLoading, setCancelLoading] = useState(false);
   const [reactivateLoading, setReactivateLoading] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState<boolean>((user as any)?.emailNotifications ?? false);
+  const [supportCategory, setSupportCategory] = useState<string>("");
+  const [supportMessage, setSupportMessage] = useState<string>("");
   const chineseLevelRef = useRef<HTMLDivElement>(null);
   const [highlightLevel, setHighlightLevel] = useState(false);
 
@@ -131,6 +135,19 @@ export default function Profile() {
       toast({ title: "Failed to update email notification setting", variant: "destructive" });
     }
   }
+
+  const sendSupportMutation = useMutation({
+    mutationFn: (data: { category: string; message: string }) =>
+      apiRequest("POST", "/api/support/contact", data),
+    onSuccess: () => {
+      setSupportCategory("");
+      setSupportMessage("");
+      toast({ title: "Message sent", description: "We'll get back to you as soon as we can." });
+    },
+    onError: () => {
+      toast({ title: "Failed to send message", description: "Please try again.", variant: "destructive" });
+    },
+  });
 
   const isDirty = user ? (
     formData.firstName !== (user.firstName || "") ||
@@ -550,6 +567,54 @@ export default function Profile() {
                     data-testid="switch-email-notifications"
                   />
                 </div>
+              </CardContent>
+            </Card>
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Contact Support</CardTitle>
+                <CardDescription>Have a question or run into a problem? Send us a message and we'll get back to you.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="support-category">Category</Label>
+                  <Select value={supportCategory} onValueChange={setSupportCategory}>
+                    <SelectTrigger id="support-category" data-testid="select-support-category">
+                      <SelectValue placeholder="What is this about?" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Technical Issue">Technical Issue</SelectItem>
+                      <SelectItem value="Bug Report">Bug Report</SelectItem>
+                      <SelectItem value="Feature Request">Feature Request</SelectItem>
+                      <SelectItem value="Billing Question">Billing Question</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="support-message">Message</Label>
+                  <Textarea
+                    id="support-message"
+                    data-testid="textarea-support-message"
+                    placeholder="Describe your issue or question in detail..."
+                    className="min-h-[120px] resize-none"
+                    value={supportMessage}
+                    onChange={e => setSupportMessage(e.target.value)}
+                    maxLength={2000}
+                  />
+                  <p className="text-xs text-muted-foreground text-right">{supportMessage.length}/2000</p>
+                </div>
+                <Button
+                  data-testid="button-send-support"
+                  onClick={() => sendSupportMutation.mutate({ category: supportCategory, message: supportMessage })}
+                  disabled={!supportCategory || supportMessage.trim().length < 10 || sendSupportMutation.isPending}
+                  className="w-full sm:w-auto"
+                >
+                  {sendSupportMutation.isPending ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending…</>
+                  ) : (
+                    <><Send className="mr-2 h-4 w-4" />Send Message</>
+                  )}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>

@@ -53,6 +53,7 @@ export interface IStorage {
   removeFromPracticeList(id: number, userId: string): Promise<boolean>;
   isPracticeListItem(userId: string, errorId: string): Promise<boolean>;
   getReviewersWithEmailNotifications(): Promise<User[]>;
+  getAllReviewersWithEmail(): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -431,6 +432,18 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(users.role, "reviewer"),
           eq(users.emailNotifications, true),
+          sql`${users.email} IS NOT NULL`
+        )
+      );
+  }
+
+  async getAllReviewersWithEmail(): Promise<User[]> {
+    return db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.role, "reviewer"),
           sql`${users.email} IS NOT NULL`
         )
       );
