@@ -461,7 +461,7 @@ const SEED_ERRORS = [
     simpleExplanation: "The ending should happen at the back of your mouth — not the front.\n\n-in ends with your tongue tip touching behind your upper teeth (like English \"in\").\n-ing ends with the back of your tongue lifting up toward your throat (like English \"sing\").",
     howToFix: "Say the English word \"sing\" and hold the final nasal sound — that's ŋ.\n\nNow replace the vowel: si... + ŋ = xīng.\n\nFeel the back of your tongue making contact, not the front.\n\nDrill minimal pairs: xīn / xīng, lín / líng, jīn / jīng.",
     minimalPairs: "心 / 星, 林 / 灵, 金 / 京, 亲 / 青",
-    practiceWords: ["星", "心", "林", "金"],
+    practiceWords: ["心", "信", "林", "金"],
     isCustom: false,
   },
 
