@@ -16,10 +16,11 @@ import { ChevronLeft, ChevronDown, ChevronUp, MessageSquare, Mic, GraduationCap,
 import { getPhraseEnglish } from "@/data/phrases";
 import { countChineseChars } from "@shared/credits";
 import {
-  TONE_COLORS, PinyinChar, getCharPinyin, FluencyDisplay,
-  useAllErrors, PracticeListItem, ScoreBar,
+  FluencyDisplay, ScoreBar,
   ErrorDetailDialog, AIErrorRow,
 } from "@/components/AIFeedbackDisplay";
+import { useAllErrors } from "@/hooks/use-errors";
+import { TONE_COLORS, type PinyinChar, getCharPinyin, type PracticeListItem } from "@/lib/pinyin-utils";
 import { AIFeedbackRatings } from "@/components/RecordingFeedback";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -785,7 +786,7 @@ function EditableFeedbackCard({
 export default function RecordingDetail() {
   const { id } = useParams<{ id: string }>();
   const recordingId = parseInt(id || "0");
-  const { data: recording, isLoading: loadingRecording } = useRecording(recordingId);
+  const { data: recording, isLoading: loadingRecording } = useRecording(recordingId, { pollUntilAiFeedback: true });
   const { data: user, isLoading: loadingUser } = useQuery<SharedUser>({ queryKey: ["/api/auth/user"] });
   const { data: childRecordings } = useChildRecordings(recordingId);
   const { data: parentRecording } = useRecording(recording?.parentRecordingId ?? 0);
@@ -1327,18 +1328,25 @@ export default function RecordingDetail() {
                 )
               ) : (
                 <div className="text-center py-8 space-y-4 bg-muted/20 rounded-xl">
-                  <p className="text-muted-foreground italic">No feedback provided yet.</p>
-                  {isOwner && !hasAiFeedback && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => aiReviewMutation.mutate()}
-                      disabled={aiReviewMutation.isPending}
-                      data-testid="get-ai-review-btn"
-                    >
-                      <Bot className="w-4 h-4 mr-2" />
-                      {aiReviewMutation.isPending ? "Scoring…" : "Get AI Review"}
-                    </Button>
+                  {isOwner && !hasAiFeedback ? (
+                    <>
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                        <Bot className="w-4 h-4 animate-pulse" />
+                        <p className="italic text-sm">AI is scoring your recording…</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => aiReviewMutation.mutate()}
+                        disabled={aiReviewMutation.isPending}
+                        className="text-xs text-muted-foreground"
+                        data-testid="get-ai-review-btn"
+                      >
+                        {aiReviewMutation.isPending ? "Scoring…" : "Not loading? Tap to retry"}
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground italic">No feedback provided yet.</p>
                   )}
                 </div>
               )}

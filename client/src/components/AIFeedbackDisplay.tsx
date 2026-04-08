@@ -9,8 +9,9 @@ import { useCreateRecording } from "@/hooks/use-recordings";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { getScoreTextColor, getScoreBgColor } from "@/lib/scoreColor";
-import { getNeutralPatches } from "@/lib/neutralTones";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { TONE_COLORS, type PinyinChar, type PracticeListItem, getCharPinyin } from "@/lib/pinyin-utils";
+import { useAllErrors } from "@/hooks/use-errors";
 import { useToast } from "@/hooks/use-toast";
 import { useRecording } from "@/hooks/use-recordings";
 import { usePhraseAudio } from "@/hooks/use-phrase-audio";
@@ -33,61 +34,6 @@ function incrementPopupCount(): void {
 
 // ─── Shared types ──────────────────────────────────────────────────────────
 
-export const TONE_COLORS: Record<number, string> = {
-  1: "text-red-600 dark:text-red-400",
-  2: "text-orange-500 dark:text-orange-400",
-  3: "text-green-600 dark:text-green-400",
-  4: "text-blue-500 dark:text-blue-400",
-  0: "text-gray-400 dark:text-gray-500",
-};
-
-export interface PinyinChar {
-  char: string;
-  py: string;
-  tone: number;
-}
-
-export type PracticeListItem = { id: number; errorId: string; character?: string | null };
-
-// ─── Shared helpers ────────────────────────────────────────────────────────
-
-export function getCharPinyin(text: string): PinyinChar[] {
-  const chars = Array.from(text);
-  const isChinese = (ch: string) => /[\u4e00-\u9fff\u3400-\u4dbf]/.test(ch);
-
-  // Run pinyin-pro only on the Chinese characters so there's no index
-  // misalignment when the text contains punctuation like ，or 。
-  const chineseOnly = chars.filter(isChinese).join("");
-  const pinyinArr = pinyin(chineseOnly, { toneType: "symbol", type: "array" });
-  const toneArr = pinyin(chineseOnly, { toneType: "num", type: "array" });
-
-  const result: PinyinChar[] = [];
-  let pIdx = 0;
-  for (const ch of chars) {
-    if (isChinese(ch)) {
-      const toneStr = toneArr[pIdx] || "";
-      const toneNum = parseInt(toneStr.slice(-1)) || 0;
-      result.push({ char: ch, py: pinyinArr[pIdx] || "", tone: toneNum });
-      pIdx++;
-    } else {
-      result.push({ char: ch, py: "", tone: 0 });
-    }
-  }
-  const chineseEntries = result.filter(p => p.py !== "");
-  const chineseText = chineseEntries.map(p => p.char).join("");
-  const patches = getNeutralPatches(chineseText);
-  patches.forEach((py, idx) => {
-    if (chineseEntries[idx]) {
-      chineseEntries[idx].py = py;
-      chineseEntries[idx].tone = 0;
-    }
-  });
-  return result;
-}
-
-export function useAllErrors() {
-  return useQuery<PronunciationError[]>({ queryKey: ["/api/errors"], retry: 3, staleTime: 5 * 60 * 1000 });
-}
 
 // ─── ScoreBar ──────────────────────────────────────────────────────────────
 
@@ -262,7 +208,7 @@ export function ErrorDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) { setActiveRecordWord(null); onClose(); } }}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" data-testid="error-detail-dialog">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" aria-describedby={undefined} data-testid="error-detail-dialog">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-2">
             <span className={`text-xs font-bold px-2 py-0.5 rounded ${categoryColor}`}>{categoryLabel}</span>

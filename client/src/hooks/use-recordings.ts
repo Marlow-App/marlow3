@@ -2,10 +2,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import { type InsertRecording, type Recording } from "@shared/schema";
 
-// Helper to validate and parse response
-// In a real app we'd use the Zod schema from api.recordings.list.responses[200]
-// but for now we'll trust the backend response shape based on the manifest.
-
 export function useAllRecordings() {
   return useQuery({
     queryKey: ["/api/all-recordings"],
@@ -39,7 +35,7 @@ export function usePendingRecordings() {
   });
 }
 
-export function useRecording(id: number) {
+export function useRecording(id: number, options?: { pollUntilAiFeedback?: boolean }) {
   return useQuery({
     queryKey: [api.recordings.get.path, id],
     queryFn: async () => {
@@ -49,6 +45,13 @@ export function useRecording(id: number) {
       return await res.json() as Recording & { user: any, feedback: any[] };
     },
     enabled: !!id,
+    refetchInterval: options?.pollUntilAiFeedback
+      ? (query) => {
+          const data = query.state.data as (Recording & { feedback: any[] }) | undefined;
+          const hasAi = data?.feedback?.some((f: any) => f.isAiFeedback);
+          return hasAi ? false : 3000;
+        }
+      : false,
   });
 }
 

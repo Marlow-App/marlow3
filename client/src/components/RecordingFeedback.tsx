@@ -6,7 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { getScoreTextColor } from "@/lib/scoreColor";
 import { api, buildUrl } from "@shared/routes";
-import { useAllErrors, AICharacterRatingDisplay, getCharPinyin, PinyinChar } from "@/components/AIFeedbackDisplay";
+import { AICharacterRatingDisplay } from "@/components/AIFeedbackDisplay";
+import { useAllErrors } from "@/hooks/use-errors";
+import { getCharPinyin, type PinyinChar } from "@/lib/pinyin-utils";
 import { SandhiPhraseDisplay } from "@/components/SandhiPhraseDisplay";
 import type { CharacterRating, SpeechSuperScores } from "@shared/schema";
 
