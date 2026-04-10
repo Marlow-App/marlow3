@@ -22,9 +22,10 @@ export const NATIVE_LANGUAGES = [
   "Dutch", "English", "French", "German", "Greek",
   "Gujarati", "Hindi", "Indonesian", "Italian", "Japanese",
   "Javanese", "Kannada", "Korean", "Malay", "Marathi",
-  "Other", "Polish", "Portuguese", "Punjabi", "Romanian",
+  "Polish", "Portuguese", "Punjabi", "Romanian",
   "Russian", "Spanish", "Tamil", "Telugu", "Thai",
   "Turkish", "Ukrainian", "Urdu", "Vietnamese",
+  "OTHER",
 ];
 
 export const FOCUS_AREA_OPTIONS = [
