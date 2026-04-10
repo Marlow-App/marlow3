@@ -21,7 +21,7 @@ import {
 } from "@/components/AIFeedbackDisplay";
 import { useAllErrors } from "@/hooks/use-errors";
 import { TONE_COLORS, type PinyinChar, getCharPinyin, type PracticeListItem } from "@/lib/pinyin-utils";
-import { AIFeedbackRatings } from "@/components/RecordingFeedback";
+import { AIFeedbackRatings, AudioComparison } from "@/components/RecordingFeedback";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -1085,27 +1085,10 @@ export default function RecordingDetail() {
                   </div>
                 </div>
 
-                <div className="bg-muted/30 p-6 rounded-2xl border border-border/50">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Learner Audio</h3>
-                  <audio
-                    key={recording.audioUrl}
-                    controls
-                    className="w-full"
-                    preload="auto"
-                    playsInline
-                    onError={(e: React.SyntheticEvent<HTMLAudioElement, Event>) => {
-                      const target = e.currentTarget;
-                      const error = target.error;
-                      console.error("Audio playback error:", {
-                        code: error?.code,
-                        message: error?.message,
-                      });
-                    }}
-                  >
-                    <source src={recording.audioUrl} />
-                    Your browser does not support the audio element.
-                  </audio>
-                </div>
+                <AudioComparison
+                  learnerAudioUrl={recording.audioUrl}
+                  sentenceText={recording.sentenceText}
+                />
               </CardContent>
             </Card>
             </div>

@@ -59,7 +59,7 @@ function useTtsAudio(sentenceText: string, enabled: boolean) {
 
 // ─── Audio comparison block ───────────────────────────────────────────────────
 
-function AudioComparison({
+export function AudioComparison({
   learnerAudioUrl,
   sentenceText,
 }: {
