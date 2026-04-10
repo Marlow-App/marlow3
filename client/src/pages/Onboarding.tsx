@@ -24,6 +24,7 @@ export const NATIVE_LANGUAGES = [
   "Malay", "Hindi", "Bengali", "Urdu", "Tamil",
   "Arabic", "Turkish", "Javanese", "Telugu", "Marathi",
   "Gujarati", "Kannada", "Punjabi", "Romanian", "Greek",
+  "Chinese (Cantonese)", "Chinese (Other dialect)", "Other",
 ];
 
 export const FOCUS_AREA_OPTIONS = [
