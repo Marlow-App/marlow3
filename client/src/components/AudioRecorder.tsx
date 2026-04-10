@@ -13,12 +13,13 @@ import {
 interface AudioRecorderProps {
   onRecordingComplete: (file: File) => void;
   isUploading?: boolean;
+  referenceAudioUrl?: string;
 }
 
 const MAX_DURATION = 10;
 const MIC_STORAGE_KEY = 'tonecoach-selected-mic';
 
-export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorderProps) {
+export function AudioRecorder({ onRecordingComplete, isUploading, referenceAudioUrl }: AudioRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -217,9 +218,20 @@ export function AudioRecorder({ onRecordingComplete, isUploading }: AudioRecorde
           )
         ) : (
           <div className="flex flex-col items-center gap-4 w-full">
-            <audio src={audioUrl!} controls className="w-full max-w-md h-10 rounded-full" />
-            
-            <div className="flex gap-3 mt-2">
+            <div className="w-full space-y-3">
+              <div className="space-y-1">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-1">Your recording</p>
+                <audio src={audioUrl!} controls className="w-full h-10 rounded-full" data-testid="user-audio-player" />
+              </div>
+              {referenceAudioUrl && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/60 px-1">Reference</p>
+                  <audio src={referenceAudioUrl} controls className="w-full h-10 rounded-full" data-testid="reference-audio-player" />
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3">
               <Button variant="outline" onClick={resetRecording} disabled={isUploading}>
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Redo

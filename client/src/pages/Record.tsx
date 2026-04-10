@@ -16,6 +16,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { countChineseChars, MAX_CHARS } from "@shared/credits";
 import { usePhraseAudio } from "@/hooks/use-phrase-audio";
 import { UpsellModal } from "@/components/UpsellModal";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 function CompactPhraseChip({ phrase, onSelect, isSelected, onPlay, isLoadingPhrase, anyLoading }: {
   phrase: Phrase;
@@ -160,6 +162,17 @@ export default function RecordPage() {
   const typedToneChars = useMemo(() => (!selectedPhrase && text.trim()) ? toToneChars(text.trim()) : [], [text, selectedPhrase]);
   const charCost = countChineseChars(activeText);
   const tooLong = charCost > MAX_CHARS;
+
+  const { data: ttsData } = useQuery<{ audioUrl: string }>({
+    queryKey: ["/api/phrase-audio/generate", activeText],
+    queryFn: async () => {
+      const res = await apiRequest("POST", "/api/phrase-audio/generate", { text: activeText, gender: "F" });
+      return res.json();
+    },
+    enabled: !!activeText.trim() && !tooLong,
+    staleTime: Infinity,
+    retry: false,
+  });
 
   const handleRecordingComplete = async (file: File) => {
     if (!activeText.trim()) {
@@ -395,6 +408,7 @@ export default function RecordPage() {
               <AudioRecorder
                 onRecordingComplete={handleRecordingComplete}
                 isUploading={isUploading || createRecording.isPending}
+                referenceAudioUrl={ttsData?.audioUrl}
               />
             </CardContent>
           </Card>
