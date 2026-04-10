@@ -13,7 +13,7 @@ import {
 interface AudioRecorderProps {
   onRecordingComplete: (file: File) => void;
   isUploading?: boolean;
-  referenceAudioUrl?: string;
+  referenceAudioUrl?: string | null;
 }
 
 const MAX_DURATION = 10;
