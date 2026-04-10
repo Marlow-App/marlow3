@@ -18,13 +18,13 @@ const CHINESE_LEVELS = [
 ];
 
 export const NATIVE_LANGUAGES = [
-  "English", "Spanish", "French", "Portuguese", "German",
-  "Italian", "Dutch", "Russian", "Polish", "Ukrainian",
-  "Japanese", "Korean", "Vietnamese", "Thai", "Indonesian",
-  "Malay", "Hindi", "Bengali", "Urdu", "Tamil",
-  "Arabic", "Turkish", "Javanese", "Telugu", "Marathi",
-  "Gujarati", "Kannada", "Punjabi", "Romanian", "Greek",
-  "Chinese (Cantonese)", "Chinese (Other dialect)", "Other",
+  "Arabic", "Bengali", "Chinese (Cantonese)", "Chinese (Other dialect)",
+  "Dutch", "English", "French", "German", "Greek",
+  "Gujarati", "Hindi", "Indonesian", "Italian", "Japanese",
+  "Javanese", "Kannada", "Korean", "Malay", "Marathi",
+  "Other", "Polish", "Portuguese", "Punjabi", "Romanian",
+  "Russian", "Spanish", "Tamil", "Telugu", "Thai",
+  "Turkish", "Ukrainian", "Urdu", "Vietnamese",
 ];
 
 export const FOCUS_AREA_OPTIONS = [
