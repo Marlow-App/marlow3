@@ -67,11 +67,13 @@ export interface IStorage {
 
   // Crossword
   getTodayCrossword(): Promise<DailyCrossword | undefined>;
+  getCrosswordByIndex(puzzleIndex: number): Promise<DailyCrossword | undefined>;
   getAllCrosswords(): Promise<DailyCrossword[]>;
   updateCrossword(id: number, data: { grid?: boolean[][]; words?: CrosswordWord[]; title?: string }): Promise<DailyCrossword | undefined>;
   getCrosswordStatus(userId: string, puzzleId: number, puzzleDate: string): Promise<CrosswordCompletion | undefined>;
   saveCrosswordProgress(userId: string, puzzleId: number, puzzleDate: string, cells: Record<string, string>, elapsedSeconds: number): Promise<CrosswordCompletion>;
   completeCrossword(userId: string, puzzleId: number, puzzleDate: string, cells: Record<string, string>, elapsedSeconds: number): Promise<CrosswordCompletion>;
+  getArchiveCrosswords(userId: string): Promise<Array<{ puzzle: DailyCrossword; date: string; isComplete: boolean }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -517,6 +519,11 @@ export class DatabaseStorage implements IStorage {
     return all.find(p => p.puzzleIndex === idx) ?? all[0];
   }
 
+  async getCrosswordByIndex(puzzleIndex: number): Promise<DailyCrossword | undefined> {
+    const [row] = await db.select().from(dailyCrosswords).where(eq(dailyCrosswords.puzzleIndex, puzzleIndex)).limit(1);
+    return row;
+  }
+
   async getAllCrosswords(): Promise<DailyCrossword[]> {
     return db.select().from(dailyCrosswords).orderBy(dailyCrosswords.puzzleIndex);
   }
@@ -575,6 +582,32 @@ export class DatabaseStorage implements IStorage {
       .values({ userId, puzzleId, puzzleDate, cells, elapsedSeconds, isComplete: true, completedAt: new Date() })
       .returning();
     return created;
+  }
+
+  async getArchiveCrosswords(userId: string): Promise<Array<{ puzzle: DailyCrossword; date: string; isComplete: boolean }>> {
+    const all = await db.select().from(dailyCrosswords).orderBy(dailyCrosswords.puzzleIndex);
+    if (!all.length) return [];
+    const total = all.length;
+    const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+
+    // Fetch all completions for this user in one query
+    const completions = await db
+      .select({ puzzleId: crosswordCompletions.puzzleId })
+      .from(crosswordCompletions)
+      .where(and(eq(crosswordCompletions.userId, userId), eq(crosswordCompletions.isComplete, true)));
+    const completedIds = new Set(completions.map(c => c.puzzleId));
+
+    const result: Array<{ puzzle: DailyCrossword; date: string; isComplete: boolean }> = [];
+    for (let n = 1; n <= 13; n++) {
+      const pastDay = daysSinceEpoch - n;
+      const pastIdx = ((pastDay % total) + total) % total;
+      const puzzle = all.find(p => p.puzzleIndex === pastIdx);
+      if (!puzzle) continue;
+      const d = new Date(pastDay * 24 * 60 * 60 * 1000);
+      const date = d.toISOString().slice(0, 10);
+      result.push({ puzzle, date, isComplete: completedIds.has(puzzle.id) });
+    }
+    return result;
   }
 }
 

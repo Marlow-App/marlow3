@@ -1077,6 +1077,7 @@ export async function registerRoutes(
 
       const words = (puzzle.words as unknown) as CrosswordWord[];
       // Only evaluate cells the user has actually filled in (skip empty cells).
+      // Compare Chinese characters (chars[]) — answers are never sent to the client.
       // Intersection cells satisfy both constraints via AND logic.
       const results: Record<string, boolean> = {};
       for (const word of words) {
@@ -1084,9 +1085,9 @@ export async function registerRoutes(
           const r = word.direction === "across" ? word.startRow : word.startRow + i;
           const c = word.direction === "across" ? word.startCol + i : word.startCol;
           const key = `${r}-${c}`;
-          const typed = (cells[key] ?? "").toLowerCase().trim();
+          const typed = (cells[key] ?? "").trim();
           if (!typed) continue; // skip unfilled cells
-          const expected = (word.answer[i] ?? "").toLowerCase().trim();
+          const expected = (word.chars[i] ?? "").trim();
           const isCorrect = typed === expected;
           results[key] = results[key] === undefined ? isCorrect : results[key] && isCorrect;
         }
@@ -1134,8 +1135,8 @@ export async function registerRoutes(
           const r = word.direction === "across" ? word.startRow : word.startRow + i;
           const c = word.direction === "across" ? word.startCol + i : word.startCol;
           const key = `${r}-${c}`;
-          const typed = (cells[key] ?? "").toLowerCase().trim();
-          const expected = (word.answer[i] ?? "").toLowerCase().trim();
+          const typed = (cells[key] ?? "").trim();
+          const expected = (word.chars[i] ?? "").trim();
           if (typed !== expected) { allCorrect = false; break; }
         }
         if (!allCorrect) break;
@@ -1150,6 +1151,54 @@ export async function registerRoutes(
       res.json(record);
     } catch (err) {
       console.error("Error completing crossword:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get a specific puzzle by puzzleIndex (strips answers + chars)
+  app.get("/api/crossword/puzzle/:puzzleIndex", isAuthenticated, async (req, res) => {
+    try {
+      const puzzleIndex = Number(req.params.puzzleIndex);
+      if (isNaN(puzzleIndex)) return res.status(400).json({ message: "Invalid puzzleIndex" });
+      const puzzle = await storage.getCrosswordByIndex(puzzleIndex);
+      if (!puzzle) return res.status(404).json({ message: "Puzzle not found" });
+
+      const words = (puzzle.words as unknown) as CrosswordWord[];
+      const publicWords = words.map(({ chars: _c, answer: _a, ...rest }) => rest);
+      res.json({
+        id: puzzle.id,
+        puzzleIndex: puzzle.puzzleIndex,
+        title: puzzle.title,
+        grid: puzzle.grid,
+        words: publicWords,
+        wordCount: words.length,
+        status: null,
+      });
+    } catch (err) {
+      console.error("Error getting crossword by index:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get archive of past 13 days of crosswords with user completion status
+  app.get("/api/crossword/archive", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as { claims: { sub: string } }).claims.sub;
+      const archive = await storage.getArchiveCrosswords(userId);
+      const result = archive.map(({ puzzle, date, isComplete }) => {
+        const words = (puzzle.words as unknown) as CrosswordWord[];
+        return {
+          id: puzzle.id,
+          puzzleIndex: puzzle.puzzleIndex,
+          title: puzzle.title,
+          wordCount: words.length,
+          date,
+          isComplete,
+        };
+      });
+      res.json(result);
+    } catch (err) {
+      console.error("Error getting crossword archive:", err);
       res.status(500).json({ message: "Internal server error" });
     }
   });

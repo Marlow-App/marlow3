@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -26,10 +27,11 @@ export interface CrosswordGridProps {
   selectedKey: string | null;
   activeCellKeys: Set<string>;
   cellNumbers: Record<string, number>;
-  gridRef: React.RefObject<HTMLDivElement>;
-  onCellClick: (row: number, col: number) => void;
-  onKeyDown: (e: React.KeyboardEvent) => void;
+  onCellFocus: (row: number, col: number) => void;
+  onCellChar: (key: string, char: string) => void;
+  onCellKeyDown: (key: string, e: React.KeyboardEvent<HTMLInputElement>) => void;
   onStart: () => void;
+  readOnly?: boolean;
 }
 
 export function cellKey(row: number, col: number): string {
@@ -44,11 +46,25 @@ export function CrosswordGrid({
   selectedKey,
   activeCellKeys,
   cellNumbers,
-  gridRef,
-  onCellClick,
-  onKeyDown,
+  onCellFocus,
+  onCellChar,
+  onCellKeyDown,
   onStart,
+  readOnly = false,
 }: CrosswordGridProps) {
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const isComposingRef = useRef(false);
+  const justEndedCompositionRef = useRef(false);
+
+  // Focus the selected input whenever selectedKey changes
+  useEffect(() => {
+    if (!selectedKey || phase !== "playing" || readOnly) return;
+    const input = inputRefs.current[selectedKey];
+    if (input && document.activeElement !== input) {
+      input.focus({ preventScroll: true });
+    }
+  }, [selectedKey, phase, readOnly]);
+
   return (
     <div className="relative">
       {/* Blur overlay for pre-start gate */}
@@ -73,73 +89,119 @@ export function CrosswordGrid({
         </div>
       )}
 
-      {/* Interactive grid */}
+      {/* Grid */}
       <div
-        ref={gridRef}
-        tabIndex={0}
-        onKeyDown={onKeyDown}
-        className="outline-none focus:ring-2 focus:ring-primary/30 rounded-xl"
+        className="grid gap-1 p-2 bg-foreground/5 rounded-xl border border-border"
+        style={{ gridTemplateColumns: "repeat(5, 1fr)" }}
         data-testid="crossword-grid"
       >
-        <div
-          className="grid gap-1 p-2 bg-foreground/5 rounded-xl border border-border"
-          style={{ gridTemplateColumns: "repeat(5, 1fr)" }}
-        >
-          {puzzle.grid.map((row, r) =>
-            row.map((isWhite, c) => {
-              const k = cellKey(r, c);
-              const num = cellNumbers[k];
-              const isSelected = selectedKey === k;
-              const isHighlighted = activeCellKeys.has(k);
-              const checkResult = checkState[k];
-              const value = cells[k] ?? "";
+        {puzzle.grid.map((row, r) =>
+          row.map((isWhite, c) => {
+            const k = cellKey(r, c);
+            const num = cellNumbers[k];
+            const isSelected = selectedKey === k;
+            const isHighlighted = activeCellKeys.has(k);
+            const checkResult = checkState[k];
+            const value = cells[k] ?? "";
 
-              if (!isWhite) {
-                return (
-                  <div
-                    key={k}
-                    className="w-14 h-14 md:w-16 md:h-16 rounded-md bg-foreground/80 dark:bg-foreground/60"
-                    data-testid={`cell-black-${k}`}
-                  />
-                );
-              }
-
+            if (!isWhite) {
               return (
                 <div
                   key={k}
-                  onClick={() => phase !== "pre-start" && onCellClick(r, c)}
-                  className={cn(
-                    "w-14 h-14 md:w-16 md:h-16 rounded-md border-2 relative cursor-pointer select-none transition-all duration-100 flex items-center justify-center",
-                    isSelected
-                      ? "border-primary bg-primary/15 shadow-sm"
-                      : isHighlighted
-                        ? "border-primary/40 bg-primary/8"
-                        : "border-border bg-card hover:border-primary/30",
-                    checkResult === true && "border-green-500 bg-green-50 dark:bg-green-950/30",
-                    checkResult === false && "border-red-500 bg-red-50 dark:bg-red-950/30",
-                  )}
-                  data-testid={`cell-${k}`}
-                >
-                  {num && (
-                    <span className="absolute top-0.5 left-1 text-[9px] font-bold text-muted-foreground leading-none">
-                      {num}
+                  className="w-14 h-14 md:w-16 md:h-16 rounded-md bg-foreground/80 dark:bg-foreground/60"
+                  data-testid={`cell-black-${k}`}
+                />
+              );
+            }
+
+            return (
+              <div
+                key={k}
+                className={cn(
+                  "w-14 h-14 md:w-16 md:h-16 rounded-md border-2 relative transition-all duration-100",
+                  isSelected
+                    ? "border-primary bg-primary/15 shadow-sm"
+                    : isHighlighted
+                      ? "border-primary/40 bg-primary/8"
+                      : "border-border bg-card",
+                  !readOnly && !isSelected && !isHighlighted && "hover:border-primary/30",
+                  checkResult === true && "border-green-500 bg-green-50 dark:bg-green-950/30",
+                  checkResult === false && "border-red-500 bg-red-50 dark:bg-red-950/30",
+                )}
+                data-testid={`cell-${k}`}
+              >
+                {num && (
+                  <span className="absolute top-0.5 left-1 text-[9px] font-bold text-muted-foreground leading-none z-10 pointer-events-none">
+                    {num}
+                  </span>
+                )}
+
+                {readOnly ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span
+                      className={cn(
+                        "text-2xl font-bold select-none",
+                        checkResult === true && "text-green-700 dark:text-green-400",
+                        checkResult === false && "text-red-600 dark:text-red-400",
+                      )}
+                    >
+                      {value}
                     </span>
-                  )}
-                  <span
+                  </div>
+                ) : (
+                  <input
+                    ref={el => { inputRefs.current[k] = el; }}
+                    type="text"
+                    inputMode="text"
+                    lang="zh"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    value={value}
+                    readOnly={phase !== "playing"}
+                    tabIndex={phase === "playing" ? 0 : -1}
                     className={cn(
-                      "text-sm font-bold font-mono tracking-tight",
-                      value.length > 4 ? "text-[10px]" : value.length > 2 ? "text-xs" : "text-sm",
+                      "absolute inset-0 w-full h-full bg-transparent border-none outline-none text-center text-2xl font-bold cursor-pointer caret-transparent select-none pt-3",
                       checkResult === true && "text-green-700 dark:text-green-400",
                       checkResult === false && "text-red-600 dark:text-red-400",
                     )}
-                  >
-                    {value}
-                  </span>
-                </div>
-              );
-            })
-          )}
-        </div>
+                    data-testid={`input-${k}`}
+                    onFocus={() => {
+                      if (phase === "playing") onCellFocus(r, c);
+                    }}
+                    onCompositionStart={() => {
+                      isComposingRef.current = true;
+                    }}
+                    onCompositionEnd={(e) => {
+                      isComposingRef.current = false;
+                      justEndedCompositionRef.current = true;
+                      const composed = (e.data || "").trim();
+                      const char = composed[0];
+                      if (char) onCellChar(k, char);
+                    }}
+                    onChange={(e) => {
+                      if (isComposingRef.current) return;
+                      if (justEndedCompositionRef.current) {
+                        justEndedCompositionRef.current = false;
+                        return;
+                      }
+                      const val = e.target.value.trim();
+                      if (val) {
+                        const char = val[val.length - 1];
+                        onCellChar(k, char);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (isComposingRef.current) return;
+                      onCellKeyDown(k, e);
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

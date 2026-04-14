@@ -1,21 +1,22 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation, useSearch } from "wouter";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import {
   Timer, CheckCircle2, RotateCcw, Trophy,
-  Copy, Grid3X3,
+  Copy, Grid3X3, ChevronRight, CheckCircle,
 } from "lucide-react";
 import { SiX, SiFacebook, SiWhatsapp, SiThreads } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { CrosswordGrid, cellKey } from "@/components/CrosswordGrid";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface CrosswordWord {
   number: number;
@@ -41,11 +42,18 @@ interface CrosswordPuzzle {
   } | null;
 }
 
+interface ArchiveEntry {
+  id: number;
+  puzzleIndex: number;
+  title: string;
+  wordCount: number;
+  date: string;
+  isComplete: boolean;
+}
+
 type GamePhase = "pre-start" | "playing" | "completed";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getWordCells(word: CrosswordWord) {
   return Array.from({ length: word.length }, (_, i) => ({
@@ -85,14 +93,44 @@ function generateShareText(puzzleIndex: number, grid: boolean[][], elapsedSecond
   return `Marlow 中文填字游戏 #${puzzleIndex + 1} 🀄\nSolved in ${formatTime(elapsedSeconds)} ✅\n\n${gridEmoji}\n\nPlay Marlow's daily Chinese crossword 👉 marlow.app/crossword`;
 }
 
-// ─── Main Crossword Component ─────────────────────────────────────────────────
+function isChineseChar(char: string): boolean {
+  const cp = char.codePointAt(0) ?? 0;
+  return (cp >= 0x4e00 && cp <= 0x9fff) || (cp >= 0x3400 && cp <= 0x4dbf) || (cp >= 0xf900 && cp <= 0xfaff);
+}
+
+// ─── Main Crossword Component ──────────────────────────────────────────────────
 
 export default function CrosswordPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const search = useSearch();
 
-  const { data: puzzle, isLoading } = useQuery<CrosswordPuzzle>({
+  // Check if viewing a specific puzzle via query param ?p=<puzzleIndex>
+  const urlParams = new URLSearchParams(search);
+  const viewingIndex = urlParams.has("p") ? Number(urlParams.get("p")) : null;
+  const isViewingArchive = viewingIndex !== null && !isNaN(viewingIndex);
+
+  const { data: todayPuzzle, isLoading: todayLoading } = useQuery<CrosswordPuzzle>({
     queryKey: ["/api/crossword/today"],
+    enabled: !isViewingArchive,
+  });
+
+  const { data: archivePuzzle, isLoading: archiveLoading } = useQuery<CrosswordPuzzle>({
+    queryKey: ["/api/crossword/puzzle", viewingIndex],
+    queryFn: async () => {
+      const res = await fetch(`/api/crossword/puzzle/${viewingIndex}`, { credentials: "include" });
+      return res.json();
+    },
+    enabled: isViewingArchive,
+  });
+
+  const puzzle = isViewingArchive ? archivePuzzle : todayPuzzle;
+  const isLoading = isViewingArchive ? archiveLoading : todayLoading;
+
+  const { data: archive } = useQuery<ArchiveEntry[]>({
+    queryKey: ["/api/crossword/archive"],
+    enabled: !isViewingArchive,
   });
 
   // Game state
@@ -103,11 +141,10 @@ export default function CrosswordPage() {
   const [activeWordNum, setActiveWordNum] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Restore saved state from status
+  // Restore saved state
   useEffect(() => {
     if (!puzzle) return;
     if (puzzle.status?.isComplete) {
@@ -115,8 +152,6 @@ export default function CrosswordPage() {
       setElapsedSeconds(puzzle.status.elapsedSeconds ?? 0);
       setPhase("completed");
     } else if (puzzle.status?.cells && Object.keys(puzzle.status.cells).length > 0) {
-      // Pre-populate cells from saved progress but stay on pre-start gate;
-      // the user must click Start to resume (handleStart will restore the timer offset)
       setCells((puzzle.status.cells as Record<string, string>) ?? {});
       setElapsedSeconds(puzzle.status.elapsedSeconds ?? 0);
     }
@@ -137,9 +172,9 @@ export default function CrosswordPage() {
       apiRequest("POST", "/api/crossword/today/progress", data),
   });
 
-  // Autosave progress after every cell change (debounced 2s) while in playing phase
+  // Autosave (debounced 2s)
   useEffect(() => {
-    if (phase !== "playing" || !puzzle) return;
+    if (phase !== "playing" || !puzzle || isViewingArchive) return;
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     autosaveTimerRef.current = setTimeout(() => {
       const elapsed = startTime !== null ? Math.floor((Date.now() - startTime) / 1000) : elapsedSeconds;
@@ -166,18 +201,18 @@ export default function CrosswordPage() {
     const resumeElapsed = elapsedSeconds;
     setStartTime(now - resumeElapsed * 1000);
     setPhase("playing");
-    setTimeout(() => gridRef.current?.focus(), 50);
   }, [elapsedSeconds]);
 
   const handleCheck = useCallback(async () => {
     if (!puzzle) return;
-    const current = elapsedSeconds;
-    progressMutation.mutate({ puzzleId: puzzle.id, cells, elapsedSeconds: current });
+    const current = startTime !== null ? Math.floor((Date.now() - startTime) / 1000) : elapsedSeconds;
+    if (!isViewingArchive) {
+      progressMutation.mutate({ puzzleId: puzzle.id, cells, elapsedSeconds: current });
+    }
 
     const { results } = await checkMutation.mutateAsync({ puzzleId: puzzle.id, cells });
     setCheckState(results);
 
-    // Check if all white cells are correct
     const whiteCells = puzzle.grid.flatMap((row, r) =>
       row.map((isWhite, c) => isWhite ? cellKey(r, c) : null).filter(Boolean) as string[]
     );
@@ -185,11 +220,13 @@ export default function CrosswordPage() {
 
     if (allCorrect) {
       if (timerRef.current) clearInterval(timerRef.current);
-      await completeMutation.mutateAsync({ puzzleId: puzzle.id, cells, elapsedSeconds: current });
+      if (!isViewingArchive) {
+        await completeMutation.mutateAsync({ puzzleId: puzzle.id, cells, elapsedSeconds: current });
+      }
+      setElapsedSeconds(current);
       setPhase("completed");
       toast({ title: "🎉 Puzzle Complete!", description: `Solved in ${formatTime(current)}` });
     } else {
-      // After 2 seconds, clear wrong answers
       setTimeout(() => {
         setCells(prev => {
           const next = { ...prev };
@@ -202,7 +239,7 @@ export default function CrosswordPage() {
       }, 2000);
       toast({ title: "Not quite!", description: "Wrong answers have been cleared. Keep trying!", variant: "destructive" });
     }
-  }, [puzzle, cells, elapsedSeconds]);
+  }, [puzzle, cells, elapsedSeconds, startTime, isViewingArchive]);
 
   const handleReset = useCallback(() => {
     setCells({});
@@ -214,13 +251,12 @@ export default function CrosswordPage() {
     setStartTime(null);
   }, []);
 
-  // ─── Cell interaction ──────────────────────────────────────────────────────
+  // ─── Cell interactions ────────────────────────────────────────────────────
 
-  const selectCell = useCallback((row: number, col: number, puzzle: CrosswordPuzzle) => {
+  const selectCell = useCallback((row: number, col: number, puzz: CrosswordPuzzle) => {
     const k = cellKey(row, col);
     if (selectedKey === k) {
-      // If already selected, try to toggle direction if multiple words
-      const wordsHere = getWordsForCell(puzzle.words, row, col);
+      const wordsHere = getWordsForCell(puzz.words, row, col);
       if (wordsHere.length > 1) {
         const curIdx = wordsHere.findIndex(w => w.word.number === activeWordNum);
         const next = wordsHere[(curIdx + 1) % wordsHere.length];
@@ -228,21 +264,18 @@ export default function CrosswordPage() {
       }
     } else {
       setSelectedKey(k);
-      const wordsHere = getWordsForCell(puzzle.words, row, col);
+      const wordsHere = getWordsForCell(puzz.words, row, col);
       if (wordsHere.length > 0) {
-        // Prefer current direction if possible
         const preferred = wordsHere.find(w => w.word.number === activeWordNum) ?? wordsHere[0];
         setActiveWordNum(preferred.word.number);
       } else {
         setActiveWordNum(null);
       }
     }
-    gridRef.current?.focus();
   }, [selectedKey, activeWordNum]);
 
-  // Returns the next cell key in the word without updating state
-  const computeNextCellKey = useCallback((puzzle: CrosswordPuzzle, fromRow: number, fromCol: number, wordNum: number): string | null => {
-    const word = puzzle.words.find(w => w.number === wordNum);
+  const computeNextCellKey = useCallback((puzz: CrosswordPuzzle, fromRow: number, fromCol: number, wordNum: number): string | null => {
+    const word = puzz.words.find(w => w.number === wordNum);
     if (!word) return null;
     const wordCells = getWordCells(word);
     const curIdx = wordCells.findIndex(c => c.row === fromRow && c.col === fromCol);
@@ -253,13 +286,13 @@ export default function CrosswordPage() {
     return null;
   }, []);
 
-  const advanceToNextCell = useCallback((puzzle: CrosswordPuzzle, fromRow: number, fromCol: number, wordNum: number) => {
-    const nextKey = computeNextCellKey(puzzle, fromRow, fromCol, wordNum);
+  const advanceToNextCell = useCallback((puzz: CrosswordPuzzle, fromRow: number, fromCol: number, wordNum: number) => {
+    const nextKey = computeNextCellKey(puzz, fromRow, fromCol, wordNum);
     if (nextKey) setSelectedKey(nextKey);
   }, [computeNextCellKey]);
 
-  const moveToPrevCell = useCallback((puzzle: CrosswordPuzzle, fromRow: number, fromCol: number, wordNum: number) => {
-    const word = puzzle.words.find(w => w.number === wordNum);
+  const moveToPrevCell = useCallback((puzz: CrosswordPuzzle, fromRow: number, fromCol: number, wordNum: number) => {
+    const word = puzz.words.find(w => w.number === wordNum);
     if (!word) return;
     const wordCells = getWordCells(word);
     const curIdx = wordCells.findIndex(c => c.row === fromRow && c.col === fromCol);
@@ -269,73 +302,64 @@ export default function CrosswordPage() {
     }
   }, []);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (!puzzle || phase !== "playing" || !selectedKey) return;
-    const [rowStr, colStr] = selectedKey.split("-");
+  // Called when a character is confirmed in a cell (after IME or direct input)
+  const handleCellChar = useCallback((key: string, char: string) => {
+    if (!puzzle || phase !== "playing") return;
+    // Only accept single characters (Chinese or other)
+    const firstChar = char.trim()[0] ?? "";
+    if (!firstChar) return;
+    setCells(prev => ({ ...prev, [key]: firstChar }));
+    // Auto-advance if a CJK character was entered
+    if (isChineseChar(firstChar) && activeWordNum !== null) {
+      const [rowStr, colStr] = key.split("-");
+      advanceToNextCell(puzzle, Number(rowStr), Number(colStr), activeWordNum);
+    }
+  }, [puzzle, phase, activeWordNum, advanceToNextCell]);
+
+  const handleCellFocus = useCallback((row: number, col: number) => {
+    if (!puzzle) return;
+    selectCell(row, col, puzzle);
+  }, [puzzle, selectCell]);
+
+  const handleCellKeyDown = useCallback((key: string, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!puzzle || phase !== "playing") return;
+    const [rowStr, colStr] = key.split("-");
     const row = Number(rowStr);
     const col = Number(colStr);
 
     if (e.key === "Backspace") {
       e.preventDefault();
-      const cur = cells[selectedKey] ?? "";
+      const cur = cells[key] ?? "";
       if (cur.length > 0) {
-        setCells(prev => ({ ...prev, [selectedKey]: cur.slice(0, -1) }));
+        setCells(prev => { const n = { ...prev }; delete n[key]; return n; });
       } else if (activeWordNum !== null) {
         moveToPrevCell(puzzle, row, col, activeWordNum);
       }
-    } else if (e.key === " " || e.key === "Enter" || e.key === "Tab") {
+    } else if (e.key === "Enter" || e.key === " " || e.key === "Tab") {
       e.preventDefault();
       if (activeWordNum !== null) advanceToNextCell(puzzle, row, col, activeWordNum);
     } else if (e.key === "ArrowRight") {
       e.preventDefault();
-      // Find next white cell to the right
       for (let c = col + 1; c < 5; c++) {
-        if (puzzle.grid[row][c]) { setSelectedKey(cellKey(row, c)); break; }
+        if (puzzle.grid[row]?.[c]) { setSelectedKey(cellKey(row, c)); break; }
       }
     } else if (e.key === "ArrowLeft") {
       e.preventDefault();
       for (let c = col - 1; c >= 0; c--) {
-        if (puzzle.grid[row][c]) { setSelectedKey(cellKey(row, c)); break; }
+        if (puzzle.grid[row]?.[c]) { setSelectedKey(cellKey(row, c)); break; }
       }
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
       for (let r = row + 1; r < 5; r++) {
-        if (puzzle.grid[r][col]) { setSelectedKey(cellKey(r, col)); break; }
+        if (puzzle.grid[r]?.[col]) { setSelectedKey(cellKey(r, col)); break; }
       }
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       for (let r = row - 1; r >= 0; r--) {
-        if (puzzle.grid[r][col]) { setSelectedKey(cellKey(r, col)); break; }
-      }
-    } else if (/^[a-zA-Z]$/.test(e.key)) {
-      e.preventDefault();
-      const cur = cells[selectedKey] ?? "";
-      const newChar = e.key.toLowerCase();
-      // Auto-advance when typing a new syllable start after a completed syllable.
-      // Pinyin syllables end with a vowel, 'n', 'g', or 'r'; new syllables
-      // typically begin with a consonant initial (b p m f d t n l g k h j q x r z c s w y).
-      const SYLLABLE_ENDERS = new Set(["a","e","i","o","u","ü","n","g","r"]);
-      const PINYIN_INITIALS = new Set(["b","p","m","f","d","t","l","g","k","h","j","q","x","r","z","c","s","w","y"]);
-      if (
-        cur.length >= 2 &&
-        activeWordNum !== null &&
-        SYLLABLE_ENDERS.has(cur.slice(-1)) &&
-        PINYIN_INITIALS.has(newChar) &&
-        // 'n' and 'g' can extend the current syllable (e.g. -ng), so don't advance on those
-        newChar !== "n" && newChar !== "g"
-      ) {
-        const nextKey = computeNextCellKey(puzzle, row, col, activeWordNum);
-        if (nextKey) {
-          setSelectedKey(nextKey);
-          setCells(prev => ({ ...prev, [nextKey]: newChar }));
-          return;
-        }
-      }
-      if (cur.length < 7) {
-        setCells(prev => ({ ...prev, [selectedKey]: cur + newChar }));
+        if (puzzle.grid[r]?.[col]) { setSelectedKey(cellKey(r, col)); break; }
       }
     }
-  }, [puzzle, phase, selectedKey, cells, activeWordNum, advanceToNextCell, moveToPrevCell, computeNextCellKey]);
+  }, [puzzle, phase, cells, activeWordNum, advanceToNextCell, moveToPrevCell]);
 
   // ─── Rendering ────────────────────────────────────────────────────────────
 
@@ -354,7 +378,7 @@ export default function CrosswordPage() {
       <Layout>
         <div className="text-center py-16 text-muted-foreground">
           <Grid3X3 className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>No puzzle available today. Check back soon!</p>
+          <p>No puzzle available. Check back soon!</p>
         </div>
       </Layout>
     );
@@ -369,11 +393,29 @@ export default function CrosswordPage() {
   const acrossWords = puzzle.words.filter(w => w.direction === "across").sort((a, b) => a.number - b.number);
   const downWords = puzzle.words.filter(w => w.direction === "down").sort((a, b) => a.number - b.number);
 
+  // Completed state share text
+  const shareText = generateShareText(puzzle.puzzleIndex, puzzle.grid, elapsedSeconds);
+  const encodedText = encodeURIComponent(shareText);
+  const shareUrl = encodeURIComponent("https://marlow.app/crossword");
+  const copyShare = async () => {
+    await navigator.clipboard.writeText(shareText);
+    toast({ title: "Copied!", description: "Share text copied to clipboard" });
+  };
+
   return (
     <Layout>
       <div className="space-y-5 animate-in max-w-2xl mx-auto">
+
         {/* Header */}
         <div>
+          {isViewingArchive && (
+            <button
+              onClick={() => navigate("/crossword")}
+              className="text-xs text-muted-foreground hover:text-foreground mb-2 flex items-center gap-1 transition-colors"
+            >
+              ← Back to today's puzzle
+            </button>
+          )}
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">
             {format(new Date(), "EEEE, d MMMM yyyy")}
           </p>
@@ -395,64 +437,54 @@ export default function CrosswordPage() {
           </div>
         </div>
 
-        {/* ── Completed screen (replaces game area) ─────────────────────────────── */}
-        {phase === "completed" && puzzle && (() => {
-          const text = generateShareText(puzzle.puzzleIndex, puzzle.grid, elapsedSeconds);
-          const encodedText = encodeURIComponent(text);
-          const url = encodeURIComponent("https://marlow.app/crossword");
-          const copy = async () => {
-            await navigator.clipboard.writeText(text);
-            toast({ title: "Copied!", description: "Share text copied to clipboard" });
-          };
-          return (
-            <Card
-              className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 text-center"
-              data-testid="completed-banner"
-            >
-              <CardContent className="py-10 px-6 space-y-6">
-                <div className="flex flex-col items-center gap-3">
-                  <Trophy className="w-14 h-14 text-primary" />
-                  <div>
-                    <p className="font-bold text-2xl font-display">Puzzle Complete! 🎉</p>
-                    <p className="text-base text-muted-foreground mt-1">
-                      Solved in <span className="font-semibold text-foreground">{formatTime(elapsedSeconds)}</span>
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-0.5">Come back tomorrow for a new puzzle!</p>
-                  </div>
+        {/* ── Completed celebration banner ────────────────────────────────────── */}
+        {phase === "completed" && (
+          <Card
+            className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 text-center"
+            data-testid="completed-banner"
+          >
+            <CardContent className="py-8 px-6 space-y-5">
+              <div className="flex flex-col items-center gap-3">
+                <Trophy className="w-12 h-12 text-primary" />
+                <div>
+                  <p className="font-bold text-2xl font-display">Puzzle Complete! 🎉</p>
+                  <p className="text-base text-muted-foreground mt-1">
+                    Solved in <span className="font-semibold text-foreground">{formatTime(elapsedSeconds)}</span>
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-0.5">Come back tomorrow for a new puzzle!</p>
                 </div>
-                {/* Emoji grid preview */}
-                <div className="text-2xl leading-snug whitespace-pre font-mono" data-testid="emoji-grid">
-                  {puzzle.grid.map((row, r) => (
-                    <div key={r}>{row.map((cell, c) => cell ? "🟩" : "⬛").join("")}</div>
-                  ))}
-                </div>
-                {/* Share row */}
-                <div className="flex flex-wrap justify-center gap-2" data-testid="share-row">
-                  <a href={`https://twitter.com/intent/tweet?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-x"><SiX className="w-3.5 h-3.5" />X</Button>
-                  </a>
-                  <a href={`https://threads.net/intent/post?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-threads"><SiThreads className="w-3.5 h-3.5" />Threads</Button>
-                  </a>
-                  <a href={`https://www.facebook.com/sharer/sharer.php?u=${url}`} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-facebook"><SiFacebook className="w-3.5 h-3.5" />Facebook</Button>
-                  </a>
-                  <a href={`https://wa.me/?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-whatsapp"><SiWhatsapp className="w-3.5 h-3.5" />WhatsApp</Button>
-                  </a>
-                  <Button size="sm" variant="outline" className="gap-1.5" onClick={copy} data-testid="share-copy">
-                    <Copy className="w-3.5 h-3.5" />Copy (for Instagram &amp; others)
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })()}
+              </div>
+              {/* Emoji grid */}
+              <div className="text-2xl leading-snug whitespace-pre font-mono" data-testid="emoji-grid">
+                {puzzle.grid.map((row, r) => (
+                  <div key={r}>{row.map((cell, c) => cell ? "🟩" : "⬛").join("")}</div>
+                ))}
+              </div>
+              {/* Share row */}
+              <div className="flex flex-wrap justify-center gap-2" data-testid="share-row">
+                <a href={`https://twitter.com/intent/tweet?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-x"><SiX className="w-3.5 h-3.5" />X</Button>
+                </a>
+                <a href={`https://threads.net/intent/post?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-threads"><SiThreads className="w-3.5 h-3.5" />Threads</Button>
+                </a>
+                <a href={`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-facebook"><SiFacebook className="w-3.5 h-3.5" />Facebook</Button>
+                </a>
+                <a href={`https://wa.me/?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-whatsapp"><SiWhatsapp className="w-3.5 h-3.5" />WhatsApp</Button>
+                </a>
+                <Button size="sm" variant="outline" className="gap-1.5" onClick={copyShare} data-testid="share-copy">
+                  <Copy className="w-3.5 h-3.5" />Copy
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* ── Game area: grid + clues (hidden when completed) ──────────────────── */}
-        {phase !== "completed" && (
+        {/* ── Game area: grid + clues ─────────────────────────────────────────── */}
         <div className="md:flex md:gap-6 space-y-5 md:space-y-0">
-          {/* Grid */}
+          {/* Grid column */}
           <div className="flex flex-col items-center gap-3">
             <CrosswordGrid
               puzzle={puzzle}
@@ -462,10 +494,11 @@ export default function CrosswordPage() {
               selectedKey={selectedKey}
               activeCellKeys={activeCellKeys}
               cellNumbers={cellNumbers}
-              gridRef={gridRef}
-              onCellClick={(r, c) => selectCell(r, c, puzzle)}
-              onKeyDown={handleKeyDown}
+              onCellFocus={handleCellFocus}
+              onCellChar={handleCellChar}
+              onCellKeyDown={handleCellKeyDown}
               onStart={handleStart}
+              readOnly={phase === "completed"}
             />
 
             {/* Action buttons */}
@@ -495,13 +528,14 @@ export default function CrosswordPage() {
             )}
           </div>
 
-          {/* Clues */}
-          <div className="flex-1 space-y-4 min-w-0 overflow-y-auto max-h-[420px] pr-1" data-testid="clues-panel">
+          {/* Clues column */}
+          <div className="flex-1 space-y-4 min-w-0 overflow-y-auto max-h-[450px] pr-1" data-testid="clues-panel">
             {phase === "playing" && (
               <p className="text-xs text-muted-foreground italic">
-                Type pinyin — no tone marks needed (e.g. type <span className="font-mono">ni</span> for nǐ)
+                Type using your Chinese keyboard — one character per cell
               </p>
             )}
+
             {acrossWords.length > 0 && (
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Across</h3>
@@ -512,7 +546,8 @@ export default function CrosswordPage() {
                       <div
                         key={`across-${word.number}`}
                         className={cn(
-                          "flex gap-2 text-sm px-2 py-1.5 rounded-lg cursor-pointer transition-colors",
+                          "flex gap-2 text-sm px-2 py-1.5 rounded-lg transition-colors",
+                          phase === "playing" ? "cursor-pointer" : "cursor-default",
                           isActiveWord ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50",
                         )}
                         onClick={() => {
@@ -520,7 +555,6 @@ export default function CrosswordPage() {
                           const firstCell = getWordCells(word)[0];
                           setSelectedKey(cellKey(firstCell.row, firstCell.col));
                           setActiveWordNum(word.number);
-                          gridRef.current?.focus();
                         }}
                         data-testid={`clue-across-${word.number}`}
                       >
@@ -543,7 +577,8 @@ export default function CrosswordPage() {
                       <div
                         key={`down-${word.number}`}
                         className={cn(
-                          "flex gap-2 text-sm px-2 py-1.5 rounded-lg cursor-pointer transition-colors",
+                          "flex gap-2 text-sm px-2 py-1.5 rounded-lg transition-colors",
+                          phase === "playing" ? "cursor-pointer" : "cursor-default",
                           isActiveWord ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50",
                         )}
                         onClick={() => {
@@ -551,7 +586,6 @@ export default function CrosswordPage() {
                           const firstCell = getWordCells(word)[0];
                           setSelectedKey(cellKey(firstCell.row, firstCell.col));
                           setActiveWordNum(word.number);
-                          gridRef.current?.focus();
                         }}
                         data-testid={`clue-down-${word.number}`}
                       >
@@ -564,22 +598,53 @@ export default function CrosswordPage() {
               </div>
             )}
 
-            {/* Instructions */}
             {phase === "playing" && (
               <div className="text-xs text-muted-foreground bg-muted/30 rounded-xl p-3 space-y-1">
                 <p className="font-semibold">How to play:</p>
-                <p>• Click a cell, then type the <strong>pinyin</strong> (e.g. <code className="bg-muted px-1 rounded">bei</code> for 北)</p>
-                <p>• Press <kbd className="bg-muted border border-border rounded px-1">Space</kbd> or <kbd className="bg-muted border border-border rounded px-1">→</kbd> to move to the next cell</p>
+                <p>• Click a cell, then use your Chinese keyboard to type characters</p>
+                <p>• On mobile: tap a cell to open your keyboard, switch to Chinese input</p>
                 <p>• Press <kbd className="bg-muted border border-border rounded px-1">⌫</kbd> to delete</p>
                 <p>• Click <strong>Check Answers</strong> when you're ready!</p>
               </div>
             )}
-
           </div>
         </div>
-        )}
-      </div>
 
+        {/* ── Past Puzzles library (today only) ───────────────────────────────── */}
+        {!isViewingArchive && archive && archive.length > 0 && (
+          <div className="space-y-3" data-testid="archive-section">
+            <h2 className="text-base font-bold font-display">Past Puzzles</h2>
+            <div className="grid gap-2">
+              {archive.map(entry => (
+                <button
+                  key={entry.puzzleIndex}
+                  onClick={() => navigate(`/crossword?p=${entry.puzzleIndex}`)}
+                  className="flex items-center justify-between gap-3 w-full text-left px-4 py-3 rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors"
+                  data-testid={`archive-entry-${entry.puzzleIndex}`}
+                >
+                  <div className="flex items-center gap-3">
+                    {entry.isComplete ? (
+                      <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full border-2 border-border shrink-0" />
+                    )}
+                    <div>
+                      <p className="text-sm font-semibold leading-tight">
+                        Puzzle #{entry.puzzleIndex + 1} · {entry.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {format(parseISO(entry.date), "EEEE, d MMM")}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+      </div>
     </Layout>
   );
 }
