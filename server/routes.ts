@@ -1028,7 +1028,7 @@ export async function registerRoutes(
     if (!cells) return {};
     const out: Record<string, string> = {};
     for (const [k, v] of Object.entries(cells)) {
-      if (typeof v === "string" && [...v].length === 1) out[k] = v;
+      if (typeof v === "string" && Array.from(v).length === 1) out[k] = v;
     }
     return out;
   }

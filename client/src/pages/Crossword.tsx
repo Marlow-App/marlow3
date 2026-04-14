@@ -122,6 +122,7 @@ export default function CrosswordPage() {
     queryFn: async () => {
       const dateQuery = viewingDate ? `?date=${viewingDate}` : "";
       const res = await fetch(`/api/crossword/puzzle/${viewingIndex}${dateQuery}`, { credentials: "include" });
+      if (!res.ok) throw new Error(`Failed to load puzzle: ${res.status}`);
       return res.json();
     },
     enabled: isViewingArchive,
@@ -512,6 +513,26 @@ export default function CrosswordPage() {
                   <p className="text-sm text-muted-foreground mt-0.5">Come back tomorrow for a new puzzle!</p>
                 </div>
               </div>
+              {/* Practice again */}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setCells({});
+                  setCheckState({});
+                  setSelectedKey(null);
+                  setActiveWordNum(null);
+                  setElapsedSeconds(0);
+                  setStartTime(null);
+                  setHintedKeys(new Set());
+                  setPhase("pre-start");
+                }}
+                className="gap-1.5 text-muted-foreground"
+                data-testid="practice-again-btn"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Practice Again
+              </Button>
               {/* Share row */}
               <div className="flex flex-wrap justify-center gap-2" data-testid="share-row">
                 <a href={`https://twitter.com/intent/tweet?text=${encodedText}`} target="_blank" rel="noopener noreferrer">

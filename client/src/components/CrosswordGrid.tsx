@@ -149,7 +149,7 @@ export function CrosswordGrid({
                     }}
                     onCompositionEnd={(e) => {
                       const composed = (e.data || "").trim();
-                      const char = [...composed][0];
+                      const char = Array.from(composed)[0];
                       if (char) {
                         onCellChar(k, char);
                       }
