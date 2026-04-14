@@ -474,12 +474,6 @@ export default function CrosswordPage() {
                   <p className="text-sm text-muted-foreground mt-0.5">Come back tomorrow for a new puzzle!</p>
                 </div>
               </div>
-              {/* Emoji grid */}
-              <div className="text-2xl leading-snug whitespace-pre font-mono" data-testid="emoji-grid">
-                {puzzle.grid.map((row, r) => (
-                  <div key={r}>{row.map((cell, c) => cell ? "🟩" : "⬛").join("")}</div>
-                ))}
-              </div>
               {/* Share row */}
               <div className="flex flex-wrap justify-center gap-2" data-testid="share-row">
                 <a href={`https://twitter.com/intent/tweet?text=${encodedText}`} target="_blank" rel="noopener noreferrer">

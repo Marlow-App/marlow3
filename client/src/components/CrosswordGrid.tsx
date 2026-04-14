@@ -52,11 +52,10 @@ export function CrosswordGrid({
   onStart,
   readOnly = false,
 }: CrosswordGridProps) {
+  // Refs to the invisible input overlays — uncontrolled so React never touches their value
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const isComposingRef = useRef(false);
-  const justEndedCompositionRef = useRef(false);
 
-  // Focus the selected input whenever selectedKey changes
+  // Focus the selected cell's input when selectedKey changes
   useEffect(() => {
     if (!selectedKey || phase !== "playing" || readOnly) return;
     const input = inputRefs.current[selectedKey];
@@ -67,7 +66,7 @@ export function CrosswordGrid({
 
   return (
     <div className="relative">
-      {/* Blur overlay for pre-start gate */}
+      {/* Blur overlay + start gate */}
       {phase === "pre-start" && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-xl backdrop-blur-sm bg-background/50 px-4">
           <div className="text-center">
@@ -102,7 +101,7 @@ export function CrosswordGrid({
             const isSelected = selectedKey === k;
             const isHighlighted = activeCellKeys.has(k);
             const checkResult = checkState[k];
-            const value = cells[k] ?? "";
+            const charValue = cells[k] ?? "";
 
             if (!isWhite) {
               return (
@@ -118,7 +117,7 @@ export function CrosswordGrid({
               <div
                 key={k}
                 className={cn(
-                  "w-14 h-14 md:w-16 md:h-16 rounded-md border-2 relative transition-all duration-100",
+                  "w-14 h-14 md:w-16 md:h-16 rounded-md border-2 relative transition-all duration-100 cursor-pointer select-none",
                   isSelected
                     ? "border-primary bg-primary/15 shadow-sm"
                     : isHighlighted
@@ -129,71 +128,72 @@ export function CrosswordGrid({
                   checkResult === false && "border-red-500 bg-red-50 dark:bg-red-950/30",
                 )}
                 data-testid={`cell-${k}`}
+                onClick={() => {
+                  if (phase === "playing") {
+                    onCellFocus(r, c);
+                    inputRefs.current[k]?.focus({ preventScroll: true });
+                  }
+                }}
               >
+                {/* Cell number */}
                 {num && (
                   <span className="absolute top-0.5 left-1 text-[9px] font-bold text-muted-foreground leading-none z-10 pointer-events-none">
                     {num}
                   </span>
                 )}
 
-                {readOnly ? (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span
-                      className={cn(
-                        "text-2xl font-bold select-none",
-                        checkResult === true && "text-green-700 dark:text-green-400",
-                        checkResult === false && "text-red-600 dark:text-red-400",
-                      )}
-                    >
-                      {value}
-                    </span>
-                  </div>
-                ) : (
+                {/* Character display — always visible, React-controlled */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                  <span
+                    className={cn(
+                      "text-2xl font-bold",
+                      checkResult === true && "text-green-700 dark:text-green-400",
+                      checkResult === false && "text-red-600 dark:text-red-400",
+                    )}
+                  >
+                    {charValue}
+                  </span>
+                </div>
+
+                {/*
+                  Invisible, UNCONTROLLED input overlay.
+                  No `value` prop — React never touches the input's content,
+                  so the browser's IME composition flow is never interrupted.
+                  We read the confirmed character only from compositionEnd.
+                */}
+                {!readOnly && (
                   <input
+                    key={k}
                     ref={el => { inputRefs.current[k] = el; }}
                     type="text"
                     inputMode="text"
-                    lang="zh"
+                    lang="zh-CN"
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
                     spellCheck={false}
-                    value={value}
-                    readOnly={phase !== "playing"}
                     tabIndex={phase === "playing" ? 0 : -1}
-                    className={cn(
-                      "absolute inset-0 w-full h-full bg-transparent border-none outline-none text-center text-2xl font-bold cursor-pointer caret-transparent select-none pt-3",
-                      checkResult === true && "text-green-700 dark:text-green-400",
-                      checkResult === false && "text-red-600 dark:text-red-400",
-                    )}
+                    readOnly={phase !== "playing"}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 caret-transparent"
                     data-testid={`input-${k}`}
                     onFocus={() => {
                       if (phase === "playing") onCellFocus(r, c);
                     }}
-                    onCompositionStart={() => {
-                      isComposingRef.current = true;
-                    }}
                     onCompositionEnd={(e) => {
-                      isComposingRef.current = false;
-                      justEndedCompositionRef.current = true;
+                      // IME confirmed: e.data contains the composed character(s)
                       const composed = (e.data || "").trim();
-                      const char = composed[0];
-                      if (char) onCellChar(k, char);
-                    }}
-                    onChange={(e) => {
-                      if (isComposingRef.current) return;
-                      if (justEndedCompositionRef.current) {
-                        justEndedCompositionRef.current = false;
-                        return;
-                      }
-                      const val = e.target.value.trim();
-                      if (val) {
-                        const char = val[val.length - 1];
+                      const char = [...composed][0]; // safe Unicode-aware first char
+                      if (char) {
                         onCellChar(k, char);
+                      }
+                      // Clear the raw input buffer so it's ready for the next character
+                      if (e.currentTarget) {
+                        e.currentTarget.value = "";
                       }
                     }}
                     onKeyDown={(e) => {
-                      if (isComposingRef.current) return;
+                      // Skip navigation shortcuts while IME is still composing
+                      if (e.nativeEvent.isComposing) return;
                       onCellKeyDown(k, e);
                     }}
                   />
