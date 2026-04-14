@@ -21,7 +21,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  role: text("role", { enum: ["learner", "reviewer"] }).default("learner").notNull(),
+  role: text("role", { enum: ["learner", "reviewer", "admin"] }).default("learner").notNull(),
   chineseLevel: text("chinese_level"),
   city: text("city"),
   teachingExperience: integer("teaching_experience"),

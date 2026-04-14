@@ -214,7 +214,7 @@ export default function CrosswordEditor() {
   const { data: puzzles, isLoading } = useQuery<CrosswordPuzzle[]>({ queryKey: ["/api/crossword/all"] });
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  if (user?.role !== "reviewer") {
+  if (user?.role !== "reviewer" && user?.role !== "admin") {
     return (
       <Layout>
         <div className="text-center py-16 text-muted-foreground">

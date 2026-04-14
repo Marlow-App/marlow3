@@ -16,275 +16,120 @@ export interface CrosswordPuzzleData {
   words: CrosswordWordEntry[];
 }
 
-// Layout A: 5 × 2-char words across
-// W W . W W / blank / W W . W W / blank / W W . . .
-const gridA: boolean[][] = [
-  [true,  true,  false, true,  true],
-  [false, false, false, false, false],
-  [true,  true,  false, true,  true],
-  [false, false, false, false, false],
-  [true,  true,  false, false, false],
+// Plus/cross layout: 1 down word (col 2) + 1 across word (row 2), intersecting at (2,2).
+// This is the grid used for all 14 puzzles — genuine NYT-mini-style interlocking.
+const CROSS: boolean[][] = [
+  [false, false, true,  false, false],
+  [false, false, true,  false, false],
+  [true,  true,  true,  true,  true],
+  [false, false, true,  false, false],
+  [false, false, true,  false, false],
 ];
 
-// Layout B: 4-char + 4-char + 2+2
-// W W W W . / blank / W W W W . / blank / W W . W W
-const gridB: boolean[][] = [
-  [true,  true,  true,  true,  false],
-  [false, false, false, false, false],
-  [true,  true,  true,  true,  false],
-  [false, false, false, false, false],
-  [true,  true,  false, true,  true],
-];
-
-// Layout C: 4-char + 2+2 + 3-char
-// W W W W . / blank / W W . W W / blank / W W W . .
-const gridC: boolean[][] = [
-  [true,  true,  true,  true,  false],
-  [false, false, false, false, false],
-  [true,  true,  false, true,  true],
-  [false, false, false, false, false],
-  [true,  true,  true,  false, false],
-];
-
-// Layout D: 2+2 + 2+2 + 3-char
-// W W . W W / blank / W W . W W / blank / W W W . .
-const gridD: boolean[][] = [
-  [true,  true,  false, true,  true],
-  [false, false, false, false, false],
-  [true,  true,  false, true,  true],
-  [false, false, false, false, false],
-  [true,  true,  true,  false, false],
-];
-
-// Layout E: 4-char + 4-char + 3-char
-// W W W W . / blank / W W W W . / blank / W W W . .
-const gridE: boolean[][] = [
-  [true,  true,  true,  true,  false],
-  [false, false, false, false, false],
-  [true,  true,  true,  true,  false],
-  [false, false, false, false, false],
-  [true,  true,  true,  false, false],
-];
+// Helper to build a puzzle entry (always plus-cross layout)
+function makePuzzle(
+  puzzleIndex: number,
+  title: string,
+  down: { clue: string; chars: string[]; answer: string[] },
+  across: { clue: string; chars: string[]; answer: string[] },
+): CrosswordPuzzleData {
+  return {
+    title,
+    puzzleIndex,
+    grid: CROSS,
+    words: [
+      { number: 1, direction: "down",   startRow: 0, startCol: 2, length: 5, ...down },
+      { number: 2, direction: "across", startRow: 2, startCol: 0, length: 5, ...across },
+    ],
+  };
+}
 
 export const SEED_PUZZLES: CrosswordPuzzleData[] = [
-  // ─── Puzzle 1: Chinese Cities I ──────────────────────────────────────────
-  {
-    title: "Chinese Cities I",
-    puzzleIndex: 0,
-    grid: gridA,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 2, clue: "Capital of China", chars: ["北", "京"], answer: ["bei", "jing"] },
-      { number: 2, direction: "across", startRow: 0, startCol: 3, length: 2, clue: "China's largest city", chars: ["上", "海"], answer: ["shang", "hai"] },
-      { number: 3, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Sichuan city, home of giant pandas", chars: ["成", "都"], answer: ["cheng", "du"] },
-      { number: 4, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "Largest city in Guangdong province", chars: ["广", "州"], answer: ["guang", "zhou"] },
-      { number: 5, direction: "across", startRow: 4, startCol: 0, length: 2, clue: "Ancient capital meaning 'Southern Capital'", chars: ["南", "京"], answer: ["nan", "jing"] },
-    ],
-  },
 
-  // ─── Puzzle 2: Fruits ─────────────────────────────────────────────────────
-  {
-    title: "Fruits",
-    puzzleIndex: 1,
-    grid: gridA,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 2, clue: "Apple", chars: ["苹", "果"], answer: ["ping", "guo"] },
-      { number: 2, direction: "across", startRow: 0, startCol: 3, length: 2, clue: "Watermelon", chars: ["西", "瓜"], answer: ["xi", "gua"] },
-      { number: 3, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Banana", chars: ["香", "蕉"], answer: ["xiang", "jiao"] },
-      { number: 4, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "Mandarin orange / Tangerine", chars: ["橘", "子"], answer: ["ju", "zi"] },
-      { number: 5, direction: "across", startRow: 4, startCol: 0, length: 2, clue: "Grape", chars: ["葡", "萄"], answer: ["pu", "tao"] },
-    ],
-  },
+  // Puzzle  0 — intersection: 再 (zai)
+  makePuzzle(0, "Greetings",
+    { clue: "Five greeting words: you · good · again · thanks · morning", chars: ["你","好","再","谢","早"], answer: ["ni","hao","zai","xie","zao"] },
+    { clue: "See you again tomorrow? (common farewell phrase)",          chars: ["明","天","再","见","吗"], answer: ["ming","tian","zai","jian","ma"] },
+  ),
 
-  // ─── Puzzle 3: Famous Figures ─────────────────────────────────────────────
-  {
-    title: "Famous Figures",
-    puzzleIndex: 2,
-    grid: gridA,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 2, clue: "NBA star, 7'6\" centre who played for the Houston Rockets", chars: ["姚", "明"], answer: ["yao", "ming"] },
-      { number: 2, direction: "across", startRow: 0, startCol: 3, length: 2, clue: "World-famous pianist, known for his expressive Chopin performances", chars: ["郎", "朗"], answer: ["lang", "lang"] },
-      { number: 3, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Tennis star, first Chinese player to win a Grand Slam singles title", chars: ["李", "娜"], answer: ["li", "na"] },
-      { number: 4, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "Mandopop queen and actress, 'The Diva of Asia'", chars: ["王", "菲"], answer: ["wang", "fei"] },
-      { number: 5, direction: "across", startRow: 4, startCol: 0, length: 2, clue: "Action movie star known in the West as Jackie Chan", chars: ["成", "龙"], answer: ["cheng", "long"] },
-    ],
-  },
+  // Puzzle  1 — intersection: 蓝 (lan)
+  makePuzzle(1, "Colours",
+    { clue: "Five colours: white · green · blue · yellow · red", chars: ["白","绿","蓝","黄","红"], answer: ["bai","lü","lan","huang","hong"] },
+    { clue: "I love blue skies and the sea (scenic phrase)",    chars: ["我","爱","蓝","天","海"], answer: ["wo","ai","lan","tian","hai"] },
+  ),
 
-  // ─── Puzzle 4: Greetings ──────────────────────────────────────────────────
-  {
-    title: "Greetings",
-    puzzleIndex: 3,
-    grid: gridD,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 2, clue: "Hello / Hi", chars: ["你", "好"], answer: ["ni", "hao"] },
-      { number: 2, direction: "across", startRow: 0, startCol: 3, length: 2, clue: "Thank you", chars: ["谢", "谢"], answer: ["xie", "xie"] },
-      { number: 3, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Goodbye / See you later", chars: ["再", "见"], answer: ["zai", "jian"] },
-      { number: 4, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "Come on! / Keep it up! / Go!", chars: ["加", "油"], answer: ["jia", "you"] },
-      { number: 5, direction: "across", startRow: 4, startCol: 0, length: 3, clue: "Sorry / I apologize", chars: ["对", "不", "起"], answer: ["dui", "bu", "qi"] },
-    ],
-  },
+  // Puzzle  2 — intersection: 成 (cheng)
+  makePuzzle(2, "Famous Figures",
+    { clue: "May all things succeed! (成功 = succeed, common blessing)", chars: ["万","事","成","功","好"], answer: ["wan","shi","cheng","gong","hao"] },
+    { clue: "Is he Jackie Chan? (成龙 is Jackie Chan's Chinese name)",   chars: ["他","是","成","龙","吗"], answer: ["ta","shi","cheng","long","ma"] },
+  ),
 
-  // ─── Puzzle 5: Lunar New Year ─────────────────────────────────────────────
-  {
-    title: "Lunar New Year",
-    puzzleIndex: 4,
-    grid: gridB,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 4, clue: "Happy New Year! (Lunar New Year greeting)", chars: ["新", "年", "快", "乐"], answer: ["xin", "nian", "kuai", "le"] },
-      { number: 2, direction: "across", startRow: 2, startCol: 0, length: 4, clue: "Wishing you prosperity! (Chinese New Year greeting)", chars: ["恭", "喜", "发", "财"], answer: ["gong", "xi", "fa", "cai"] },
-      { number: 3, direction: "across", startRow: 4, startCol: 0, length: 2, clue: "Chinese Spring Festival / Lunar New Year", chars: ["春", "节"], answer: ["chun", "jie"] },
-      { number: 4, direction: "across", startRow: 4, startCol: 3, length: 2, clue: "Sweet sticky rice ball eaten at the Lantern Festival", chars: ["元", "宵"], answer: ["yuan", "xiao"] },
-    ],
-  },
+  // Puzzle  3 — intersection: 北 (bei)
+  makePuzzle(3, "Directions",
+    { clue: "Sizes + cardinal directions: big · small · north · south · east", chars: ["大","小","北","南","东"], answer: ["da","xiao","bei","nan","dong"] },
+    { clue: "Hello, Beijing person! (friendly greeting to a Beijinger)",        chars: ["你","好","北","京","人"], answer: ["ni","hao","bei","jing","ren"] },
+  ),
 
-  // ─── Puzzle 6: Vegetables ─────────────────────────────────────────────────
-  {
-    title: "Vegetables",
-    puzzleIndex: 5,
-    grid: gridA,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 2, clue: "Napa cabbage / Chinese cabbage", chars: ["白", "菜"], answer: ["bai", "cai"] },
-      { number: 2, direction: "across", startRow: 0, startCol: 3, length: 2, clue: "Potato", chars: ["土", "豆"], answer: ["tu", "dou"] },
-      { number: 3, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Cucumber", chars: ["黄", "瓜"], answer: ["huang", "gua"] },
-      { number: 4, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "Corn / Maize", chars: ["玉", "米"], answer: ["yu", "mi"] },
-      { number: 5, direction: "across", startRow: 4, startCol: 0, length: 2, clue: "Tomato", chars: ["番", "茄"], answer: ["fan", "qie"] },
-    ],
-  },
+  // Puzzle  4 — intersection: 广 (guang)
+  makePuzzle(4, "Chinese Cities",
+    { clue: "China's four tier-1 cities: 北京/上海/广州/深圳 + 市 (city)", chars: ["北","上","广","深","市"], answer: ["bei","shang","guang","shen","shi"] },
+    { clue: "I'm going to Guangzhou to have fun (travel phrase)",          chars: ["我","去","广","州","玩"], answer: ["wo","qu","guang","zhou","wan"] },
+  ),
 
-  // ─── Puzzle 7: Chinese Cities II ──────────────────────────────────────────
-  {
-    title: "Chinese Cities II",
-    puzzleIndex: 6,
-    grid: gridA,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 2, clue: "Tech hub near Hong Kong", chars: ["深", "圳"], answer: ["shen", "zhen"] },
-      { number: 2, direction: "across", startRow: 0, startCol: 3, length: 2, clue: "City famous for West Lake", chars: ["杭", "州"], answer: ["hang", "zhou"] },
-      { number: 3, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Ancient capital, home of the Terracotta Army", chars: ["西", "安"], answer: ["xi", "an"] },
-      { number: 4, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "Major city in central China", chars: ["武", "汉"], answer: ["wu", "han"] },
-      { number: 5, direction: "across", startRow: 4, startCol: 0, length: 2, clue: "Coastal city near Beijing", chars: ["天", "津"], answer: ["tian", "jin"] },
-    ],
-  },
+  // Puzzle  5 — intersection: 面 (mian)
+  makePuzzle(5, "Chinese Food",
+    { clue: "Five Chinese staples: rice · cooked-rice · noodles · soup · congee", chars: ["米","饭","面","汤","粥"], answer: ["mi","fan","mian","tang","zhou"] },
+    { clue: "Zha jiang mian is the best! (famous Beijing noodle dish)",           chars: ["炸","酱","面","最","棒"], answer: ["zha","jiang","mian","zui","bang"] },
+  ),
 
-  // ─── Puzzle 8: Ancient Philosophers ─────────────────────────────────────
-  {
-    title: "Ancient Philosophers",
-    puzzleIndex: 7,
-    grid: gridA,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 2, clue: "Ancient philosopher (Confucius)", chars: ["孔", "子"], answer: ["kong", "zi"] },
-      { number: 2, direction: "across", startRow: 0, startCol: 3, length: 2, clue: "Confucian scholar known in English as Mencius", chars: ["孟", "子"], answer: ["meng", "zi"] },
-      { number: 3, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Founder of Taoism (Laozi)", chars: ["老", "子"], answer: ["lao", "zi"] },
-      { number: 4, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "Taoist philosopher, author of 'Zhuangzi'", chars: ["庄", "子"], answer: ["zhuang", "zi"] },
-      { number: 5, direction: "across", startRow: 4, startCol: 0, length: 2, clue: "Sun Tzu, author of 'The Art of War'", chars: ["孙", "子"], answer: ["sun", "zi"] },
-    ],
-  },
+  // Puzzle  6 — intersection: 香 (xiang)
+  makePuzzle(6, "Fruits",
+    { clue: "First character of five fruits: 苹果/葡萄/香蕉/梨/芒果", chars: ["苹","葡","香","梨","芒"], answer: ["ping","pu","xiang","li","mang"] },
+    { clue: "I'll buy some bananas (shopping phrase)",                  chars: ["我","买","香","蕉","吧"], answer: ["wo","mai","xiang","jiao","ba"] },
+  ),
 
-  // ─── Puzzle 9: Chinese Food ───────────────────────────────────────────────
-  {
-    title: "Chinese Food",
-    puzzleIndex: 8,
-    grid: gridA,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 2, clue: "Dumpling — eaten at Chinese New Year", chars: ["饺", "子"], answer: ["jiao", "zi"] },
-      { number: 2, direction: "across", startRow: 0, startCol: 3, length: 2, clue: "Hotpot — popular communal Chinese dish", chars: ["火", "锅"], answer: ["huo", "guo"] },
-      { number: 3, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Noodles", chars: ["面", "条"], answer: ["mian", "tiao"] },
-      { number: 4, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "Tofu / Bean curd", chars: ["豆", "腐"], answer: ["dou", "fu"] },
-      { number: 5, direction: "across", startRow: 4, startCol: 0, length: 2, clue: "Cooked rice", chars: ["米", "饭"], answer: ["mi", "fan"] },
-    ],
-  },
+  // Puzzle  7 — intersection: 豆 (dou)
+  makePuzzle(7, "Vegetables",
+    { clue: "Napa cabbage and tofu are delicious! (two classic Chinese ingredients)", chars: ["白","菜","豆","腐","好"], answer: ["bai","cai","dou","fu","hao"] },
+    { clue: "I love tofu soup (popular home-cooked dish)",                            chars: ["我","爱","豆","腐","汤"], answer: ["wo","ai","dou","fu","tang"] },
+  ),
 
-  // ─── Puzzle 10: Common Phrases ────────────────────────────────────────────
-  {
-    title: "Common Phrases",
-    puzzleIndex: 9,
-    grid: gridE,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 4, clue: "May all your wishes come true (blessing)", chars: ["万", "事", "如", "意"], answer: ["wan", "shi", "ru", "yi"] },
-      { number: 2, direction: "across", startRow: 2, startCol: 0, length: 4, clue: "Happy Birthday!", chars: ["生", "日", "快", "乐"], answer: ["sheng", "ri", "kuai", "le"] },
-      { number: 3, direction: "across", startRow: 4, startCol: 0, length: 3, clue: "No problem / It's fine", chars: ["没", "问", "题"], answer: ["mei", "wen", "ti"] },
-    ],
-  },
+  // Puzzle  8 — intersection: 秋 (qiu)
+  makePuzzle(8, "Seasons",
+    { clue: "The four seasons + year: spring · summer · autumn · winter · year", chars: ["春","夏","秋","冬","年"], answer: ["chun","xia","qiu","dong","nian"] },
+    { clue: "I love beautiful autumn (seasonal appreciation phrase)",              chars: ["我","爱","秋","天","美"], answer: ["wo","ai","qiu","tian","mei"] },
+  ),
 
-  // ─── Puzzle 11: Chinese Cities III ───────────────────────────────────────
-  {
-    title: "Chinese Cities III",
-    puzzleIndex: 10,
-    grid: gridA,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 2, clue: "Mountain city famous for spicy hotpot", chars: ["重", "庆"], answer: ["chong", "qing"] },
-      { number: 2, direction: "across", startRow: 0, startCol: 3, length: 2, clue: "City known for Tsingtao beer", chars: ["青", "岛"], answer: ["qing", "dao"] },
-      { number: 3, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Coastal city in northeastern China", chars: ["大", "连"], answer: ["da", "lian"] },
-      { number: 4, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "City in Shanxi province known for vinegar", chars: ["太", "原"], answer: ["tai", "yuan"] },
-      { number: 5, direction: "across", startRow: 4, startCol: 0, length: 2, clue: "City in Yunnan with famous flower markets", chars: ["昆", "明"], answer: ["kun", "ming"] },
-    ],
-  },
+  // Puzzle  9 — intersection: 哥 (ge)
+  makePuzzle(9, "Family",
+    { clue: "Five family members: dad · mum · big brother · little brother · little sister", chars: ["爸","妈","哥","弟","妹"], answer: ["ba","ma","ge","di","mei"] },
+    { clue: "I have a big brother and sisters (talking about siblings)",                     chars: ["我","有","哥","姐","妹"], answer: ["wo","you","ge","jie","mei"] },
+  ),
 
-  // ─── Puzzle 12: Animals ───────────────────────────────────────────────────
-  {
-    title: "Animals",
-    puzzleIndex: 11,
-    grid: gridA,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 2, clue: "China's beloved black-and-white bear", chars: ["熊", "猫"], answer: ["xiong", "mao"] },
-      { number: 2, direction: "across", startRow: 0, startCol: 3, length: 2, clue: "Striped big cat, symbol of strength", chars: ["老", "虎"], answer: ["lao", "hu"] },
-      { number: 3, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Fluffy long-eared animal", chars: ["兔", "子"], answer: ["tu", "zi"] },
-      { number: 4, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "Popular orange pet fish", chars: ["金", "鱼"], answer: ["jin", "yu"] },
-      { number: 5, direction: "across", startRow: 4, startCol: 0, length: 2, clue: "Reptile with a shell, symbol of longevity", chars: ["乌", "龟"], answer: ["wu", "gui"] },
-    ],
-  },
+  // Puzzle 10 — intersection: 晚 (wan)
+  makePuzzle(10, "Times of Day",
+    { clue: "Times + positions: morning · noon · evening · up · down",  chars: ["早","中","晚","上","下"], answer: ["zao","zhong","wan","shang","xia"] },
+    { clue: "Have a good evening! (common evening greeting phrase)",     chars: ["今","天","晚","上","好"], answer: ["jin","tian","wan","shang","hao"] },
+  ),
 
-  // ─── Puzzle 13: Pronouns + Love (cross layout — 1 down + 1 across) ─────────
-  {
-    title: "Pronouns & Love",
-    puzzleIndex: 12,
-    grid: [
-      [false, false, true,  false, false],
-      [false, false, true,  false, false],
-      [true,  true,  true,  true,  true],
-      [false, false, true,  false, false],
-      [false, false, true,  false, false],
-    ],
-    words: [
-      {
-        number: 1, direction: "down" as const, startRow: 0, startCol: 2, length: 5,
-        clue: "I · you · love · he · she (basic pronouns + a key verb)",
-        chars: ["我", "你", "爱", "他", "她"],
-        answer: ["wo", "ni", "ai", "ta", "ta"],
-      },
-      {
-        number: 2, direction: "across" as const, startRow: 2, startCol: 0, length: 5,
-        clue: "I also love China (common heartfelt phrase)",
-        chars: ["我", "也", "爱", "中", "国"],
-        answer: ["wo", "ye", "ai", "zhong", "guo"],
-      },
-    ],
-  },
+  // Puzzle 11 — intersection: 果 (guo)
+  makePuzzle(11, "Drinks",
+    { clue: "First character of five drinks: 水/茶/果汁/咖啡/牛奶 (water/tea/juice/coffee/milk)", chars: ["水","茶","果","咖","牛"], answer: ["shui","cha","guo","ka","niu"] },
+    { clue: "This juice is delicious! (simple compliment at the table)",                        chars: ["这","个","果","汁","好"], answer: ["zhe","ge","guo","zhi","hao"] },
+  ),
 
-  // ─── Puzzle 14: Numbers & Time (cross layout — 1 down + 1 across) ──────────
-  {
-    title: "Numbers & Time",
-    puzzleIndex: 13,
-    grid: [
-      [false, false, true,  false, false],
-      [false, false, true,  false, false],
-      [true,  true,  true,  true,  true],
-      [false, false, true,  false, false],
-      [false, false, true,  false, false],
-    ],
-    words: [
-      {
-        number: 1, direction: "down" as const, startRow: 0, startCol: 2, length: 5,
-        clue: "One · two · three · four · five",
-        chars: ["一", "二", "三", "四", "五"],
-        answer: ["yi", "er", "san", "si", "wu"],
-      },
-      {
-        number: 2, direction: "across" as const, startRow: 2, startCol: 0, length: 5,
-        clue: "Three-thirty in the morning (early wake-up time!)",
-        chars: ["早", "上", "三", "点", "半"],
-        answer: ["zao", "shang", "san", "dian", "ban"],
-      },
-    ],
-  },
+  // Puzzle 12 — intersection: 爱 (ai)
+  makePuzzle(12, "Pronouns & Love",
+    { clue: "Core pronouns + love: I · you · love · he · she", chars: ["我","你","爱","他","她"], answer: ["wo","ni","ai","ta","ta"] },
+    { clue: "I also love China (heartfelt everyday phrase)",   chars: ["我","也","爱","中","国"], answer: ["wo","ye","ai","zhong","guo"] },
+  ),
+
+  // Puzzle 13 — intersection: 三 (san)
+  makePuzzle(13, "Numbers & Time",
+    { clue: "Counting: one · two · three · four · five",        chars: ["一","二","三","四","五"], answer: ["yi","er","san","si","wu"] },
+    { clue: "Three-thirty in the morning (early wake-up time!)", chars: ["早","上","三","点","半"], answer: ["zao","shang","san","dian","ban"] },
+  ),
+
 ];
 
 export async function seedCrosswords(): Promise<void> {

@@ -53,7 +53,7 @@ export function Layout({ children }: LayoutProps) {
     { href: "/profile", label: "Profile", icon: UserCircle },
   ];
 
-  const navItems = user?.role === "reviewer" ? reviewerItems : learnerItems;
+  const navItems = (user?.role === "reviewer" || user?.role === "admin") ? reviewerItems : learnerItems;
 
   const isPro = useIsPro();
 

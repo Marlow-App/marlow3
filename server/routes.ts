@@ -1134,7 +1134,7 @@ export async function registerRoutes(
     try {
       const userId = (req.user as { claims: { sub: string } }).claims.sub;
       const dbUser = await storage.getUser(userId);
-      if (dbUser?.role !== "reviewer") return res.status(403).json({ message: "Reviewers only" });
+      if (dbUser?.role !== "reviewer" && dbUser?.role !== "admin") return res.status(403).json({ message: "Reviewers/admins only" });
       const puzzles = await storage.getAllCrosswords();
       res.json(puzzles);
     } catch (err) {
@@ -1148,7 +1148,7 @@ export async function registerRoutes(
     try {
       const userId = (req.user as { claims: { sub: string } }).claims.sub;
       const dbUser = await storage.getUser(userId);
-      if (dbUser?.role !== "reviewer") return res.status(403).json({ message: "Reviewers only" });
+      if (dbUser?.role !== "reviewer" && dbUser?.role !== "admin") return res.status(403).json({ message: "Reviewers/admins only" });
       const puzzleId = Number(req.params.id);
       if (!puzzleId) return res.status(400).json({ message: "Invalid puzzle ID" });
       const { grid, words, title } = req.body as { grid?: boolean[][]; words?: CrosswordWord[]; title?: string };
