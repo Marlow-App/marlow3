@@ -1076,6 +1076,8 @@ export async function registerRoutes(
       if (!puzzle) return res.status(404).json({ message: "Puzzle not found" });
 
       const words = (puzzle.words as unknown) as CrosswordWord[];
+      // Only evaluate cells the user has actually filled in (skip empty cells).
+      // Intersection cells satisfy both constraints via AND logic.
       const results: Record<string, boolean> = {};
       for (const word of words) {
         for (let i = 0; i < word.length; i++) {
@@ -1083,9 +1085,9 @@ export async function registerRoutes(
           const c = word.direction === "across" ? word.startCol + i : word.startCol;
           const key = `${r}-${c}`;
           const typed = (cells[key] ?? "").toLowerCase().trim();
+          if (!typed) continue; // skip unfilled cells
           const expected = (word.answer[i] ?? "").toLowerCase().trim();
           const isCorrect = typed === expected;
-          // AND logic: intersection cells must satisfy both across and down constraints
           results[key] = results[key] === undefined ? isCorrect : results[key] && isCorrect;
         }
       }
@@ -1114,12 +1116,35 @@ export async function registerRoutes(
   app.post("/api/crossword/today/progress", isAuthenticated, saveProgressHandler);
   app.post("/api/crossword/progress", isAuthenticated, saveProgressHandler);
 
-  // Complete puzzle
+  // Complete puzzle — server verifies all cells correct before marking isComplete=true
   app.post("/api/crossword/complete", isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as { claims: { sub: string } }).claims.sub;
       const { puzzleId, cells, elapsedSeconds } = req.body as { puzzleId: number; cells: Record<string, string>; elapsedSeconds: number };
       if (!puzzleId || !cells) return res.status(400).json({ message: "puzzleId and cells required" });
+
+      const all = await storage.getAllCrosswords();
+      const puzzle = all.find(p => p.id === puzzleId);
+      if (!puzzle) return res.status(404).json({ message: "Puzzle not found" });
+
+      const words = (puzzle.words as unknown) as CrosswordWord[];
+      let allCorrect = true;
+      for (const word of words) {
+        for (let i = 0; i < word.length; i++) {
+          const r = word.direction === "across" ? word.startRow : word.startRow + i;
+          const c = word.direction === "across" ? word.startCol + i : word.startCol;
+          const key = `${r}-${c}`;
+          const typed = (cells[key] ?? "").toLowerCase().trim();
+          const expected = (word.answer[i] ?? "").toLowerCase().trim();
+          if (typed !== expected) { allCorrect = false; break; }
+        }
+        if (!allCorrect) break;
+      }
+
+      if (!allCorrect) {
+        return res.status(400).json({ message: "Puzzle is not fully solved correctly" });
+      }
+
       const puzzleDate = new Date().toISOString().slice(0, 10);
       const record = await storage.completeCrossword(userId, puzzleId, puzzleDate, cells, elapsedSeconds ?? 0);
       res.json(record);
