@@ -133,7 +133,7 @@ export default function CrosswordPage() {
 
   const progressMutation = useMutation({
     mutationFn: (data: { puzzleId: number; cells: Record<string, string>; elapsedSeconds: number }) =>
-      apiRequest("POST", "/api/crossword/progress", data),
+      apiRequest("POST", "/api/crossword/today/progress", data),
   });
 
   const checkMutation = useMutation({
