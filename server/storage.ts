@@ -590,12 +590,13 @@ export class DatabaseStorage implements IStorage {
     const total = all.length;
     const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
 
-    // Fetch all completions for this user in one query
+    // Fetch all completions for this user in one query (select both puzzleId AND puzzleDate)
     const completions = await db
-      .select({ puzzleId: crosswordCompletions.puzzleId })
+      .select({ puzzleId: crosswordCompletions.puzzleId, puzzleDate: crosswordCompletions.puzzleDate })
       .from(crosswordCompletions)
       .where(and(eq(crosswordCompletions.userId, userId), eq(crosswordCompletions.isComplete, true)));
-    const completedIds = new Set(completions.map(c => c.puzzleId));
+    // Build a set of "puzzleId:puzzleDate" keys so completions are date-specific
+    const completedKeys = new Set(completions.map(c => `${c.puzzleId}:${c.puzzleDate}`));
 
     const result: Array<{ puzzle: DailyCrossword; date: string; isComplete: boolean }> = [];
     for (let n = 1; n <= 13; n++) {
@@ -605,7 +606,7 @@ export class DatabaseStorage implements IStorage {
       if (!puzzle) continue;
       const d = new Date(pastDay * 24 * 60 * 60 * 1000);
       const date = d.toISOString().slice(0, 10);
-      result.push({ puzzle, date, isComplete: completedIds.has(puzzle.id) });
+      result.push({ puzzle, date, isComplete: completedKeys.has(`${puzzle.id}:${date}`) });
     }
     return result;
   }

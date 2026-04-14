@@ -144,9 +144,17 @@ export default function CrosswordPage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Restore saved state
+  // Reset and restore state whenever puzzle changes (covers today → archive and archive → archive navigation)
   useEffect(() => {
     if (!puzzle) return;
+    // Always reset all game state first
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    setSelectedKey(null);
+    setActiveWordNum(null);
+    setCheckState({});
+    setStartTime(null);
+    // Apply saved status for this specific puzzle
     if (puzzle.status?.isComplete) {
       setCells((puzzle.status.cells as Record<string, string>) ?? {});
       setElapsedSeconds(puzzle.status.elapsedSeconds ?? 0);
@@ -154,8 +162,14 @@ export default function CrosswordPage() {
     } else if (puzzle.status?.cells && Object.keys(puzzle.status.cells).length > 0) {
       setCells((puzzle.status.cells as Record<string, string>) ?? {});
       setElapsedSeconds(puzzle.status.elapsedSeconds ?? 0);
+      setPhase("pre-start");
+    } else {
+      setCells({});
+      setElapsedSeconds(0);
+      setPhase("pre-start");
     }
-  }, [puzzle]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [puzzle?.id]);
 
   // Timer
   useEffect(() => {
