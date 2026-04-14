@@ -81,7 +81,7 @@ export function CrosswordGrid({
               return (
                 <div
                   key={k}
-                  className="w-14 h-14 md:w-16 md:h-16 rounded-md bg-foreground/80 dark:bg-foreground/60"
+                  className="w-16 h-16 md:w-20 md:h-20 rounded-md bg-foreground/80 dark:bg-foreground/60"
                   data-testid={`cell-black-${k}`}
                 />
               );
@@ -91,7 +91,7 @@ export function CrosswordGrid({
               <div
                 key={k}
                 className={cn(
-                  "w-14 h-14 md:w-16 md:h-16 rounded-md border-2 relative transition-all duration-100 cursor-pointer select-none",
+                  "w-16 h-16 md:w-20 md:h-20 rounded-md border-2 relative transition-all duration-100 cursor-pointer select-none",
                   isSelected
                     ? "border-primary bg-primary/15 shadow-sm"
                     : isHighlighted
