@@ -64,7 +64,7 @@ export function CrosswordGrid({
     <div className="relative">
       <div
         className="grid gap-1 p-2 bg-foreground/5 rounded-xl border border-border"
-        style={{ gridTemplateColumns: "repeat(5, 1fr)" }}
+        style={{ gridTemplateColumns: `repeat(${puzzle.grid[0]?.length ?? 4}, 1fr)` }}
         data-testid="crossword-grid"
       >
         {puzzle.grid.map((row, r) =>

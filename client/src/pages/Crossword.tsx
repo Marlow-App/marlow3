@@ -381,7 +381,8 @@ export default function CrosswordPage() {
       if (activeWordNum !== null) advanceToNextCell(puzzle, row, col, activeWordNum);
     } else if (e.key === "ArrowRight") {
       e.preventDefault();
-      for (let c = col + 1; c < 5; c++) {
+      const numCols = puzzle.grid[0]?.length ?? 4;
+      for (let c = col + 1; c < numCols; c++) {
         if (puzzle.grid[row]?.[c]) { setSelectedKey(cellKey(row, c)); break; }
       }
     } else if (e.key === "ArrowLeft") {
@@ -391,7 +392,8 @@ export default function CrosswordPage() {
       }
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
-      for (let r = row + 1; r < 5; r++) {
+      const numRows = puzzle.grid.length ?? 4;
+      for (let r = row + 1; r < numRows; r++) {
         if (puzzle.grid[r]?.[col]) { setSelectedKey(cellKey(r, col)); break; }
       }
     } else if (e.key === "ArrowUp") {

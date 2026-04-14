@@ -16,16 +16,17 @@ export interface CrosswordPuzzleData {
   words: CrosswordWordEntry[];
 }
 
-// I-beam layout: row 0 and row 4 are full ACROSS words; col 2 is the full DOWN word.
-// Intersections: (row 0, col 2) and (row 4, col 2).
-// Word 1 = ACROSS (row 0), Word 2 = DOWN (col 2), Word 3 = ACROSS (row 4)
-// Constraint: Word1.chars[2] === Word2.chars[0]  AND  Word3.chars[2] === Word2.chars[4]
-const I_BEAM: boolean[][] = [
-  [true,  true,  true,  true,  true],
-  [false, false, true,  false, false],
-  [false, false, true,  false, false],
-  [false, false, true,  false, false],
-  [true,  true,  true,  true,  true],
+// 4×4 I-beam layout:
+// Row 0 = full ACROSS word (4 chars, cols 0-3)
+// Col 1 = full DOWN word (4 chars, rows 0-3)
+// Row 3 = full ACROSS word (4 chars, cols 0-3)
+// Intersections: (row 0, col 1) and (row 3, col 1)
+// Constraint: across1.chars[1] === down.chars[0]  AND  across3.chars[1] === down.chars[3]
+const I_BEAM_4: boolean[][] = [
+  [true,  true,  true,  true],
+  [false, true,  false, false],
+  [false, true,  false, false],
+  [true,  true,  true,  true],
 ];
 
 function makePuzzle(
@@ -35,182 +36,182 @@ function makePuzzle(
   down:    { clue: string; chars: string[]; answer: string[] },
   across3: { clue: string; chars: string[]; answer: string[] },
 ): CrosswordPuzzleData {
-  if (across1.chars[2] !== down.chars[0]) {
+  if (across1.chars[1] !== down.chars[0]) {
     throw new Error(
-      `Puzzle ${puzzleIndex}: across1.chars[2]="${across1.chars[2]}" must equal down.chars[0]="${down.chars[0]}"`,
+      `Puzzle ${puzzleIndex}: across1.chars[1]="${across1.chars[1]}" must equal down.chars[0]="${down.chars[0]}"`,
     );
   }
-  if (across3.chars[2] !== down.chars[4]) {
+  if (across3.chars[1] !== down.chars[3]) {
     throw new Error(
-      `Puzzle ${puzzleIndex}: across3.chars[2]="${across3.chars[2]}" must equal down.chars[4]="${down.chars[4]}"`,
+      `Puzzle ${puzzleIndex}: across3.chars[1]="${across3.chars[1]}" must equal down.chars[3]="${down.chars[3]}"`,
     );
   }
   return {
     title,
     puzzleIndex,
-    grid: I_BEAM,
+    grid: I_BEAM_4,
     words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 5, ...across1 },
-      { number: 2, direction: "down",   startRow: 0, startCol: 2, length: 5, ...down    },
-      { number: 3, direction: "across", startRow: 4, startCol: 0, length: 5, ...across3 },
+      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 4, ...across1 },
+      { number: 2, direction: "down",   startRow: 0, startCol: 1, length: 4, ...down    },
+      { number: 3, direction: "across", startRow: 3, startCol: 0, length: 4, ...across3 },
     ],
   };
 }
 
 export const SEED_PUZZLES: CrosswordPuzzleData[] = [
 
-  // 0 — Peppa Pig · Street Food · Strawberries
-  // A1[2]=小=D[0] ✓  A3[2]=红=D[4] ✓
-  makePuzzle(0, "Peppa, Snacks & Berries",
-    { clue: "Outdoor snacks that fill the street with amazing smells",
-      chars: ["街","边","小","吃","香"], answer: ["jie","bian","xiao","chi","xiang"] },
-    { clue: "This cartoon pink piggy loves jumping in muddy puddles",
-      chars: ["小","猪","佩","奇","红"], answer: ["xiao","zhu","pei","qi","hong"] },
-    { clue: "These red berries are round, sweet, and bright red",
-      chars: ["草","莓","红","彤","彤"], answer: ["cao","mei","hong","tong","tong"] },
+  // 0 — 第一印象 · 一路顺风 · 乘风破浪
+  // A1[1]=一=D[0] ✓  A3[1]=风=D[3] ✓
+  makePuzzle(0, "First Impressions",
+    { clue: "The judgment you form when you meet someone for the very first time",
+      chars: ["第","一","印","象"], answer: ["di","yi","yin","xiang"] },
+    { clue: "A warm send-off wishing someone a smooth and safe journey",
+      chars: ["一","路","顺","风"], answer: ["yi","lu","shun","feng"] },
+    { clue: "To boldly overcome every challenge that stands in your way",
+      chars: ["乘","风","破","浪"], answer: ["cheng","feng","po","lang"] },
   ),
 
-  // 1 — Video Games · Basketball · Great Feeling
-  // A1[2]=打=D[0] ✓  A3[2]=爽=D[4] ✓
-  makePuzzle(1, "Games, Hoops & Feelings",
-    { clue: "What kids do after school on phones, consoles, and computers",
-      chars: ["他","们","打","游","戏"], answer: ["ta","men","da","you","xi"] },
-    { clue: "Shooting hoops with friends on the court",
-      chars: ["打","篮","球","很","爽"], answer: ["da","lan","qiu","hen","shuang"] },
-    { clue: "How you feel after acing a test or winning a game",
-      chars: ["感","觉","爽","极","了"], answer: ["gan","jue","shuang","ji","le"] },
+  // 1 — 澳大利亚 · 大吃一惊 · 大惊失色
+  // A1[1]=大=D[0] ✓  A3[1]=惊=D[3] ✓
+  makePuzzle(1, "Shock & Surprise",
+    { clue: "The country where kangaroos and the Great Barrier Reef are found",
+      chars: ["澳","大","利","亚"], answer: ["ao","da","li","ya"] },
+    { clue: "To be completely taken aback and shocked by something unexpected",
+      chars: ["大","吃","一","惊"], answer: ["da","chi","yi","jing"] },
+    { clue: "To turn pale with fear or shock — your face loses all colour",
+      chars: ["大","惊","失","色"], answer: ["da","jing","shi","se"] },
   ),
 
-  // 2 — Watching Crowds · Cinema · Happy Mood
-  // A1[2]=看=D[0] ✓  A3[2]=心=D[4] ✓
-  makePuzzle(2, "Cinema, Crowds & Moods",
-    { clue: "When something exciting happens, a crowd gathers to watch",
-      chars: ["大","家","看","热","闹"], answer: ["da","jia","kan","re","nao"] },
-    { clue: "Saturday night activity with popcorn and a big screen",
-      chars: ["看","电","影","开","心"], answer: ["kan","dian","ying","kai","xin"] },
-    { clue: "When your spirits are high and everything feels good",
-      chars: ["快","乐","心","情","好"], answer: ["kuai","le","xin","qing","hao"] },
+  // 2 — 全心全意 · 心想事成 · 功成名就
+  // A1[1]=心=D[0] ✓  A3[1]=成=D[3] ✓
+  makePuzzle(2, "Heart & Success",
+    { clue: "Putting every bit of your heart and soul into what you do",
+      chars: ["全","心","全","意"], answer: ["quan","xin","quan","yi"] },
+    { clue: "May everything you wish for come true — a classic blessing",
+      chars: ["心","想","事","成"], answer: ["xin","xiang","shi","cheng"] },
+    { clue: "To achieve great fame and success through hard work",
+      chars: ["功","成","名","就"], answer: ["gong","cheng","ming","jiu"] },
   ),
 
-  // 3 — Little Dog · Running · PE Class
-  // A1[2]=跑=D[0] ✓  A3[2]=体=D[4] ✓
-  makePuzzle(3, "Dogs, Running & PE",
-    { clue: "A small furry four-legged pet going at full speed",
-      chars: ["小","狗","跑","得","快"], answer: ["xiao","gou","pao","de","kuai"] },
-    { clue: "This exercise makes your body healthier and stronger",
-      chars: ["跑","步","强","身","体"], answer: ["pao","bu","qiang","shen","ti"] },
-    { clue: "The school subject where you play sports and move around",
-      chars: ["每","天","体","育","课"], answer: ["mei","tian","ti","yu","ke"] },
+  // 3 — 顶天立地 · 天长地久 · 悠久历史
+  // A1[1]=天=D[0] ✓  A3[1]=久=D[3] ✓
+  makePuzzle(3, "Heaven & Earth",
+    { clue: "Standing tall and upright — a truly heroic and towering figure",
+      chars: ["顶","天","立","地"], answer: ["ding","tian","li","di"] },
+    { clue: "As eternal as heaven and earth — lasting forever without end",
+      chars: ["天","长","地","久"], answer: ["tian","chang","di","jiu"] },
+    { clue: "A civilisation or tradition that stretches back thousands of years",
+      chars: ["悠","久","历","史"], answer: ["you","jiu","li","shi"] },
   ),
 
-  // 4 — Fish · Amusement Park · Computer Games
-  // A1[2]=游=D[0] ✓  A3[2]=玩=D[4] ✓
-  makePuzzle(4, "Fish, Parks & Games",
-    { clue: "These underwater creatures glide silently through rivers and seas",
-      chars: ["鱼","儿","游","水","中"], answer: ["yu","er","you","shui","zhong"] },
-    { clue: "A park full of roller coasters, rides, and attractions",
-      chars: ["游","乐","园","好","玩"], answer: ["you","le","yuan","hao","wan"] },
-    { clue: "What you do when you open Minecraft, Roblox, or any game",
-      chars: ["电","脑","玩","游","戏"], answer: ["dian","nao","wan","you","xi"] },
+  // 4 — 最新消息 · 新年快乐 · 欢乐时光
+  // A1[1]=新=D[0] ✓  A3[1]=乐=D[3] ✓
+  makePuzzle(4, "New Year Joy",
+    { clue: "Breaking news — the very latest update on what is happening",
+      chars: ["最","新","消","息"], answer: ["zui","xin","xiao","xi"] },
+    { clue: "The greeting everyone says when the lunar new year begins",
+      chars: ["新","年","快","乐"], answer: ["xin","nian","kuai","le"] },
+    { clue: "A wonderful period full of laughter, fun, and good memories",
+      chars: ["欢","乐","时","光"], answer: ["huan","le","shi","guang"] },
   ),
 
-  // 5 — Mom's Love · Reading · Kung Fu
-  // A1[2]=爱=D[0] ✓  A3[2]=步=D[4] ✓
-  makePuzzle(5, "Mom, Books & Kung Fu",
-    { clue: "A mother's warmth and affection for her child",
-      chars: ["妈","妈","爱","宝","宝"], answer: ["ma","ma","ai","bao","bao"] },
-    { clue: "Do this every day and you will keep getting smarter",
-      chars: ["爱","读","书","进","步"], answer: ["ai","du","shu","jin","bu"] },
-    { clue: "The special footwork moves in martial arts",
-      chars: ["功","夫","步","法","妙"], answer: ["gong","fu","bu","fa","miao"] },
+  // 5 — 万马奔腾 · 马到成功 · 建功立业
+  // A1[1]=马=D[0] ✓  A3[1]=功=D[3] ✓
+  makePuzzle(5, "Horses & Achievement",
+    { clue: "Ten thousand horses galloping — a scene of enormous energy and power",
+      chars: ["万","马","奔","腾"], answer: ["wan","ma","ben","teng"] },
+    { clue: "Instant success — the moment your horse arrives, victory is already won",
+      chars: ["马","到","成","功"], answer: ["ma","dao","cheng","gong"] },
+    { clue: "To establish a career and leave behind a legacy of great achievements",
+      chars: ["建","功","立","业"], answer: ["jian","gong","li","ye"] },
   ),
 
-  // 6 — Teacher · Rainbow · Sparkling Eyes
-  // A1[2]=画=D[0] ✓  A3[2]=亮=D[4] ✓
-  makePuzzle(6, "Teacher, Rainbow & Eyes",
-    { clue: "Writing and drawing on the board at the front of the classroom",
-      chars: ["老","师","画","黑","板"], answer: ["lao","shi","hua","hei","ban"] },
-    { clue: "The colorful arc that appears in the sky after it rains",
-      chars: ["画","彩","虹","漂","亮"], answer: ["hua","cai","hong","piao","liang"] },
-    { clue: "Happy, alert eyes that shine like little stars",
-      chars: ["眼","睛","亮","晶","晶"], answer: ["yan","jing","liang","jing","jing"] },
+  // 6 — 青春活力 · 春暖花开 · 公开比赛
+  // A1[1]=春=D[0] ✓  A3[1]=开=D[3] ✓
+  makePuzzle(6, "Spring & Vitality",
+    { clue: "The energy, enthusiasm, and vigour that belongs to youth",
+      chars: ["青","春","活","力"], answer: ["qing","chun","huo","li"] },
+    { clue: "The season when the air grows warm and flowers burst into bloom",
+      chars: ["春","暖","花","开"], answer: ["chun","nuan","hua","kai"] },
+    { clue: "A competition open to all — anyone can sign up and take part",
+      chars: ["公","开","比","赛"], answer: ["gong","kai","bi","sai"] },
   ),
 
-  // 7 — Little Birds · Singing · Warm Feelings
-  // A1[2]=唱=D[0] ✓  A3[2]=心=D[4] ✓
-  makePuzzle(7, "Birds, Songs & Warmth",
-    { clue: "Feathered friends who serenade everyone at dawn every morning",
-      chars: ["小","鸟","唱","晨","歌"], answer: ["xiao","niao","chang","chen","ge"] },
-    { clue: "This activity lets you express yourself through music and melody",
-      chars: ["唱","歌","很","开","心"], answer: ["chang","ge","hen","kai","xin"] },
-    { clue: "The cozy, warm feeling in your chest when something is sweet",
-      chars: ["暖","暖","心","窝","里"], answer: ["nuan","nuan","xin","wo","li"] },
+  // 7 — 清风明月 · 风和日丽 · 美丽风景
+  // A1[1]=风=D[0] ✓  A3[1]=丽=D[3] ✓
+  makePuzzle(7, "Wind & Beauty",
+    { clue: "A gentle breeze under a bright full moon — a classic poetic scene",
+      chars: ["清","风","明","月"], answer: ["qing","feng","ming","yue"] },
+    { clue: "A perfect day — warm sunshine, calm winds, not a cloud in sight",
+      chars: ["风","和","日","丽"], answer: ["feng","he","ri","li"] },
+    { clue: "A view or landscape so stunning it takes your breath away",
+      chars: ["美","丽","风","景"], answer: ["mei","li","feng","jing"] },
   ),
 
-  // 8 — Ancient Knights · Bicycle · High Grades
-  // A1[2]=骑=D[0] ✓  A3[2]=棒=D[4] ✓
-  makePuzzle(8, "Knights, Bikes & Grades",
-    { clue: "A brave warrior in shiny armor from a long time ago",
-      chars: ["古","代","骑","士","帅"], answer: ["gu","dai","qi","shi","shuai"] },
-    { clue: "A healthy, eco-friendly way to get around on two wheels",
-      chars: ["骑","自","行","车","棒"], answer: ["qi","zi","xing","che","bang"] },
-    { clue: "When you ace every test and make your parents super proud",
-      chars: ["成","绩","棒","上","天"], answer: ["cheng","ji","bang","shang","tian"] },
+  // 8 — 小吃文化 · 吃喝玩乐 · 娱乐活动
+  // A1[1]=吃=D[0] ✓  A3[1]=乐=D[3] ✓
+  makePuzzle(8, "Food & Fun",
+    { clue: "The rich tradition of street snacks and local bites found across China",
+      chars: ["小","吃","文","化"], answer: ["xiao","chi","wen","hua"] },
+    { clue: "Eating, drinking, playing, and having fun — enjoying life to the full",
+      chars: ["吃","喝","玩","乐"], answer: ["chi","he","wan","le"] },
+    { clue: "Events and pastimes done for enjoyment — shows, sports, games, and more",
+      chars: ["娱","乐","活","动"], answer: ["yu","le","huo","dong"] },
   ),
 
-  // 9 — Shuttlecock · Soccer · Summer Sweat
-  // A1[2]=踢=D[0] ✓  A3[2]=汗=D[4] ✓
-  makePuzzle(9, "Recess, Soccer & Summer",
-    { clue: "Keeping a weighted feathered toy in the air with your feet — classic recess game",
-      chars: ["课","间","踢","毽","子"], answer: ["ke","jian","ti","jian","zi"] },
-    { clue: "After 90 minutes chasing the ball on the field, your shirt is soaked",
-      chars: ["踢","足","球","出","汗"], answer: ["ti","zu","qiu","chu","han"] },
-    { clue: "Hot temperatures and dripping foreheads in July and August",
-      chars: ["夏","天","汗","水","多"], answer: ["xia","tian","han","shui","duo"] },
+  // 9 — 少年时代 · 年年有余 · 业余爱好
+  // A1[1]=年=D[0] ✓  A3[1]=余=D[3] ✓
+  makePuzzle(9, "Youth & Hobbies",
+    { clue: "The childhood and teenage years — a time of growth and discovery",
+      chars: ["少","年","时","代"], answer: ["shao","nian","shi","dai"] },
+    { clue: "A New Year wish: may every year bring abundance and prosperity",
+      chars: ["年","年","有","余"], answer: ["nian","nian","you","yu"] },
+    { clue: "Something you enjoy doing in your free time — a personal interest",
+      chars: ["业","余","爱","好"], answer: ["ye","yu","ai","hao"] },
   ),
 
-  // 10 — Frogs · Dancing · Joy
-  // A1[2]=跳=D[0] ✓  A3[2]=心=D[4] ✓
-  makePuzzle(10, "Frogs, Dancing & Joy",
-    { clue: "This green amphibian leaps off the lily pad with a big splash",
-      chars: ["青","蛙","跳","进","水"], answer: ["qing","wa","tiao","jin","shui"] },
-    { clue: "Moving your body to music at a party, concert, or on stage",
-      chars: ["跳","舞","真","开","心"], answer: ["tiao","wu","zhen","kai","xin"] },
-    { clue: "Playing and laughing with friends — pure, carefree happiness",
-      chars: ["开","开","心","心","玩"], answer: ["kai","kai","xin","xin","wan"] },
+  // 10 — 春节习俗 · 节日快乐 · 音乐老师
+  // A1[1]=节=D[0] ✓  A3[1]=乐=D[3] ✓
+  makePuzzle(10, "Festivals & Music",
+    { clue: "The traditional customs and rituals celebrated during the Spring Festival",
+      chars: ["春","节","习","俗"], answer: ["chun","jie","xi","su"] },
+    { clue: "The greeting you say to someone on any festive occasion or holiday",
+      chars: ["节","日","快","乐"], answer: ["jie","ri","kuai","le"] },
+    { clue: "The person at school who teaches you to sing, play, and read music",
+      chars: ["音","乐","老","师"], answer: ["yin","yue","lao","shi"] },
   ),
 
-  // 11 — Teddy Bear · Giant Panda · Tall Classmate
-  // A1[2]=熊=D[0] ✓  A3[2]=子=D[4] ✓
-  makePuzzle(11, "Bears, Pandas & Classmates",
-    { clue: "A huggable stuffed animal that kids sleep with at night",
-      chars: ["泰","迪","熊","玩","具"], answer: ["tai","di","xiong","wan","ju"] },
-    { clue: "China's famous black-and-white national treasure loves bamboo",
-      chars: ["熊","猫","吃","竹","子"], answer: ["xiong","mao","chi","zhu","zi"] },
-    { clue: "The really tall kid you always have to look up at in class",
-      chars: ["高","个","子","同","学"], answer: ["gao","ge","zi","tong","xue"] },
+  // 11 — 自学成才 · 学无止境 · 环境污染
+  // A1[1]=学=D[0] ✓  A3[1]=境=D[3] ✓
+  makePuzzle(11, "Learning & Environment",
+    { clue: "To teach yourself and develop skills without a formal teacher",
+      chars: ["自","学","成","才"], answer: ["zi","xue","cheng","cai"] },
+    { clue: "The idea that there is always more to learn — knowledge never ends",
+      chars: ["学","无","止","境"], answer: ["xue","wu","zhi","jing"] },
+    { clue: "Damage caused to air, water, and land by waste and harmful substances",
+      chars: ["环","境","污","染"], answer: ["huan","jing","wu","ran"] },
   ),
 
-  // 12 — Elephant · Bubble Tea · Flowers
-  // A1[2]=喝=D[0] ✓  A3[2]=香=D[4] ✓
-  makePuzzle(12, "Elephants, Tea & Flowers",
-    { clue: "The biggest land animal has a long trunk and drinks gallons of water",
-      chars: ["大","象","喝","水","多"], answer: ["da","xiang","he","shui","duo"] },
-    { clue: "Taiwan's most popular sweet drink with chewy tapioca balls",
-      chars: ["喝","奶","茶","真","香"], answer: ["he","nai","cha","zhen","xiang"] },
-    { clue: "Roses and jasmine do this to make you sniff the air",
-      chars: ["花","朵","香","扑","鼻"], answer: ["hua","duo","xiang","pu","bi"] },
+  // 12 — 踏青春游 · 青山绿水 · 饮水思源
+  // A1[1]=青=D[0] ✓  A3[1]=水=D[3] ✓
+  makePuzzle(12, "Nature & Gratitude",
+    { clue: "A spring outing to enjoy fresh air, green scenery, and nature",
+      chars: ["踏","青","春","游"], answer: ["ta","qing","chun","you"] },
+    { clue: "Green mountains and clear waters — a picture of natural beauty",
+      chars: ["青","山","绿","水"], answer: ["qing","shan","lv","shui"] },
+    { clue: "When you drink water, remember where it comes from — don't forget your roots",
+      chars: ["饮","水","思","源"], answer: ["yin","shui","si","yuan"] },
   ),
 
-  // 13 — Bees · Learning English · Sunny Weather
-  // A1[2]=学=D[0] ✓  A3[2]=好=D[4] ✓
-  makePuzzle(13, "Bees, English & Sunshine",
-    { clue: "These buzzing yellow-and-black insects collect pollen and make honey",
-      chars: ["蜜","蜂","学","飞","翔"], answer: ["mi","feng","xue","fei","xiang"] },
-    { clue: "Studying this subject lets you communicate with people around the world",
-      chars: ["学","英","语","真","好"], answer: ["xue","ying","yu","zhen","hao"] },
-    { clue: "Not a cloud in the sky, warm sun, perfect day to go outside",
-      chars: ["天","气","好","晴","朗"], answer: ["tian","qi","hao","qing","lang"] },
+  // 13 — 黄金时代 · 金榜题名 · 著名人物
+  // A1[1]=金=D[0] ✓  A3[1]=名=D[3] ✓
+  makePuzzle(13, "Gold & Fame",
+    { clue: "A period of great prosperity, creativity, and achievement — a golden era",
+      chars: ["黄","金","时","代"], answer: ["huang","jin","shi","dai"] },
+    { clue: "To pass an important exam and have your name on the honour list",
+      chars: ["金","榜","题","名"], answer: ["jin","bang","ti","ming"] },
+    { clue: "A well-known and celebrated person — a famous figure in history or culture",
+      chars: ["著","名","人","物"], answer: ["zhu","ming","ren","wu"] },
   ),
 
 ];

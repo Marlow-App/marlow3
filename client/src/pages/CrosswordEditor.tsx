@@ -128,7 +128,7 @@ function PuzzleEditor({ puzzle, onClose }: { puzzle: CrosswordPuzzle; onClose: (
             <p className="text-sm font-medium mb-2">Grid (click to toggle black/white)</p>
             <div
               className="grid gap-1 p-2 bg-foreground/5 rounded-xl border border-border inline-grid"
-              style={{ gridTemplateColumns: "repeat(5, 1fr)" }}
+              style={{ gridTemplateColumns: `repeat(${grid[0]?.length ?? 4}, 1fr)` }}
               data-testid="editor-grid"
             >
               {grid.map((row, r) =>
