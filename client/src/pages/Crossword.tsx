@@ -10,7 +10,7 @@ import {
   Timer, CheckCircle2, RotateCcw, Trophy,
   Copy, Grid3X3,
 } from "lucide-react";
-import { SiX, SiFacebook, SiWhatsapp } from "react-icons/si";
+import { SiX, SiFacebook, SiWhatsapp, SiThreads } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -136,8 +136,10 @@ export default function CrosswordPage() {
   });
 
   const checkMutation = useMutation({
-    mutationFn: (data: { puzzleId: number; cells: Record<string, string> }) =>
-      apiRequest("POST", "/api/crossword/check", data),
+    mutationFn: async (data: { puzzleId: number; cells: Record<string, string> }) => {
+      const res = await apiRequest("POST", "/api/crossword/check", data);
+      return res.json() as Promise<{ results: Record<string, boolean> }>;
+    },
   });
 
   const completeMutation = useMutation({
@@ -158,8 +160,7 @@ export default function CrosswordPage() {
     const current = elapsedSeconds;
     progressMutation.mutate({ puzzleId: puzzle.id, cells, elapsedSeconds: current });
 
-    const result = await checkMutation.mutateAsync({ puzzleId: puzzle.id, cells });
-    const results = (result as any).results as Record<string, boolean>;
+    const { results } = await checkMutation.mutateAsync({ puzzleId: puzzle.id, cells });
     setCheckState(results);
 
     // Check if all white cells are correct
@@ -379,7 +380,7 @@ export default function CrosswordPage() {
                         <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-x"><SiX className="w-3.5 h-3.5" />X</Button>
                       </a>
                       <a href={`https://threads.net/intent/post?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-threads"><span className="font-bold text-sm leading-none">⑇</span>Threads</Button>
+                        <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-threads"><SiThreads className="w-3.5 h-3.5" />Threads</Button>
                       </a>
                       <a href={`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${encodedText}`} target="_blank" rel="noopener noreferrer">
                         <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-facebook"><SiFacebook className="w-3.5 h-3.5" />Facebook</Button>
@@ -388,7 +389,7 @@ export default function CrosswordPage() {
                         <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-whatsapp"><SiWhatsapp className="w-3.5 h-3.5" />WhatsApp</Button>
                       </a>
                       <Button size="sm" variant="outline" className="gap-1.5" onClick={copy} data-testid="share-copy">
-                        <Copy className="w-3.5 h-3.5" />Copy
+                        <Copy className="w-3.5 h-3.5" />Copy (for Instagram &amp; others)
                       </Button>
                     </>
                   );

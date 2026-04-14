@@ -1084,7 +1084,9 @@ export async function registerRoutes(
           const key = `${r}-${c}`;
           const typed = (cells[key] ?? "").toLowerCase().trim();
           const expected = (word.answer[i] ?? "").toLowerCase().trim();
-          results[key] = typed === expected;
+          const isCorrect = typed === expected;
+          // AND logic: intersection cells must satisfy both across and down constraints
+          results[key] = results[key] === undefined ? isCorrect : results[key] && isCorrect;
         }
       }
 

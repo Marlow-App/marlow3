@@ -258,23 +258,84 @@ export const SEED_PUZZLES: CrosswordPuzzleData[] = [
       { number: 4, direction: "across", startRow: 4, startCol: 0, length: 3, clue: "It's okay / Never mind", chars: ["没", "关", "系"], answer: ["mei", "guan", "xi"] },
     ],
   },
+
+  // ─── Puzzle 15: Chinese Identity (cross layout — across + down) ──────────
+  {
+    title: "Chinese Identity",
+    puzzleIndex: 14,
+    grid: [
+      [false, false, true,  false, false],
+      [false, false, true,  false, false],
+      [true,  true,  true,  true,  true],
+      [false, false, true,  false, false],
+      [false, false, true,  false, false],
+    ],
+    words: [
+      {
+        number: 1, direction: "down" as const, startRow: 0, startCol: 2, length: 5,
+        clue: "When people reach middle age (人到_年时)",
+        chars: ["人", "到", "中", "年", "时"],
+        answer: ["ren", "dao", "zhong", "nian", "shi"],
+      },
+      {
+        number: 2, direction: "across" as const, startRow: 2, startCol: 0, length: 5,
+        clue: "I am Chinese (common phrase)",
+        chars: ["我", "是", "中", "国", "人"],
+        answer: ["wo", "shi", "zhong", "guo", "ren"],
+      },
+    ],
+  },
+
+  // ─── Puzzle 16: Chinese Language (cross layout — across + down) ───────────
+  {
+    title: "Chinese Language",
+    puzzleIndex: 15,
+    grid: [
+      [false, false, true,  false, false],
+      [false, false, true,  false, false],
+      [true,  true,  true,  true,  true],
+      [false, false, true,  false, false],
+      [false, false, true,  false, false],
+    ],
+    words: [
+      {
+        number: 1, direction: "down" as const, startRow: 0, startCol: 2, length: 5,
+        clue: "Chinese character grammar book (汉字_法书)",
+        chars: ["汉", "字", "语", "法", "书"],
+        answer: ["han", "zi", "yu", "fa", "shu"],
+      },
+      {
+        number: 2, direction: "across" as const, startRow: 2, startCol: 0, length: 5,
+        clue: "Learning Chinese is difficult (学汉_很难)",
+        chars: ["学", "汉", "语", "很", "难"],
+        answer: ["xue", "han", "yu", "hen", "nan"],
+      },
+    ],
+  },
 ];
 
 export async function seedCrosswords(): Promise<void> {
   const { db } = await import("./db");
   const { dailyCrosswords } = await import("@shared/schema");
-  const existing = await db.select().from(dailyCrosswords).limit(1);
-  if (existing.length > 0) {
-    console.log("[Crossword] Puzzles already seeded, skipping.");
-    return;
-  }
+  const existing = await db.select({ puzzleIndex: dailyCrosswords.puzzleIndex }).from(dailyCrosswords);
+  const existingIndices = new Set(existing.map((p) => p.puzzleIndex));
+
+  let added = 0;
   for (const puzzle of SEED_PUZZLES) {
-    await db.insert(dailyCrosswords).values({
-      puzzleIndex: puzzle.puzzleIndex,
-      title: puzzle.title,
-      grid: puzzle.grid as unknown as Record<string, unknown>,
-      words: puzzle.words as unknown as Record<string, unknown>[],
-    });
+    if (!existingIndices.has(puzzle.puzzleIndex)) {
+      await db.insert(dailyCrosswords).values({
+        puzzleIndex: puzzle.puzzleIndex,
+        title: puzzle.title,
+        grid: puzzle.grid as unknown as Record<string, unknown>,
+        words: puzzle.words as unknown as Record<string, unknown>[],
+      });
+      added++;
+    }
   }
-  console.log(`[Crossword] Seeded ${SEED_PUZZLES.length} puzzles.`);
+
+  if (added > 0) {
+    console.log(`[Crossword] Added ${added} new puzzle(s). Total: ${SEED_PUZZLES.length}.`);
+  } else {
+    console.log("[Crossword] Puzzles already up to date, skipping.");
+  }
 }
