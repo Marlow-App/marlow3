@@ -106,9 +106,10 @@ export default function CrosswordPage() {
   const [, navigate] = useLocation();
   const search = useSearch();
 
-  // Check if viewing a specific puzzle via query param ?p=<puzzleIndex>
+  // Check if viewing a specific puzzle via query params ?p=<puzzleIndex>&d=<YYYY-MM-DD>
   const urlParams = new URLSearchParams(search);
   const viewingIndex = urlParams.has("p") ? Number(urlParams.get("p")) : null;
+  const viewingDate = urlParams.get("d") ?? null;
   const isViewingArchive = viewingIndex !== null && !isNaN(viewingIndex);
 
   const { data: todayPuzzle, isLoading: todayLoading } = useQuery<CrosswordPuzzle>({
@@ -117,9 +118,10 @@ export default function CrosswordPage() {
   });
 
   const { data: archivePuzzle, isLoading: archiveLoading } = useQuery<CrosswordPuzzle>({
-    queryKey: ["/api/crossword/puzzle", viewingIndex],
+    queryKey: ["/api/crossword/puzzle", viewingIndex, viewingDate],
     queryFn: async () => {
-      const res = await fetch(`/api/crossword/puzzle/${viewingIndex}`, { credentials: "include" });
+      const dateQuery = viewingDate ? `?date=${viewingDate}` : "";
+      const res = await fetch(`/api/crossword/puzzle/${viewingIndex}${dateQuery}`, { credentials: "include" });
       return res.json();
     },
     enabled: isViewingArchive,
@@ -346,7 +348,9 @@ export default function CrosswordPage() {
       const cur = cells[key] ?? "";
       if (cur.length > 0) {
         setCells(prev => { const n = { ...prev }; delete n[key]; return n; });
-      } else if (activeWordNum !== null) {
+      }
+      // Always navigate to prev cell on backspace (clear + move in one press)
+      if (activeWordNum !== null) {
         moveToPrevCell(puzzle, row, col, activeWordNum);
       }
     } else if (e.key === "Enter" || e.key === " " || e.key === "Tab") {
@@ -431,7 +435,9 @@ export default function CrosswordPage() {
             </button>
           )}
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">
-            {format(new Date(), "EEEE, d MMMM yyyy")}
+            {isViewingArchive && viewingDate
+              ? format(parseISO(viewingDate), "EEEE, d MMMM yyyy")
+              : format(new Date(), "EEEE, d MMMM yyyy")}
           </p>
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -632,7 +638,7 @@ export default function CrosswordPage() {
               {archive.map(entry => (
                 <button
                   key={entry.puzzleIndex}
-                  onClick={() => navigate(`/crossword?p=${entry.puzzleIndex}`)}
+                  onClick={() => navigate(`/crossword?p=${entry.puzzleIndex}&d=${entry.date}`)}
                   className="flex items-center justify-between gap-3 w-full text-left px-4 py-3 rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors"
                   data-testid={`archive-entry-${entry.puzzleIndex}`}
                 >

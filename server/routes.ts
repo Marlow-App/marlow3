@@ -1155,7 +1155,7 @@ export async function registerRoutes(
     }
   });
 
-  // Get a specific puzzle by puzzleIndex (strips answers + chars)
+  // Get a specific puzzle by puzzleIndex (strips answers + chars); optional ?date=YYYY-MM-DD for status
   app.get("/api/crossword/puzzle/:puzzleIndex", isAuthenticated, async (req, res) => {
     try {
       const puzzleIndex = Number(req.params.puzzleIndex);
@@ -1163,8 +1163,26 @@ export async function registerRoutes(
       const puzzle = await storage.getCrosswordByIndex(puzzleIndex);
       if (!puzzle) return res.status(404).json({ message: "Puzzle not found" });
 
+      const userId = (req.user as { claims: { sub: string } }).claims.sub;
       const words = (puzzle.words as unknown) as CrosswordWord[];
       const publicWords = words.map(({ chars: _c, answer: _a, ...rest }) => rest);
+
+      // If a specific date is provided, look up the user's status for that date
+      let statusData = null;
+      const dateParam = req.query.date as string | undefined;
+      if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+        const completion = await storage.getCrosswordStatus(userId, puzzle.id, dateParam);
+        if (completion) {
+          statusData = {
+            id: completion.id,
+            cells: completion.cells,
+            elapsedSeconds: completion.elapsedSeconds,
+            isComplete: completion.isComplete,
+            completedAt: completion.completedAt?.toISOString() ?? null,
+          };
+        }
+      }
+
       res.json({
         id: puzzle.id,
         puzzleIndex: puzzle.puzzleIndex,
@@ -1172,7 +1190,7 @@ export async function registerRoutes(
         grid: puzzle.grid,
         words: publicWords,
         wordCount: words.length,
-        status: null,
+        status: statusData,
       });
     } catch (err) {
       console.error("Error getting crossword by index:", err);
