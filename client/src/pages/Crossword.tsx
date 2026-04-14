@@ -496,7 +496,12 @@ export default function CrosswordPage() {
           </div>
 
           {/* Clues */}
-          <div className="flex-1 space-y-4 min-w-0" data-testid="clues-panel">
+          <div className="flex-1 space-y-4 min-w-0 overflow-y-auto max-h-[420px] pr-1" data-testid="clues-panel">
+            {phase === "playing" && (
+              <p className="text-xs text-muted-foreground italic">
+                Type pinyin — no tone marks needed (e.g. type <span className="font-mono">ni</span> for nǐ)
+              </p>
+            )}
             {acrossWords.length > 0 && (
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Across</h3>
