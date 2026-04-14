@@ -164,40 +164,26 @@ export const SEED_PUZZLES: CrosswordPuzzleData[] = [
 export async function seedCrosswords(): Promise<void> {
   const { db } = await import("./db");
   const { dailyCrosswords } = await import("@shared/schema");
-  const { eq, gt } = await import("drizzle-orm");
 
-  const maxIndex = SEED_PUZZLES.length - 1;
-
-  // Remove any puzzle rows beyond the current seed range
-  await db.delete(dailyCrosswords).where(gt(dailyCrosswords.puzzleIndex, maxIndex));
-
+  // Only insert puzzles that don't already exist — never overwrite admin-edited rows.
   const existing = await db
     .select({ puzzleIndex: dailyCrosswords.puzzleIndex })
     .from(dailyCrosswords);
   const existingIndices = new Set(existing.map((p) => p.puzzleIndex));
 
   let added = 0;
-  let updated = 0;
   for (const puzzle of SEED_PUZZLES) {
-    const vals = {
+    if (existingIndices.has(puzzle.puzzleIndex)) continue;
+    await db.insert(dailyCrosswords).values({
       puzzleIndex: puzzle.puzzleIndex,
       title: puzzle.title,
       grid: puzzle.grid as unknown as Record<string, unknown>,
       words: puzzle.words as unknown as Record<string, unknown>[],
-    };
-    if (!existingIndices.has(puzzle.puzzleIndex)) {
-      await db.insert(dailyCrosswords).values(vals);
-      added++;
-    } else {
-      await db
-        .update(dailyCrosswords)
-        .set({ title: vals.title, grid: vals.grid, words: vals.words })
-        .where(eq(dailyCrosswords.puzzleIndex, puzzle.puzzleIndex));
-      updated++;
-    }
+    });
+    added++;
   }
 
   console.log(
-    `[Crossword] Seed done — ${added} added, ${updated} updated. Total: ${SEED_PUZZLES.length}.`,
+    `[Crossword] Seed done — ${added} puzzles added. Total in DB: ${existing.length + added}.`,
   );
 }
