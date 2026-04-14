@@ -113,10 +113,10 @@ export default function CrosswordPage() {
       setElapsedSeconds(puzzle.status.elapsedSeconds ?? 0);
       setPhase("completed");
     } else if (puzzle.status?.cells && Object.keys(puzzle.status.cells).length > 0) {
+      // Pre-populate cells from saved progress but stay on pre-start gate;
+      // the user must click Start to resume (handleStart will restore the timer offset)
       setCells((puzzle.status.cells as Record<string, string>) ?? {});
       setElapsedSeconds(puzzle.status.elapsedSeconds ?? 0);
-      setPhase("playing");
-      setStartTime(Date.now() - ((puzzle.status.elapsedSeconds ?? 0) * 1000));
     }
   }, [puzzle]);
 
@@ -226,16 +226,23 @@ export default function CrosswordPage() {
     gridRef.current?.focus();
   }, [selectedKey, activeWordNum]);
 
-  const advanceToNextCell = useCallback((puzzle: CrosswordPuzzle, fromRow: number, fromCol: number, wordNum: number) => {
+  // Returns the next cell key in the word without updating state
+  const computeNextCellKey = useCallback((puzzle: CrosswordPuzzle, fromRow: number, fromCol: number, wordNum: number): string | null => {
     const word = puzzle.words.find(w => w.number === wordNum);
-    if (!word) return;
+    if (!word) return null;
     const wordCells = getWordCells(word);
     const curIdx = wordCells.findIndex(c => c.row === fromRow && c.col === fromCol);
-    if (curIdx < wordCells.length - 1) {
+    if (curIdx >= 0 && curIdx < wordCells.length - 1) {
       const next = wordCells[curIdx + 1];
-      setSelectedKey(cellKey(next.row, next.col));
+      return cellKey(next.row, next.col);
     }
+    return null;
   }, []);
+
+  const advanceToNextCell = useCallback((puzzle: CrosswordPuzzle, fromRow: number, fromCol: number, wordNum: number) => {
+    const nextKey = computeNextCellKey(puzzle, fromRow, fromCol, wordNum);
+    if (nextKey) setSelectedKey(nextKey);
+  }, [computeNextCellKey]);
 
   const moveToPrevCell = useCallback((puzzle: CrosswordPuzzle, fromRow: number, fromCol: number, wordNum: number) => {
     const word = puzzle.words.find(w => w.number === wordNum);
@@ -289,11 +296,32 @@ export default function CrosswordPage() {
     } else if (/^[a-zA-Z]$/.test(e.key)) {
       e.preventDefault();
       const cur = cells[selectedKey] ?? "";
+      const newChar = e.key.toLowerCase();
+      // Auto-advance when typing a new syllable start after a completed syllable.
+      // Pinyin syllables end with a vowel, 'n', 'g', or 'r'; new syllables
+      // typically begin with a consonant initial (b p m f d t n l g k h j q x r z c s w y).
+      const SYLLABLE_ENDERS = new Set(["a","e","i","o","u","ü","n","g","r"]);
+      const PINYIN_INITIALS = new Set(["b","p","m","f","d","t","l","g","k","h","j","q","x","r","z","c","s","w","y"]);
+      if (
+        cur.length >= 2 &&
+        activeWordNum !== null &&
+        SYLLABLE_ENDERS.has(cur.slice(-1)) &&
+        PINYIN_INITIALS.has(newChar) &&
+        // 'n' and 'g' can extend the current syllable (e.g. -ng), so don't advance on those
+        newChar !== "n" && newChar !== "g"
+      ) {
+        const nextKey = computeNextCellKey(puzzle, row, col, activeWordNum);
+        if (nextKey) {
+          setSelectedKey(nextKey);
+          setCells(prev => ({ ...prev, [nextKey]: newChar }));
+          return;
+        }
+      }
       if (cur.length < 7) {
-        setCells(prev => ({ ...prev, [selectedKey]: cur + e.key.toLowerCase() }));
+        setCells(prev => ({ ...prev, [selectedKey]: cur + newChar }));
       }
     }
-  }, [puzzle, phase, selectedKey, cells, activeWordNum, advanceToNextCell, moveToPrevCell]);
+  }, [puzzle, phase, selectedKey, cells, activeWordNum, advanceToNextCell, moveToPrevCell, computeNextCellKey]);
 
   // ─── Rendering ────────────────────────────────────────────────────────────
 

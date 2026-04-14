@@ -232,37 +232,10 @@ export const SEED_PUZZLES: CrosswordPuzzleData[] = [
     ],
   },
 
-  // ─── Puzzle 13: Famous Figures II ────────────────────────────────────────
-  {
-    title: "Famous Figures II",
-    puzzleIndex: 12,
-    grid: gridA,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 2, clue: "Iconic Chinese pop singer, 'Queen of Mandopop'", chars: ["王", "菲"], answer: ["wang", "fei"] },
-      { number: 2, direction: "across", startRow: 0, startCol: 3, length: 2, clue: "World-famous Chinese classical pianist", chars: ["郎", "朗"], answer: ["lang", "lang"] },
-      { number: 3, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Tennis champion, first Chinese Grand Slam singles winner", chars: ["李", "娜"], answer: ["li", "na"] },
-      { number: 4, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "Action movie star, director of Wolf Warrior", chars: ["吴", "京"], answer: ["wu", "jing"] },
-      { number: 5, direction: "across", startRow: 4, startCol: 0, length: 2, clue: "Mandopop singer famous for 'Winter Fire'", chars: ["费", "翔"], answer: ["fei", "xiang"] },
-    ],
-  },
-
-  // ─── Puzzle 14: Idioms & Mix ──────────────────────────────────────────────
-  {
-    title: "Idioms & Mix",
-    puzzleIndex: 13,
-    grid: gridC,
-    words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 4, clue: "So-so / Just okay (very common Chinese idiom)", chars: ["马", "马", "虎", "虎"], answer: ["ma", "ma", "hu", "hu"] },
-      { number: 2, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Hong Kong — means 'Fragrant Harbour'", chars: ["香", "港"], answer: ["xiang", "gang"] },
-      { number: 3, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "Island off China's southeastern coast", chars: ["台", "湾"], answer: ["tai", "wan"] },
-      { number: 4, direction: "across", startRow: 4, startCol: 0, length: 3, clue: "It's okay / Never mind", chars: ["没", "关", "系"], answer: ["mei", "guan", "xi"] },
-    ],
-  },
-
-  // ─── Puzzle 15: Chinese Identity (cross layout — across + down) ──────────
+  // ─── Puzzle 13: Chinese Identity (cross layout — 1 across + 1 down) ────────
   {
     title: "Chinese Identity",
-    puzzleIndex: 14,
+    puzzleIndex: 12,
     grid: [
       [false, false, true,  false, false],
       [false, false, true,  false, false],
@@ -286,10 +259,10 @@ export const SEED_PUZZLES: CrosswordPuzzleData[] = [
     ],
   },
 
-  // ─── Puzzle 16: Chinese Language (cross layout — across + down) ───────────
+  // ─── Puzzle 14: Chinese Language (cross layout — 1 across + 1 down) ───────
   {
     title: "Chinese Language",
-    puzzleIndex: 15,
+    puzzleIndex: 13,
     grid: [
       [false, false, true,  false, false],
       [false, false, true,  false, false],
@@ -317,25 +290,40 @@ export const SEED_PUZZLES: CrosswordPuzzleData[] = [
 export async function seedCrosswords(): Promise<void> {
   const { db } = await import("./db");
   const { dailyCrosswords } = await import("@shared/schema");
-  const existing = await db.select({ puzzleIndex: dailyCrosswords.puzzleIndex }).from(dailyCrosswords);
+  const { eq, gt } = await import("drizzle-orm");
+
+  const maxIndex = SEED_PUZZLES.length - 1;
+
+  // Remove any out-of-range puzzle rows (e.g. previously added extras)
+  await db.delete(dailyCrosswords).where(gt(dailyCrosswords.puzzleIndex, maxIndex));
+
+  const existing = await db
+    .select({ puzzleIndex: dailyCrosswords.puzzleIndex })
+    .from(dailyCrosswords);
   const existingIndices = new Set(existing.map((p) => p.puzzleIndex));
 
   let added = 0;
+  let updated = 0;
   for (const puzzle of SEED_PUZZLES) {
+    const vals = {
+      puzzleIndex: puzzle.puzzleIndex,
+      title: puzzle.title,
+      grid: puzzle.grid as unknown as Record<string, unknown>,
+      words: puzzle.words as unknown as Record<string, unknown>[],
+    };
     if (!existingIndices.has(puzzle.puzzleIndex)) {
-      await db.insert(dailyCrosswords).values({
-        puzzleIndex: puzzle.puzzleIndex,
-        title: puzzle.title,
-        grid: puzzle.grid as unknown as Record<string, unknown>,
-        words: puzzle.words as unknown as Record<string, unknown>[],
-      });
+      await db.insert(dailyCrosswords).values(vals);
       added++;
+    } else {
+      await db
+        .update(dailyCrosswords)
+        .set({ title: vals.title, grid: vals.grid, words: vals.words })
+        .where(eq(dailyCrosswords.puzzleIndex, puzzle.puzzleIndex));
+      updated++;
     }
   }
 
-  if (added > 0) {
-    console.log(`[Crossword] Added ${added} new puzzle(s). Total: ${SEED_PUZZLES.length}.`);
-  } else {
-    console.log("[Crossword] Puzzles already up to date, skipping.");
-  }
+  console.log(
+    `[Crossword] Seed done — ${added} added, ${updated} updated. Total: ${SEED_PUZZLES.length}.`,
+  );
 }
