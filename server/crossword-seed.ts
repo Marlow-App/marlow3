@@ -159,15 +159,15 @@ export const SEED_PUZZLES: CrosswordPuzzleData[] = [
       chars: ["海","南","岛","美","丽"], answer: ["hai","nan","dao","mei","li"] },
   ),
 
-  // 9 — Achievement (DOWN: 马到成功日)
-  // across1[2]=马=down[0] ✓   across3[2]=日=down[4] ✓
-  makePuzzle(9, "Achievement",
-    { clue: "Streams of carriages and horses — the bustle of a thriving city",
-      chars: ["车","水","马","龙","啊"], answer: ["che","shui","ma","long","a"] },
-    { clue: "Success arrives as swiftly as a horse",
-      chars: ["马","到","成","功","日"], answer: ["ma","dao","cheng","gong","ri"] },
-    { clue: "At the very moment the sun rises each morning",
-      chars: ["每","天","日","出","时"], answer: ["mei","tian","ri","chu","shi"] },
+  // 9 — Moonlit Night (DOWN: 花好月圆夜)
+  // across1[2]=花=down[0] ✓   across3[2]=夜=down[4] ✓
+  makePuzzle(9, "Moonlit Night",
+    { clue: "The sweet scent of jasmine blossoms (famous Chinese folk song)",
+      chars: ["茉","莉","花","香","啊"], answer: ["mo","li","hua","xiang","a"] },
+    { clue: "Flowers in bloom and the moon is full — a night of perfection",
+      chars: ["花","好","月","圆","夜"], answer: ["hua","hao","yue","yuan","ye"] },
+    { clue: "Alone in the night, far from home and missing it dearly",
+      chars: ["独","处","夜","思","乡"], answer: ["du","chu","ye","si","xiang"] },
   ),
 
   // 10 — Compass Directions (DOWN: 东西南北中)
