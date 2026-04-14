@@ -142,6 +142,40 @@ export const crosswordCompletions = pgTable("crossword_completions", {
 export type DailyCrossword = typeof dailyCrosswords.$inferSelect;
 export type CrosswordCompletion = typeof crosswordCompletions.$inferSelect;
 
+export interface CrosswordWord {
+  number: number;
+  direction: "across" | "down";
+  startRow: number;
+  startCol: number;
+  length: number;
+  clue: string;
+  chars: string[];
+  answer: string[];
+}
+
+export interface CrosswordWordPublic {
+  number: number;
+  direction: "across" | "down";
+  startRow: number;
+  startCol: number;
+  length: number;
+  clue: string;
+}
+
+export interface CrosswordPuzzlePublic {
+  id: number;
+  puzzleIndex: number;
+  title: string;
+  grid: boolean[][];
+  words: CrosswordWordPublic[];
+  status: {
+    cells: Record<string, string>;
+    elapsedSeconds: number | null;
+    isComplete: boolean;
+    completedAt: string | null;
+  } | null;
+}
+
 // Relations
 export const recordingsRelations = relations(recordings, ({ one, many }) => ({
   user: one(users, {

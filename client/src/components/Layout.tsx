@@ -48,6 +48,7 @@ export function Layout({ children }: LayoutProps) {
   const reviewerItems = [
     { href: "/", label: "Home", icon: House },
     { href: "/reviewer-hub", label: "Reviewer Hub", icon: FileAudio },
+    { href: "/crossword", label: "Daily Crossword", icon: Grid3X3 },
     { href: "/crossword/editor", label: "Crossword Editor", icon: Grid3X3 },
     { href: "/profile", label: "Profile", icon: UserCircle },
   ];

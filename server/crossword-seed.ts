@@ -260,18 +260,20 @@ export const SEED_PUZZLES: CrosswordPuzzleData[] = [
   },
 ];
 
-export async function seedCrosswords(db: any, table: any) {
-  const existing = await db.select().from(table).limit(1);
+export async function seedCrosswords(): Promise<void> {
+  const { db } = await import("./db");
+  const { dailyCrosswords } = await import("@shared/schema");
+  const existing = await db.select().from(dailyCrosswords).limit(1);
   if (existing.length > 0) {
     console.log("[Crossword] Puzzles already seeded, skipping.");
     return;
   }
   for (const puzzle of SEED_PUZZLES) {
-    await db.insert(table).values({
+    await db.insert(dailyCrosswords).values({
       puzzleIndex: puzzle.puzzleIndex,
       title: puzzle.title,
-      grid: puzzle.grid,
-      words: puzzle.words,
+      grid: puzzle.grid as unknown as Record<string, unknown>,
+      words: puzzle.words as unknown as Record<string, unknown>[],
     });
   }
   console.log(`[Crossword] Seeded ${SEED_PUZZLES.length} puzzles.`);

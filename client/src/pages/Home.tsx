@@ -19,7 +19,7 @@ import {
 import { Link, useLocation } from "wouter";
 import {
   Mic2, PlayCircle, UserCircle, Zap, Loader2, X,
-  Compass, BookOpen, Volume2, ChevronRight, Flame,
+  Compass, BookOpen, Volume2, ChevronRight, Flame, CheckCircle2,
 } from "lucide-react";
 import {
   format, formatDistanceToNow, startOfWeek, addDays,
@@ -265,6 +265,12 @@ export default function Home() {
   const isReviewer = user?.role === "reviewer";
   const { data: recordings, isLoading } = useRecordings();
   const { data: practiceList } = useQuery<PracticeItem[]>({ queryKey: ["/api/practice-list"] });
+  const { data: crosswordData } = useQuery<{
+    wordCount: number;
+    status: { isComplete: boolean } | null;
+    title: string;
+    puzzleIndex: number;
+  }>({ queryKey: ["/api/crossword/today"] });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [practiceDialogItem, setPracticeDialogItem] = useState<PracticeItem | null>(null);
@@ -571,9 +577,23 @@ export default function Home() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-base">Today's Puzzle</p>
-                  <p className="text-sm text-muted-foreground mt-0.5">Fill in Chinese vocabulary using pinyin — a new puzzle every day!</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {crosswordData
+                      ? `${crosswordData.wordCount} words · ${crosswordData.title}`
+                      : "Fill in Chinese vocabulary using pinyin — a new puzzle every day!"}
+                  </p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                {crosswordData?.status?.isComplete ? (
+                  <div className="flex items-center gap-1.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full shrink-0" data-testid="crossword-completed-badge">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Completed
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-sm font-semibold text-indigo-600 dark:text-indigo-400 shrink-0" data-testid="crossword-play-link">
+                    Play
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </Link>

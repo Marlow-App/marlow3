@@ -1,9 +1,10 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import { api } from "@shared/routes";
+import type { CrosswordWord } from "@shared/schema";
 import { z } from "zod";
 import { authStorage } from "./replit_integrations/auth/storage";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripe/stripeClient";
@@ -1028,21 +1029,38 @@ export async function registerRoutes(
       const puzzle = await storage.getTodayCrossword();
       if (!puzzle) return res.status(404).json({ message: "No puzzle available" });
 
-      const userId = (req.user as any).claims.sub;
+      const userId = (req.user as { claims: { sub: string } }).claims.sub;
       const puzzleDate = new Date().toISOString().slice(0, 10);
       const status = await storage.getCrosswordStatus(userId, puzzle.id, puzzleDate);
 
-      const publicWords = (puzzle.words as any[]).map(({ chars: _c, answer: _a, ...rest }) => rest);
+      const words = (puzzle.words as unknown) as CrosswordWord[];
+      const publicWords = words.map(({ chars: _c, answer: _a, ...rest }) => rest);
       res.json({
         id: puzzle.id,
         puzzleIndex: puzzle.puzzleIndex,
         title: puzzle.title,
         grid: puzzle.grid,
         words: publicWords,
+        wordCount: words.length,
         status: status ?? null,
       });
     } catch (err) {
       console.error("Error getting crossword:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get today's progress for the current user
+  app.get("/api/crossword/today/progress", isAuthenticated, async (req, res) => {
+    try {
+      const puzzle = await storage.getTodayCrossword();
+      if (!puzzle) return res.status(404).json({ message: "No puzzle available" });
+      const userId = (req.user as { claims: { sub: string } }).claims.sub;
+      const puzzleDate = new Date().toISOString().slice(0, 10);
+      const status = await storage.getCrosswordStatus(userId, puzzle.id, puzzleDate);
+      res.json(status ?? null);
+    } catch (err) {
+      console.error("Error getting crossword progress:", err);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -1057,7 +1075,7 @@ export async function registerRoutes(
       const puzzle = all.find(p => p.id === puzzleId);
       if (!puzzle) return res.status(404).json({ message: "Puzzle not found" });
 
-      const words = puzzle.words as any[];
+      const words = (puzzle.words as unknown) as CrosswordWord[];
       const results: Record<string, boolean> = {};
       for (const word of words) {
         for (let i = 0; i < word.length; i++) {
@@ -1077,10 +1095,10 @@ export async function registerRoutes(
     }
   });
 
-  // Save progress
-  app.post("/api/crossword/progress", isAuthenticated, async (req, res) => {
+  // Save progress (supports both /today/progress and legacy /progress)
+  const saveProgressHandler = async (req: Request, res: Response) => {
     try {
-      const userId = (req.user as any).claims.sub;
+      const userId = (req.user as { claims: { sub: string } }).claims.sub;
       const { puzzleId, cells, elapsedSeconds } = req.body as { puzzleId: number; cells: Record<string, string>; elapsedSeconds: number };
       if (!puzzleId || !cells) return res.status(400).json({ message: "puzzleId and cells required" });
       const puzzleDate = new Date().toISOString().slice(0, 10);
@@ -1090,12 +1108,14 @@ export async function registerRoutes(
       console.error("Error saving crossword progress:", err);
       res.status(500).json({ message: "Internal server error" });
     }
-  });
+  };
+  app.post("/api/crossword/today/progress", isAuthenticated, saveProgressHandler);
+  app.post("/api/crossword/progress", isAuthenticated, saveProgressHandler);
 
   // Complete puzzle
   app.post("/api/crossword/complete", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as any).claims.sub;
+      const userId = (req.user as { claims: { sub: string } }).claims.sub;
       const { puzzleId, cells, elapsedSeconds } = req.body as { puzzleId: number; cells: Record<string, string>; elapsedSeconds: number };
       if (!puzzleId || !cells) return res.status(400).json({ message: "puzzleId and cells required" });
       const puzzleDate = new Date().toISOString().slice(0, 10);
@@ -1110,7 +1130,7 @@ export async function registerRoutes(
   // Admin: get all puzzles with full data
   app.get("/api/crossword/all", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as any).claims.sub;
+      const userId = (req.user as { claims: { sub: string } }).claims.sub;
       const dbUser = await storage.getUser(userId);
       if (dbUser?.role !== "reviewer") return res.status(403).json({ message: "Reviewers only" });
       const puzzles = await storage.getAllCrosswords();
@@ -1124,12 +1144,12 @@ export async function registerRoutes(
   // Admin: update a puzzle
   app.put("/api/crossword/:id", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as any).claims.sub;
+      const userId = (req.user as { claims: { sub: string } }).claims.sub;
       const dbUser = await storage.getUser(userId);
       if (dbUser?.role !== "reviewer") return res.status(403).json({ message: "Reviewers only" });
       const puzzleId = Number(req.params.id);
       if (!puzzleId) return res.status(400).json({ message: "Invalid puzzle ID" });
-      const { grid, words, title } = req.body;
+      const { grid, words, title } = req.body as { grid?: boolean[][]; words?: CrosswordWord[]; title?: string };
       const updated = await storage.updateCrossword(puzzleId, { grid, words, title });
       if (!updated) return res.status(404).json({ message: "Puzzle not found" });
       res.json(updated);

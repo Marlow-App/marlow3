@@ -7,8 +7,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { format } from "date-fns";
 import {
-  Timer, Share2, CheckCircle2, RotateCcw, Trophy,
-  Copy, X as XIcon, Grid3X3,
+  Timer, CheckCircle2, RotateCcw, Trophy,
+  Copy, Grid3X3,
 } from "lucide-react";
 import { SiX, SiFacebook, SiWhatsapp } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +31,7 @@ interface CrosswordPuzzle {
   title: string;
   grid: boolean[][];
   words: CrosswordWord[];
+  wordCount: number;
   status: {
     cells: Record<string, string>;
     elapsedSeconds: number | null;
@@ -83,76 +84,6 @@ function generateShareText(puzzleIndex: number, grid: boolean[][], elapsedSecond
   return `Marlow 中文填字游戏 #${puzzleIndex + 1} 🀄\nSolved in ${formatTime(elapsedSeconds)} ✅\n\n${gridEmoji}\n\nPlay Marlow's daily Chinese crossword 👉 marlow.app/crossword`;
 }
 
-// ─── ShareModal ───────────────────────────────────────────────────────────────
-
-function ShareModal({ puzzleIndex, grid, elapsedSeconds, onClose }: {
-  puzzleIndex: number; grid: boolean[][]; elapsedSeconds: number; onClose: () => void;
-}) {
-  const { toast } = useToast();
-  const text = generateShareText(puzzleIndex, grid, elapsedSeconds);
-  const encodedText = encodeURIComponent(text);
-  const url = encodeURIComponent("https://marlow.app/crossword");
-
-  const copy = async () => {
-    await navigator.clipboard.writeText(text);
-    toast({ title: "Copied!", description: "Share text copied to clipboard" });
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <Card className="w-full max-w-sm relative animate-in zoom-in-95 duration-200">
-        <button onClick={onClose} className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted" data-testid="share-modal-close">
-          <XIcon className="w-4 h-4" />
-        </button>
-        <CardContent className="pt-6 pb-5 space-y-4">
-          <div className="text-center">
-            <p className="text-2xl mb-1">🎉</p>
-            <h2 className="font-bold text-xl font-display">Share Your Result!</h2>
-            <p className="text-sm text-muted-foreground mt-1">Let your friends know how you did</p>
-          </div>
-
-          <pre className="text-xs bg-muted/60 rounded-xl p-3 whitespace-pre-wrap font-mono leading-relaxed border border-border">
-            {text}
-          </pre>
-
-          <div className="grid grid-cols-2 gap-2">
-            <a href={`https://twitter.com/intent/tweet?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" className="w-full gap-2" data-testid="share-x">
-                <SiX className="w-4 h-4" />
-                X
-              </Button>
-            </a>
-            <a href={`https://threads.net/intent/post?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" className="w-full gap-2" data-testid="share-threads">
-                <span className="font-bold text-base leading-none">⑇</span>
-                Threads
-              </Button>
-            </a>
-            <a href={`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${encodedText}`} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" className="w-full gap-2" data-testid="share-facebook">
-                <SiFacebook className="w-4 h-4" />
-                Facebook
-              </Button>
-            </a>
-            <a href={`https://wa.me/?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" className="w-full gap-2" data-testid="share-whatsapp">
-                <SiWhatsapp className="w-4 h-4" />
-                WhatsApp
-              </Button>
-            </a>
-          </div>
-
-          <Button onClick={copy} className="w-full gap-2" data-testid="share-copy">
-            <Copy className="w-4 h-4" />
-            Copy (for Instagram &amp; others)
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
 // ─── Main Crossword Component ─────────────────────────────────────────────────
 
 export default function CrosswordPage() {
@@ -171,7 +102,6 @@ export default function CrosswordPage() {
   const [activeWordNum, setActiveWordNum] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
-  const [showShare, setShowShare] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -242,7 +172,6 @@ export default function CrosswordPage() {
       if (timerRef.current) clearInterval(timerRef.current);
       await completeMutation.mutateAsync({ puzzleId: puzzle.id, cells, elapsedSeconds: current });
       setPhase("completed");
-      setShowShare(true);
       toast({ title: "🎉 Puzzle Complete!", description: `Solved in ${formatTime(current)}` });
     } else {
       // After 2 seconds, clear wrong answers
@@ -419,24 +348,51 @@ export default function CrosswordPage() {
                   {formatTime(elapsedSeconds)}
                 </div>
               )}
-              {phase === "completed" && (
-                <Button size="sm" onClick={() => setShowShare(true)} className="gap-1.5" data-testid="share-btn">
-                  <Share2 className="w-4 h-4" />
-                  Share
-                </Button>
-              )}
             </div>
           </div>
         </div>
 
         {/* Completed banner */}
-        {phase === "completed" && (
+        {phase === "completed" && puzzle && (
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20" data-testid="completed-banner">
-            <CardContent className="py-4 px-5 flex items-center gap-3">
-              <Trophy className="w-8 h-8 text-primary shrink-0" />
-              <div>
-                <p className="font-bold text-lg font-display">Puzzle Complete! 🎉</p>
-                <p className="text-sm text-muted-foreground">Solved in {formatTime(elapsedSeconds)} — come back tomorrow for a new puzzle!</p>
+            <CardContent className="py-4 px-5 space-y-3">
+              <div className="flex items-center gap-3">
+                <Trophy className="w-8 h-8 text-primary shrink-0" />
+                <div>
+                  <p className="font-bold text-lg font-display">Puzzle Complete! 🎉</p>
+                  <p className="text-sm text-muted-foreground">Solved in {formatTime(elapsedSeconds)} — come back tomorrow for a new puzzle!</p>
+                </div>
+              </div>
+              {/* Inline share row */}
+              <div className="flex flex-wrap gap-2" data-testid="share-row">
+                {(() => {
+                  const text = generateShareText(puzzle.puzzleIndex, puzzle.grid, elapsedSeconds);
+                  const encodedText = encodeURIComponent(text);
+                  const url = encodeURIComponent("https://marlow.app/crossword");
+                  const copy = async () => {
+                    await navigator.clipboard.writeText(text);
+                    toast({ title: "Copied!", description: "Share text copied to clipboard" });
+                  };
+                  return (
+                    <>
+                      <a href={`https://twitter.com/intent/tweet?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-x"><SiX className="w-3.5 h-3.5" />X</Button>
+                      </a>
+                      <a href={`https://threads.net/intent/post?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-threads"><span className="font-bold text-sm leading-none">⑇</span>Threads</Button>
+                      </a>
+                      <a href={`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${encodedText}`} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-facebook"><SiFacebook className="w-3.5 h-3.5" />Facebook</Button>
+                      </a>
+                      <a href={`https://wa.me/?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-whatsapp"><SiWhatsapp className="w-3.5 h-3.5" />WhatsApp</Button>
+                      </a>
+                      <Button size="sm" variant="outline" className="gap-1.5" onClick={copy} data-testid="share-copy">
+                        <Copy className="w-3.5 h-3.5" />Copy
+                      </Button>
+                    </>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
@@ -449,10 +405,18 @@ export default function CrosswordPage() {
             <div className="relative">
               {/* Blur overlay for pre-start */}
               {phase === "pre-start" && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-sm bg-background/40">
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-xl backdrop-blur-sm bg-background/50 px-4">
+                  <div className="text-center">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      {format(new Date(), "EEEE, MMMM d")}
+                    </p>
+                    <p className="text-base font-bold mt-0.5">
+                      {puzzle.wordCount ?? puzzle.words.length} words to solve
+                    </p>
+                  </div>
                   <Button
                     size="lg"
-                    className="text-lg px-8 py-6 rounded-2xl shadow-xl shadow-primary/20 font-bold"
+                    className="text-base px-7 py-5 rounded-2xl shadow-lg shadow-primary/20 font-bold"
                     onClick={handleStart}
                     data-testid="start-btn"
                   >
@@ -650,14 +614,6 @@ export default function CrosswordPage() {
         </div>
       </div>
 
-      {showShare && puzzle && (
-        <ShareModal
-          puzzleIndex={puzzle.puzzleIndex}
-          grid={puzzle.grid}
-          elapsedSeconds={elapsedSeconds}
-          onClose={() => setShowShare(false)}
-        />
-      )}
     </Layout>
   );
 }

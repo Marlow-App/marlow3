@@ -21,6 +21,7 @@ import {
   type SupportTicket,
   type DailyCrossword,
   type CrosswordCompletion,
+  type CrosswordWord,
 } from "@shared/schema";
 import { eq, desc, and, sql, gte, count } from "drizzle-orm";
 import { authStorage } from "./replit_integrations/auth/storage";
@@ -67,7 +68,7 @@ export interface IStorage {
   // Crossword
   getTodayCrossword(): Promise<DailyCrossword | undefined>;
   getAllCrosswords(): Promise<DailyCrossword[]>;
-  updateCrossword(id: number, data: { grid?: any; words?: any; title?: string }): Promise<DailyCrossword | undefined>;
+  updateCrossword(id: number, data: { grid?: boolean[][]; words?: CrosswordWord[]; title?: string }): Promise<DailyCrossword | undefined>;
   getCrosswordStatus(userId: string, puzzleId: number, puzzleDate: string): Promise<CrosswordCompletion | undefined>;
   saveCrosswordProgress(userId: string, puzzleId: number, puzzleDate: string, cells: Record<string, string>, elapsedSeconds: number): Promise<CrosswordCompletion>;
   completeCrossword(userId: string, puzzleId: number, puzzleDate: string, cells: Record<string, string>, elapsedSeconds: number): Promise<CrosswordCompletion>;
@@ -520,10 +521,14 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(dailyCrosswords).orderBy(dailyCrosswords.puzzleIndex);
   }
 
-  async updateCrossword(id: number, data: { grid?: any; words?: any; title?: string }): Promise<DailyCrossword | undefined> {
+  async updateCrossword(id: number, data: { grid?: boolean[][]; words?: CrosswordWord[]; title?: string }): Promise<DailyCrossword | undefined> {
+    const setData: Partial<{ grid: unknown; words: unknown; title: string }> = {};
+    if (data.grid !== undefined) setData.grid = data.grid;
+    if (data.words !== undefined) setData.words = data.words;
+    if (data.title !== undefined) setData.title = data.title;
     const [updated] = await db
       .update(dailyCrosswords)
-      .set(data)
+      .set(setData)
       .where(eq(dailyCrosswords.id, id))
       .returning();
     return updated;
