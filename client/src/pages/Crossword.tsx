@@ -228,7 +228,15 @@ export default function CrosswordPage() {
       progressMutation.mutate({ puzzleId: puzzle.id, cells, elapsedSeconds: current });
     }
 
-    const { results } = await checkMutation.mutateAsync({ puzzleId: puzzle.id, cells });
+    let results: Record<string, boolean>;
+    try {
+      const data = await checkMutation.mutateAsync({ puzzleId: puzzle.id, cells });
+      results = data.results;
+    } catch {
+      toast({ title: "Check failed", description: "Could not check answers. Please try again.", variant: "destructive" });
+      return;
+    }
+
     setCheckState(results);
 
     const whiteCells = puzzle.grid.flatMap((row, r) =>
@@ -239,7 +247,11 @@ export default function CrosswordPage() {
     if (allCorrect) {
       if (timerRef.current) clearInterval(timerRef.current);
       if (!isViewingArchive) {
-        await completeMutation.mutateAsync({ puzzleId: puzzle.id, cells, elapsedSeconds: current });
+        try {
+          await completeMutation.mutateAsync({ puzzleId: puzzle.id, cells, elapsedSeconds: current });
+        } catch {
+          // completion recording failed — still show the win screen locally
+        }
       }
       setElapsedSeconds(current);
       setPhase("completed");
