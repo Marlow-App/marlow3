@@ -105,6 +105,7 @@ export default function CrosswordPage() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Restore saved state from status
   useEffect(() => {
@@ -135,6 +136,18 @@ export default function CrosswordPage() {
     mutationFn: (data: { puzzleId: number; cells: Record<string, string>; elapsedSeconds: number }) =>
       apiRequest("POST", "/api/crossword/today/progress", data),
   });
+
+  // Autosave progress after every cell change (debounced 2s) while in playing phase
+  useEffect(() => {
+    if (phase !== "playing" || !puzzle) return;
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(() => {
+      const elapsed = startTime !== null ? Math.floor((Date.now() - startTime) / 1000) : elapsedSeconds;
+      progressMutation.mutate({ puzzleId: puzzle.id, cells, elapsedSeconds: elapsed });
+    }, 2000);
+    return () => { if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cells, phase]);
 
   const checkMutation = useMutation({
     mutationFn: async (data: { puzzleId: number; cells: Record<string, string> }) => {
