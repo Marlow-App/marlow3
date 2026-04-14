@@ -590,10 +590,14 @@ export class DatabaseStorage implements IStorage {
     const total = all.length;
     const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
 
-    // Only show puzzles from the user's join date onward
+    // April 14 2026 is the crossword feature launch date — no archive entries before this day
+    const CROSSWORD_LAUNCH_DAY = Math.floor(Date.UTC(2026, 3, 14) / (1000 * 60 * 60 * 24));
+
+    // Only show puzzles from the user's join date onward (and never before launch day)
     const [user] = await db.select({ createdAt: users.createdAt }).from(users).where(eq(users.id, userId)).limit(1);
     const joinDay = user?.createdAt ? Math.floor(user.createdAt.getTime() / (1000 * 60 * 60 * 24)) : daysSinceEpoch;
-    const maxLookback = Math.max(0, Math.min(59, daysSinceEpoch - joinDay));
+    const effectiveStartDay = Math.max(joinDay, CROSSWORD_LAUNCH_DAY);
+    const maxLookback = Math.max(0, Math.min(59, daysSinceEpoch - effectiveStartDay));
 
     // Fetch all completions for this user in one query (select both puzzleId AND puzzleDate)
     const completions = await db
