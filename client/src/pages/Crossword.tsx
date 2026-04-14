@@ -232,7 +232,7 @@ export default function CrosswordPage() {
     try {
       const data = await checkMutation.mutateAsync({ puzzleId: puzzle.id, cells });
       results = data.results;
-    } catch {
+    } catch (_e) {
       toast({ title: "Check failed", description: "Could not check answers. Please try again.", variant: "destructive" });
       return;
     }
@@ -249,8 +249,9 @@ export default function CrosswordPage() {
       if (!isViewingArchive) {
         try {
           await completeMutation.mutateAsync({ puzzleId: puzzle.id, cells, elapsedSeconds: current });
-        } catch {
-          // completion recording failed — still show the win screen locally
+        } catch (_e) {
+          toast({ title: "All correct!", description: "Your answers are right, but we couldn't save your result. Try clicking Check again.", variant: "destructive" });
+          return;
         }
       }
       setElapsedSeconds(current);
