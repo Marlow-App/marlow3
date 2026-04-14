@@ -381,53 +381,62 @@ export default function CrosswordPage() {
           </div>
         </div>
 
-        {/* Completed banner */}
-        {phase === "completed" && puzzle && (
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20" data-testid="completed-banner">
-            <CardContent className="py-4 px-5 space-y-3">
-              <div className="flex items-center gap-3">
-                <Trophy className="w-8 h-8 text-primary shrink-0" />
-                <div>
-                  <p className="font-bold text-lg font-display">Puzzle Complete! 🎉</p>
-                  <p className="text-sm text-muted-foreground">Solved in {formatTime(elapsedSeconds)} — come back tomorrow for a new puzzle!</p>
+        {/* ── Completed screen (replaces game area) ─────────────────────────────── */}
+        {phase === "completed" && puzzle && (() => {
+          const text = generateShareText(puzzle.puzzleIndex, puzzle.grid, elapsedSeconds);
+          const encodedText = encodeURIComponent(text);
+          const url = encodeURIComponent("https://marlow.app/crossword");
+          const copy = async () => {
+            await navigator.clipboard.writeText(text);
+            toast({ title: "Copied!", description: "Share text copied to clipboard" });
+          };
+          return (
+            <Card
+              className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 text-center"
+              data-testid="completed-banner"
+            >
+              <CardContent className="py-10 px-6 space-y-6">
+                <div className="flex flex-col items-center gap-3">
+                  <Trophy className="w-14 h-14 text-primary" />
+                  <div>
+                    <p className="font-bold text-2xl font-display">Puzzle Complete! 🎉</p>
+                    <p className="text-base text-muted-foreground mt-1">
+                      Solved in <span className="font-semibold text-foreground">{formatTime(elapsedSeconds)}</span>
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-0.5">Come back tomorrow for a new puzzle!</p>
+                  </div>
                 </div>
-              </div>
-              {/* Inline share row */}
-              <div className="flex flex-wrap gap-2" data-testid="share-row">
-                {(() => {
-                  const text = generateShareText(puzzle.puzzleIndex, puzzle.grid, elapsedSeconds);
-                  const encodedText = encodeURIComponent(text);
-                  const url = encodeURIComponent("https://marlow.app/crossword");
-                  const copy = async () => {
-                    await navigator.clipboard.writeText(text);
-                    toast({ title: "Copied!", description: "Share text copied to clipboard" });
-                  };
-                  return (
-                    <>
-                      <a href={`https://twitter.com/intent/tweet?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-x"><SiX className="w-3.5 h-3.5" />X</Button>
-                      </a>
-                      <a href={`https://threads.net/intent/post?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-threads"><SiThreads className="w-3.5 h-3.5" />Threads</Button>
-                      </a>
-                      <a href={`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${encodedText}`} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-facebook"><SiFacebook className="w-3.5 h-3.5" />Facebook</Button>
-                      </a>
-                      <a href={`https://wa.me/?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-whatsapp"><SiWhatsapp className="w-3.5 h-3.5" />WhatsApp</Button>
-                      </a>
-                      <Button size="sm" variant="outline" className="gap-1.5" onClick={copy} data-testid="share-copy">
-                        <Copy className="w-3.5 h-3.5" />Copy (for Instagram &amp; others)
-                      </Button>
-                    </>
-                  );
-                })()}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                {/* Emoji grid preview */}
+                <div className="text-2xl leading-snug whitespace-pre font-mono" data-testid="emoji-grid">
+                  {puzzle.grid.map((row, r) => (
+                    <div key={r}>{row.map((cell, c) => cell ? "🟩" : "⬛").join("")}</div>
+                  ))}
+                </div>
+                {/* Share row */}
+                <div className="flex flex-wrap justify-center gap-2" data-testid="share-row">
+                  <a href={`https://twitter.com/intent/tweet?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
+                    <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-x"><SiX className="w-3.5 h-3.5" />X</Button>
+                  </a>
+                  <a href={`https://threads.net/intent/post?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
+                    <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-threads"><SiThreads className="w-3.5 h-3.5" />Threads</Button>
+                  </a>
+                  <a href={`https://www.facebook.com/sharer/sharer.php?u=${url}`} target="_blank" rel="noopener noreferrer">
+                    <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-facebook"><SiFacebook className="w-3.5 h-3.5" />Facebook</Button>
+                  </a>
+                  <a href={`https://wa.me/?text=${encodedText}`} target="_blank" rel="noopener noreferrer">
+                    <Button size="sm" variant="outline" className="gap-1.5" data-testid="share-whatsapp"><SiWhatsapp className="w-3.5 h-3.5" />WhatsApp</Button>
+                  </a>
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={copy} data-testid="share-copy">
+                    <Copy className="w-3.5 h-3.5" />Copy (for Instagram &amp; others)
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
-        {/* Game area: grid + clues */}
+        {/* ── Game area: grid + clues (hidden when completed) ──────────────────── */}
+        {phase !== "completed" && (
         <div className="md:flex md:gap-6 space-y-5 md:space-y-0">
           {/* Grid */}
           <div className="flex flex-col items-center gap-3">
@@ -498,7 +507,6 @@ export default function CrosswordPage() {
                                 : "border-border bg-card hover:border-primary/30",
                             checkResult === true && "border-green-500 bg-green-50 dark:bg-green-950/30",
                             checkResult === false && "border-red-500 bg-red-50 dark:bg-red-950/30",
-                            phase === "completed" && !checkResult && checkResult !== false && "border-green-400/60 bg-green-50/50 dark:bg-green-950/20",
                           )}
                           data-testid={`cell-${k}`}
                         >
@@ -625,22 +633,9 @@ export default function CrosswordPage() {
               </div>
             )}
 
-            {/* Completed: show answers */}
-            {phase === "completed" && (
-              <div className="bg-muted/30 rounded-xl p-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Today's Answers</p>
-                <div className="space-y-1">
-                  {[...acrossWords, ...downWords].map(word => (
-                    <div key={`answer-${word.direction}-${word.number}`} className="flex gap-2 text-sm">
-                      <span className="font-bold text-muted-foreground shrink-0">{word.number}{word.direction === "across" ? "A" : "D"}</span>
-                      <span>{word.clue}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
+        )}
       </div>
 
     </Layout>

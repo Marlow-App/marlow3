@@ -95,17 +95,17 @@ export const SEED_PUZZLES: CrosswordPuzzleData[] = [
     ],
   },
 
-  // ─── Puzzle 3: Famous Figures I ───────────────────────────────────────────
+  // ─── Puzzle 3: Famous Figures ─────────────────────────────────────────────
   {
-    title: "Famous Figures I",
+    title: "Famous Figures",
     puzzleIndex: 2,
     grid: gridA,
     words: [
-      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 2, clue: "Tang dynasty poet, 'The Poet Immortal'", chars: ["李", "白"], answer: ["li", "bai"] },
-      { number: 2, direction: "across", startRow: 0, startCol: 3, length: 2, clue: "Tang dynasty poet, 'The Poet Sage'", chars: ["杜", "甫"], answer: ["du", "fu"] },
-      { number: 3, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Ancient philosopher known in English as Confucius", chars: ["孔", "子"], answer: ["kong", "zi"] },
-      { number: 4, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "Father of modern Chinese literature", chars: ["鲁", "迅"], answer: ["lu", "xun"] },
-      { number: 5, direction: "across", startRow: 4, startCol: 0, length: 2, clue: "Kung fu movie star known in the West as Jackie Chan", chars: ["成", "龙"], answer: ["cheng", "long"] },
+      { number: 1, direction: "across", startRow: 0, startCol: 0, length: 2, clue: "NBA star, 7'6\" centre who played for the Houston Rockets", chars: ["姚", "明"], answer: ["yao", "ming"] },
+      { number: 2, direction: "across", startRow: 0, startCol: 3, length: 2, clue: "World-famous pianist, known for his expressive Chopin performances", chars: ["郎", "朗"], answer: ["lang", "lang"] },
+      { number: 3, direction: "across", startRow: 2, startCol: 0, length: 2, clue: "Tennis star, first Chinese player to win a Grand Slam singles title", chars: ["李", "娜"], answer: ["li", "na"] },
+      { number: 4, direction: "across", startRow: 2, startCol: 3, length: 2, clue: "Mandopop queen and actress, 'The Diva of Asia'", chars: ["王", "菲"], answer: ["wang", "fei"] },
+      { number: 5, direction: "across", startRow: 4, startCol: 0, length: 2, clue: "Action movie star known in the West as Jackie Chan", chars: ["成", "龙"], answer: ["cheng", "long"] },
     ],
   },
 
@@ -232,9 +232,9 @@ export const SEED_PUZZLES: CrosswordPuzzleData[] = [
     ],
   },
 
-  // ─── Puzzle 13: Chinese Identity (cross layout — 1 across + 1 down) ────────
+  // ─── Puzzle 13: Pronouns + Love (cross layout — 1 down + 1 across) ─────────
   {
-    title: "Chinese Identity",
+    title: "Pronouns & Love",
     puzzleIndex: 12,
     grid: [
       [false, false, true,  false, false],
@@ -246,22 +246,22 @@ export const SEED_PUZZLES: CrosswordPuzzleData[] = [
     words: [
       {
         number: 1, direction: "down" as const, startRow: 0, startCol: 2, length: 5,
-        clue: "When people reach middle age (人到_年时)",
-        chars: ["人", "到", "中", "年", "时"],
-        answer: ["ren", "dao", "zhong", "nian", "shi"],
+        clue: "I · you · love · he · she (basic pronouns + a key verb)",
+        chars: ["我", "你", "爱", "他", "她"],
+        answer: ["wo", "ni", "ai", "ta", "ta"],
       },
       {
         number: 2, direction: "across" as const, startRow: 2, startCol: 0, length: 5,
-        clue: "I am Chinese (common phrase)",
-        chars: ["我", "是", "中", "国", "人"],
-        answer: ["wo", "shi", "zhong", "guo", "ren"],
+        clue: "I also love China (common heartfelt phrase)",
+        chars: ["我", "也", "爱", "中", "国"],
+        answer: ["wo", "ye", "ai", "zhong", "guo"],
       },
     ],
   },
 
-  // ─── Puzzle 14: Chinese Language (cross layout — 1 across + 1 down) ───────
+  // ─── Puzzle 14: Numbers & Time (cross layout — 1 down + 1 across) ──────────
   {
-    title: "Chinese Language",
+    title: "Numbers & Time",
     puzzleIndex: 13,
     grid: [
       [false, false, true,  false, false],
@@ -273,15 +273,15 @@ export const SEED_PUZZLES: CrosswordPuzzleData[] = [
     words: [
       {
         number: 1, direction: "down" as const, startRow: 0, startCol: 2, length: 5,
-        clue: "Chinese character grammar book (汉字_法书)",
-        chars: ["汉", "字", "语", "法", "书"],
-        answer: ["han", "zi", "yu", "fa", "shu"],
+        clue: "One · two · three · four · five",
+        chars: ["一", "二", "三", "四", "五"],
+        answer: ["yi", "er", "san", "si", "wu"],
       },
       {
         number: 2, direction: "across" as const, startRow: 2, startCol: 0, length: 5,
-        clue: "Learning Chinese is difficult (学汉_很难)",
-        chars: ["学", "汉", "语", "很", "难"],
-        answer: ["xue", "han", "yu", "hen", "nan"],
+        clue: "Three-thirty in the morning (early wake-up time!)",
+        chars: ["早", "上", "三", "点", "半"],
+        answer: ["zao", "shang", "san", "dian", "ban"],
       },
     ],
   },
