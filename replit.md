@@ -26,6 +26,8 @@ Key pages include:
 - `ReviewerPortal`: For reviewers to manage pending and completed feedback tasks.
 - `RecordingDetail`: Detailed view of a recording with feedback options.
 - `PracticeList`: A personalized list of saved errors for learners.
+- `Crossword`: Daily Chinese mini crossword puzzle with pinyin input (NYT mini style), social sharing.
+- `CrosswordEditor`: Admin/reviewer-only editor for puzzle clues, chars, and answers.
 - `ConsentGate` & `Onboarding`: Initial setup for new users.
 - `Profile`: User account management, including subscription and settings.
 
@@ -35,7 +37,11 @@ The backend is an Express.js application written in TypeScript, providing a REST
 
 ### Database
 
-PostgreSQL is the primary database, managed by Drizzle ORM and `drizzle-kit`. The schema defines `users`, `sessions`, `recordings`, `feedback`, and `userConsents` tables, establishing relations between them. The `users` table stores subscription-related fields (`subscriptionTier`, `subscriptionStatus`, `stripeCustomerId`, etc.) and user preferences.
+PostgreSQL is the primary database, managed by Drizzle ORM and `drizzle-kit`. The schema defines `users`, `sessions`, `recordings`, `feedback`, `userConsents`, `dailyCrosswords`, and `crosswordCompletions` tables. The `users` table stores subscription-related fields. `dailyCrosswords` stores puzzle data (grid, words with answers) seeded from `server/crossword-seed.ts`. `crosswordCompletions` tracks per-user progress and completion status per puzzle per day.
+
+### Daily Crossword
+
+A daily 5×5 mini crossword puzzle. 14 puzzles cycle daily (by epoch day mod 14). Each puzzle has up to 5 Chinese vocabulary words. Users type pinyin per cell and click "Check Answers" for server-side validation (answers are never sent to the client). On completion, users see a celebration screen and can share an emoji grid on X, Threads, Facebook, WhatsApp, or clipboard. Seed data is in `server/crossword-seed.ts`; the editor at `/crossword/editor` is reviewer-only.
 
 ### Authentication
 

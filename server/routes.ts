@@ -1020,5 +1020,124 @@ export async function registerRoutes(
     }
   });
 
+  // ─── Crossword Routes ─────────────────────────────────────────────────────
+
+  // Get today's puzzle (strips answers + chars from response)
+  app.get("/api/crossword/today", isAuthenticated, async (req, res) => {
+    try {
+      const puzzle = await storage.getTodayCrossword();
+      if (!puzzle) return res.status(404).json({ message: "No puzzle available" });
+
+      const userId = (req.user as any).claims.sub;
+      const puzzleDate = new Date().toISOString().slice(0, 10);
+      const status = await storage.getCrosswordStatus(userId, puzzle.id, puzzleDate);
+
+      const publicWords = (puzzle.words as any[]).map(({ chars: _c, answer: _a, ...rest }) => rest);
+      res.json({
+        id: puzzle.id,
+        puzzleIndex: puzzle.puzzleIndex,
+        title: puzzle.title,
+        grid: puzzle.grid,
+        words: publicWords,
+        status: status ?? null,
+      });
+    } catch (err) {
+      console.error("Error getting crossword:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Check answers (server-side validation)
+  app.post("/api/crossword/check", isAuthenticated, async (req, res) => {
+    try {
+      const { puzzleId, cells } = req.body as { puzzleId: number; cells: Record<string, string> };
+      if (!puzzleId || !cells) return res.status(400).json({ message: "puzzleId and cells required" });
+
+      const all = await storage.getAllCrosswords();
+      const puzzle = all.find(p => p.id === puzzleId);
+      if (!puzzle) return res.status(404).json({ message: "Puzzle not found" });
+
+      const words = puzzle.words as any[];
+      const results: Record<string, boolean> = {};
+      for (const word of words) {
+        for (let i = 0; i < word.length; i++) {
+          const r = word.direction === "across" ? word.startRow : word.startRow + i;
+          const c = word.direction === "across" ? word.startCol + i : word.startCol;
+          const key = `${r}-${c}`;
+          const typed = (cells[key] ?? "").toLowerCase().trim();
+          const expected = (word.answer[i] ?? "").toLowerCase().trim();
+          results[key] = typed === expected;
+        }
+      }
+
+      res.json({ results });
+    } catch (err) {
+      console.error("Error checking crossword:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Save progress
+  app.post("/api/crossword/progress", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const { puzzleId, cells, elapsedSeconds } = req.body as { puzzleId: number; cells: Record<string, string>; elapsedSeconds: number };
+      if (!puzzleId || !cells) return res.status(400).json({ message: "puzzleId and cells required" });
+      const puzzleDate = new Date().toISOString().slice(0, 10);
+      const record = await storage.saveCrosswordProgress(userId, puzzleId, puzzleDate, cells, elapsedSeconds ?? 0);
+      res.json(record);
+    } catch (err) {
+      console.error("Error saving crossword progress:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Complete puzzle
+  app.post("/api/crossword/complete", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const { puzzleId, cells, elapsedSeconds } = req.body as { puzzleId: number; cells: Record<string, string>; elapsedSeconds: number };
+      if (!puzzleId || !cells) return res.status(400).json({ message: "puzzleId and cells required" });
+      const puzzleDate = new Date().toISOString().slice(0, 10);
+      const record = await storage.completeCrossword(userId, puzzleId, puzzleDate, cells, elapsedSeconds ?? 0);
+      res.json(record);
+    } catch (err) {
+      console.error("Error completing crossword:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: get all puzzles with full data
+  app.get("/api/crossword/all", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const dbUser = await storage.getUser(userId);
+      if (dbUser?.role !== "reviewer") return res.status(403).json({ message: "Reviewers only" });
+      const puzzles = await storage.getAllCrosswords();
+      res.json(puzzles);
+    } catch (err) {
+      console.error("Error getting all crosswords:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Admin: update a puzzle
+  app.put("/api/crossword/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const dbUser = await storage.getUser(userId);
+      if (dbUser?.role !== "reviewer") return res.status(403).json({ message: "Reviewers only" });
+      const puzzleId = Number(req.params.id);
+      if (!puzzleId) return res.status(400).json({ message: "Invalid puzzle ID" });
+      const { grid, words, title } = req.body;
+      const updated = await storage.updateCrossword(puzzleId, { grid, words, title });
+      if (!updated) return res.status(404).json({ message: "Puzzle not found" });
+      res.json(updated);
+    } catch (err) {
+      console.error("Error updating crossword:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   return httpServer;
 }

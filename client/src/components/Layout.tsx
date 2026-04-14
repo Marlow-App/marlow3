@@ -1,5 +1,5 @@
 import { ReactNode, useState, useEffect, useRef } from "react";
-import { House, Mic2, BarChart2, BookOpen, UserCircle, FileAudio, X, Menu, LogOut, Zap } from "lucide-react";
+import { House, Mic2, BarChart2, BookOpen, UserCircle, FileAudio, X, Menu, LogOut, Zap, Grid3X3 } from "lucide-react";
 import pandaLogo from "@assets/chow_chow_2_1774332948261.png";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ export function Layout({ children }: LayoutProps) {
   const learnerItems = [
     { href: "/", label: "Home", icon: House },
     { href: "/record", label: "Record New", icon: Mic2 },
+    { href: "/crossword", label: "Daily Crossword", icon: Grid3X3 },
     { href: "/learner-portal", label: "My Progress", icon: BarChart2 },
     { href: "/practice-list", label: "Practice List", icon: BookOpen },
     { href: "/profile", label: "Profile", icon: UserCircle },
@@ -47,6 +48,7 @@ export function Layout({ children }: LayoutProps) {
   const reviewerItems = [
     { href: "/", label: "Home", icon: House },
     { href: "/reviewer-hub", label: "Reviewer Hub", icon: FileAudio },
+    { href: "/crossword/editor", label: "Crossword Editor", icon: Grid3X3 },
     { href: "/profile", label: "Profile", icon: UserCircle },
   ];
 

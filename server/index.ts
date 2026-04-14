@@ -6,7 +6,10 @@ import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync } from './stripe/stripeClient';
 import { WebhookHandlers } from './stripe/webhookHandlers';
 import { seedPronunciationErrors } from './seed/pronunciationErrors';
+import { seedCrosswords } from './crossword-seed';
 import { authStorage } from './replit_integrations/auth/storage';
+import { db } from './db';
+import { dailyCrosswords } from '@shared/schema';
 
 const app = express();
 const httpServer = createServer(app);
@@ -124,6 +127,9 @@ app.use((req, res, next) => {
 (async () => {
   // Seed pronunciation errors on startup (idempotent)
   await seedPronunciationErrors().catch(err => console.error("Error seeding pronunciation errors:", err));
+
+  // Seed crossword puzzles on startup (idempotent)
+  await seedCrosswords(db, dailyCrosswords).catch(err => console.error("Error seeding crossword puzzles:", err));
 
   // Upsert the AI reviewer system user (required as FK for AI feedback rows)
   await authStorage.upsertUser({

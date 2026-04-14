@@ -119,6 +119,29 @@ export type SupportTicket = typeof supportTickets.$inferSelect;
 export const insertSupportTicketSchema = createInsertSchema(supportTickets).omit({ id: true, userId: true, status: true, resolvedById: true, resolvedAt: true, createdAt: true });
 export type InsertSupportTicket = z.infer<typeof insertSupportTicketSchema>;
 
+export const dailyCrosswords = pgTable("daily_crosswords", {
+  id: serial("id").primaryKey(),
+  puzzleIndex: integer("puzzle_index").notNull().unique(),
+  title: text("title").notNull(),
+  grid: jsonb("grid").notNull(),
+  words: jsonb("words").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const crosswordCompletions = pgTable("crossword_completions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  puzzleId: integer("puzzle_id").notNull().references(() => dailyCrosswords.id),
+  puzzleDate: text("puzzle_date").notNull(),
+  cells: jsonb("cells").notNull().default({}),
+  elapsedSeconds: integer("elapsed_seconds"),
+  completedAt: timestamp("completed_at"),
+  isComplete: boolean("is_complete").default(false).notNull(),
+});
+
+export type DailyCrossword = typeof dailyCrosswords.$inferSelect;
+export type CrosswordCompletion = typeof crosswordCompletions.$inferSelect;
+
 // Relations
 export const recordingsRelations = relations(recordings, ({ one, many }) => ({
   user: one(users, {

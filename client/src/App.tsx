@@ -20,6 +20,8 @@ import ConsentGate from "@/pages/ConsentGate";
 import Onboarding from "@/pages/Onboarding";
 import PracticeList from "@/pages/PracticeList";
 import SupportTicketDetail from "@/pages/SupportTicketDetail";
+import CrosswordPage from "@/pages/Crossword";
+import CrosswordEditor from "@/pages/CrosswordEditor";
 import NotFound from "@/pages/not-found";
 
 const PUBLIC_PATHS = ["/privacy-policy", "/terms"];
@@ -67,6 +69,8 @@ function Router() {
         {(params: { id: string }) => <SupportTicketDetail key={params.id} />}
       </Route>
       <Route path="/practice-list" component={PracticeList} />
+      <Route path="/crossword" component={CrosswordPage} />
+      <Route path="/crossword/editor" component={CrosswordEditor} />
       <Route path="/profile" component={Profile} />
       <Route path="/checkout/success" component={CheckoutSuccess} />
       <Route component={NotFound} />

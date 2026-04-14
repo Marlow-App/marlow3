@@ -557,6 +557,28 @@ export default function Home() {
           );
         })()}
 
+        {/* Daily Crossword Teaser */}
+        <section data-testid="crossword-section">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-base">🀄</span>
+            <h2 className="text-lg font-bold font-display">Daily Crossword</h2>
+          </div>
+          <Link href="/crossword">
+            <Card className="bg-gradient-to-br from-indigo-50/80 to-indigo-50/20 dark:from-indigo-950/30 dark:to-indigo-950/10 border-indigo-200/50 dark:border-indigo-800/30 hover:shadow-md hover:border-indigo-300/70 dark:hover:border-indigo-700/50 transition-all duration-200 cursor-pointer" data-testid="crossword-card">
+              <CardContent className="p-5 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
+                  <span className="text-2xl">🀄</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-base">Today's Puzzle</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">Fill in Chinese vocabulary using pinyin — a new puzzle every day!</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+              </CardContent>
+            </Card>
+          </Link>
+        </section>
+
         {/* Recent Activity */}
         <section>
           <div className="flex items-center justify-between mb-3">

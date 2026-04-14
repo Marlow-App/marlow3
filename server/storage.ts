@@ -8,6 +8,8 @@ import {
   pronunciationErrors,
   practiceListItems,
   supportTickets,
+  dailyCrosswords,
+  crosswordCompletions,
   type InsertRecording,
   type InsertFeedback,
   type InsertFeedbackWithReviewer,
@@ -17,6 +19,8 @@ import {
   type PronunciationError,
   type PracticeListItem,
   type SupportTicket,
+  type DailyCrossword,
+  type CrosswordCompletion,
 } from "@shared/schema";
 import { eq, desc, and, sql, gte, count } from "drizzle-orm";
 import { authStorage } from "./replit_integrations/auth/storage";
@@ -59,6 +63,14 @@ export interface IStorage {
   createSupportTicket(userId: string, category: string, message: string): Promise<SupportTicket>;
   listSupportTickets(): Promise<(SupportTicket & { user: User | null; resolvedBy: User | null })[]>;
   resolveSupportTicket(id: number, resolvedById: string): Promise<SupportTicket | undefined>;
+
+  // Crossword
+  getTodayCrossword(): Promise<DailyCrossword | undefined>;
+  getAllCrosswords(): Promise<DailyCrossword[]>;
+  updateCrossword(id: number, data: { grid?: any; words?: any; title?: string }): Promise<DailyCrossword | undefined>;
+  getCrosswordStatus(userId: string, puzzleId: number, puzzleDate: string): Promise<CrosswordCompletion | undefined>;
+  saveCrosswordProgress(userId: string, puzzleId: number, puzzleDate: string, cells: Record<string, string>, elapsedSeconds: number): Promise<CrosswordCompletion>;
+  completeCrossword(userId: string, puzzleId: number, puzzleDate: string, cells: Record<string, string>, elapsedSeconds: number): Promise<CrosswordCompletion>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -484,6 +496,80 @@ export class DatabaseStorage implements IStorage {
       .where(eq(supportTickets.id, id))
       .returning();
     return updated;
+  }
+
+  // ─── Crossword ─────────────────────────────────────────────────────────────
+
+  private getTodayDateString(): string {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  private getTodayPuzzleIndex(totalPuzzles: number): number {
+    const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+    return daysSinceEpoch % totalPuzzles;
+  }
+
+  async getTodayCrossword(): Promise<DailyCrossword | undefined> {
+    const all = await db.select().from(dailyCrosswords).orderBy(dailyCrosswords.puzzleIndex);
+    if (!all.length) return undefined;
+    const idx = this.getTodayPuzzleIndex(all.length);
+    return all.find(p => p.puzzleIndex === idx) ?? all[0];
+  }
+
+  async getAllCrosswords(): Promise<DailyCrossword[]> {
+    return db.select().from(dailyCrosswords).orderBy(dailyCrosswords.puzzleIndex);
+  }
+
+  async updateCrossword(id: number, data: { grid?: any; words?: any; title?: string }): Promise<DailyCrossword | undefined> {
+    const [updated] = await db
+      .update(dailyCrosswords)
+      .set(data)
+      .where(eq(dailyCrosswords.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getCrosswordStatus(userId: string, puzzleId: number, puzzleDate: string): Promise<CrosswordCompletion | undefined> {
+    const [row] = await db
+      .select()
+      .from(crosswordCompletions)
+      .where(and(eq(crosswordCompletions.userId, userId), eq(crosswordCompletions.puzzleId, puzzleId), eq(crosswordCompletions.puzzleDate, puzzleDate)))
+      .limit(1);
+    return row;
+  }
+
+  async saveCrosswordProgress(userId: string, puzzleId: number, puzzleDate: string, cells: Record<string, string>, elapsedSeconds: number): Promise<CrosswordCompletion> {
+    const existing = await this.getCrosswordStatus(userId, puzzleId, puzzleDate);
+    if (existing) {
+      const [updated] = await db
+        .update(crosswordCompletions)
+        .set({ cells, elapsedSeconds })
+        .where(eq(crosswordCompletions.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [created] = await db
+      .insert(crosswordCompletions)
+      .values({ userId, puzzleId, puzzleDate, cells, elapsedSeconds, isComplete: false })
+      .returning();
+    return created;
+  }
+
+  async completeCrossword(userId: string, puzzleId: number, puzzleDate: string, cells: Record<string, string>, elapsedSeconds: number): Promise<CrosswordCompletion> {
+    const existing = await this.getCrosswordStatus(userId, puzzleId, puzzleDate);
+    if (existing) {
+      const [updated] = await db
+        .update(crosswordCompletions)
+        .set({ cells, elapsedSeconds, isComplete: true, completedAt: new Date() })
+        .where(eq(crosswordCompletions.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [created] = await db
+      .insert(crosswordCompletions)
+      .values({ userId, puzzleId, puzzleDate, cells, elapsedSeconds, isComplete: true, completedAt: new Date() })
+      .returning();
+    return created;
   }
 }
 
