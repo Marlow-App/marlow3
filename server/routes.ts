@@ -1023,6 +1023,16 @@ export async function registerRoutes(
 
   // ─── Crossword Routes ─────────────────────────────────────────────────────
 
+  // Filter out stale/invalid cell values: only keep single Unicode characters
+  function sanitizeCells(cells: Record<string, string> | undefined | null): Record<string, string> {
+    if (!cells) return {};
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(cells)) {
+      if (typeof v === "string" && [...v].length === 1) out[k] = v;
+    }
+    return out;
+  }
+
   // Get today's puzzle (strips answers + chars from response)
   app.get("/api/crossword/today", isAuthenticated, async (req, res) => {
     try {
@@ -1035,6 +1045,11 @@ export async function registerRoutes(
 
       const words = (puzzle.words as unknown) as CrosswordWord[];
       const publicWords = words.map(({ chars: _c, answer: _a, ...rest }) => rest);
+      const cleanCells = sanitizeCells(status?.cells as Record<string, string>);
+      const hadStaleCells = status && Object.keys(status.cells ?? {}).length > 0 && Object.keys(cleanCells).length === 0;
+      const cleanStatus = status
+        ? { ...status, cells: cleanCells, isComplete: hadStaleCells ? false : status.isComplete }
+        : null;
       res.json({
         id: puzzle.id,
         puzzleIndex: puzzle.puzzleIndex,
@@ -1042,7 +1057,7 @@ export async function registerRoutes(
         grid: puzzle.grid,
         words: publicWords,
         wordCount: words.length,
-        status: status ?? null,
+        status: cleanStatus,
       });
     } catch (err) {
       console.error("Error getting crossword:", err);
@@ -1107,7 +1122,7 @@ export async function registerRoutes(
       const { puzzleId, cells, elapsedSeconds } = req.body as { puzzleId: number; cells: Record<string, string>; elapsedSeconds: number };
       if (!puzzleId || !cells) return res.status(400).json({ message: "puzzleId and cells required" });
       const puzzleDate = new Date().toISOString().slice(0, 10);
-      const record = await storage.saveCrosswordProgress(userId, puzzleId, puzzleDate, cells, elapsedSeconds ?? 0);
+      const record = await storage.saveCrosswordProgress(userId, puzzleId, puzzleDate, sanitizeCells(cells), elapsedSeconds ?? 0);
       res.json(record);
     } catch (err) {
       console.error("Error saving crossword progress:", err);
@@ -1173,11 +1188,13 @@ export async function registerRoutes(
       if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
         const completion = await storage.getCrosswordStatus(userId, puzzle.id, dateParam);
         if (completion) {
+          const archiveCells = sanitizeCells(completion.cells as Record<string, string>);
+          const hadStale = Object.keys(completion.cells ?? {}).length > 0 && Object.keys(archiveCells).length === 0;
           statusData = {
             id: completion.id,
-            cells: completion.cells,
+            cells: archiveCells,
             elapsedSeconds: completion.elapsedSeconds,
-            isComplete: completion.isComplete,
+            isComplete: hadStale ? false : completion.isComplete,
             completedAt: completion.completedAt?.toISOString() ?? null,
           };
         }
