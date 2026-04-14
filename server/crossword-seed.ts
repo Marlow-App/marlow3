@@ -59,160 +59,158 @@ function makePuzzle(
 
 export const SEED_PUZZLES: CrosswordPuzzleData[] = [
 
-  // 0 — Five Tastes (DOWN: 酸甜苦辣鲜)
-  // A1[2]=酸=D[0] ✓  A3[2]=鲜=D[4] ✓
-  makePuzzle(0, "Five Tastes",
-    { clue: "Craving this fiery, tangy noodle dish from Chongqing",
-      chars: ["想","吃","酸","辣","粉"], answer: ["xiang","chi","suan","la","fen"] },
-    { clue: "The five fundamental flavors of Chinese cuisine",
-      chars: ["酸","甜","苦","辣","鲜"], answer: ["suan","tian","ku","la","xian"] },
-    { clue: "To sample something fresh and experience a new flavor",
-      chars: ["尝","尝","鲜","味","道"], answer: ["chang","chang","xian","wei","dao"] },
+  // 0 — Peppa Pig · Street Food · Strawberries
+  // A1[2]=小=D[0] ✓  A3[2]=红=D[4] ✓
+  makePuzzle(0, "Peppa, Snacks & Berries",
+    { clue: "Outdoor snacks that fill the street with amazing smells",
+      chars: ["街","边","小","吃","香"], answer: ["jie","bian","xiao","chi","xiang"] },
+    { clue: "This cartoon pink piggy loves jumping in muddy puddles",
+      chars: ["小","猪","佩","奇","红"], answer: ["xiao","zhu","pei","qi","hong"] },
+    { clue: "These red berries are round, sweet, and bright red",
+      chars: ["草","莓","红","彤","彤"], answer: ["cao","mei","hong","tong","tong"] },
   ),
 
-  // 1 — Confucian Virtues (DOWN: 仁义礼智信)
-  // A1[2]=仁=D[0] ✓  A3[2]=信=D[4] ✓
-  makePuzzle(1, "Confucian Virtues",
-    { clue: "Broad love, benevolence, virtue, and goodness",
-      chars: ["博","爱","仁","德","善"], answer: ["bo","ai","ren","de","shan"] },
-    { clue: "Five Confucian virtues forming the moral foundation",
-      chars: ["仁","义","礼","智","信"], answer: ["ren","yi","li","zhi","xin"] },
-    { clue: "Without trust, a person cannot stand (Confucius)",
-      chars: ["人","无","信","不","立"], answer: ["ren","wu","xin","bu","li"] },
+  // 1 — Video Games · Basketball · Great Feeling
+  // A1[2]=打=D[0] ✓  A3[2]=爽=D[4] ✓
+  makePuzzle(1, "Games, Hoops & Feelings",
+    { clue: "What kids do after school on phones, consoles, and computers",
+      chars: ["他","们","打","游","戏"], answer: ["ta","men","da","you","xi"] },
+    { clue: "Shooting hoops with friends on the court",
+      chars: ["打","篮","球","很","爽"], answer: ["da","lan","qiu","hen","shuang"] },
+    { clue: "How you feel after acing a test or winning a game",
+      chars: ["感","觉","爽","极","了"], answer: ["gan","jue","shuang","ji","le"] },
   ),
 
-  // 2 — Classical Arts (DOWN: 琴棋书画诗)
-  // A1[2]=琴=D[0] ✓  A3[2]=诗=D[4] ✓
-  makePuzzle(2, "Classical Arts",
-    { clue: "The beautiful resonant melody of the guqin zither",
-      chars: ["悠","扬","琴","声","美"], answer: ["you","yang","qin","sheng","mei"] },
-    { clue: "The five classical arts: music, chess, calligraphy, painting, poetry",
-      chars: ["琴","棋","书","画","诗"], answer: ["qin","qi","shu","hua","shi"] },
-    { clue: "The splendor of Chinese poetry through the ages",
-      chars: ["古","今","诗","词","好"], answer: ["gu","jin","shi","ci","hao"] },
+  // 2 — Watching Crowds · Cinema · Happy Mood
+  // A1[2]=看=D[0] ✓  A3[2]=心=D[4] ✓
+  makePuzzle(2, "Cinema, Crowds & Moods",
+    { clue: "When something exciting happens, a crowd gathers to watch",
+      chars: ["大","家","看","热","闹"], answer: ["da","jia","kan","re","nao"] },
+    { clue: "Saturday night activity with popcorn and a big screen",
+      chars: ["看","电","影","开","心"], answer: ["kan","dian","ying","kai","xin"] },
+    { clue: "When your spirits are high and everything feels good",
+      chars: ["快","乐","心","情","好"], answer: ["kuai","le","xin","qing","hao"] },
   ),
 
-  // 3 — Ancient States (DOWN: 燕赵齐鲁楚)
-  // A1[2]=燕=D[0] ✓  A3[2]=楚=D[4] ✓
-  // 燕赵齐鲁楚 = five great states of ancient China (Warring States period)
-  makePuzzle(3, "Ancient States",
-    { clue: "Spring returns, swallows fly home — swallows were the symbol of the ancient Yan state",
-      chars: ["春","来","燕","子","归"], answer: ["chun","lai","yan","zi","gui"] },
-    { clue: "Five great states of the Warring States period: Yan, Zhao, Qi, Lu, Chu",
-      chars: ["燕","赵","齐","鲁","楚"], answer: ["yan","zhao","qi","lu","chu"] },
-    { clue: "Neat and impeccably dressed (from 《诗经》)",
-      chars: ["衣","冠","楚","楚","地"], answer: ["yi","guan","chu","chu","di"] },
+  // 3 — Little Dog · Running · PE Class
+  // A1[2]=跑=D[0] ✓  A3[2]=体=D[4] ✓
+  makePuzzle(3, "Dogs, Running & PE",
+    { clue: "A small furry four-legged pet going at full speed",
+      chars: ["小","狗","跑","得","快"], answer: ["xiao","gou","pao","de","kuai"] },
+    { clue: "This exercise makes your body healthier and stronger",
+      chars: ["跑","步","强","身","体"], answer: ["pao","bu","qiang","shen","ti"] },
+    { clue: "The school subject where you play sports and move around",
+      chars: ["每","天","体","育","课"], answer: ["mei","tian","ti","yu","ke"] },
   ),
 
-  // 4 — Four Gentlemen + Pine (DOWN: 梅兰竹菊松)
-  // A1[2]=梅=D[0] ✓  A3[2]=松=D[4] ✓
-  makePuzzle(4, "The Four Gentlemen",
-    { clue: "A solitary plum blossom bursting into bloom",
-      chars: ["一","朵","梅","花","开"], answer: ["yi","duo","mei","hua","kai"] },
-    { clue: "Plum, orchid, bamboo, chrysanthemum, pine — symbols of noble character",
-      chars: ["梅","兰","竹","菊","松"], answer: ["mei","lan","zhu","ju","song"] },
-    { clue: "Pine and cypress stand tall and endure through the ages",
-      chars: ["千","年","松","柏","常"], answer: ["qian","nian","song","bai","chang"] },
+  // 4 — Fish · Amusement Park · Computer Games
+  // A1[2]=游=D[0] ✓  A3[2]=玩=D[4] ✓
+  makePuzzle(4, "Fish, Parks & Games",
+    { clue: "These underwater creatures glide silently through rivers and seas",
+      chars: ["鱼","儿","游","水","中"], answer: ["yu","er","you","shui","zhong"] },
+    { clue: "A park full of roller coasters, rides, and attractions",
+      chars: ["游","乐","园","好","玩"], answer: ["you","le","yuan","hao","wan"] },
+    { clue: "What you do when you open Minecraft, Roblox, or any game",
+      chars: ["电","脑","玩","游","戏"], answer: ["dian","nao","wan","you","xi"] },
   ),
 
-  // 5 — Five Elements (DOWN: 金木水火土)
-  // A1[2]=金=D[0] ✓  A3[2]=土=D[4] ✓
-  makePuzzle(5, "Five Elements",
-    { clue: "A full view of golden autumn colors",
-      chars: ["满","目","金","秋","色"], answer: ["man","mu","jin","qiu","se"] },
-    { clue: "The five elements of ancient Chinese cosmology",
-      chars: ["金","木","水","火","土"], answer: ["jin","mu","shui","huo","tu"] },
-    { clue: "The deep emotional bond with one's homeland earth",
-      chars: ["故","乡","土","地","情"], answer: ["gu","xiang","tu","di","qing"] },
+  // 5 — Mom's Love · Reading · Kung Fu
+  // A1[2]=爱=D[0] ✓  A3[2]=步=D[4] ✓
+  makePuzzle(5, "Mom, Books & Kung Fu",
+    { clue: "A mother's warmth and affection for her child",
+      chars: ["妈","妈","爱","宝","宝"], answer: ["ma","ma","ai","bao","bao"] },
+    { clue: "Do this every day and you will keep getting smarter",
+      chars: ["爱","读","书","进","步"], answer: ["ai","du","shu","jin","bu"] },
+    { clue: "The special footwork moves in martial arts",
+      chars: ["功","夫","步","法","妙"], answer: ["gong","fu","bu","fa","miao"] },
   ),
 
-  // 6 — Chinese Meal (DOWN: 酒茶饭菜汤)
-  // A1[2]=酒=D[0] ✓  A3[2]=汤=D[4] ✓
-  makePuzzle(6, "Chinese Meal",
-    { clue: "Raise a cup — good wine brings friends together",
-      chars: ["举","杯","酒","相","逢"], answer: ["ju","bei","jiu","xiang","feng"] },
-    { clue: "Staples of a Chinese meal: liquor, tea, rice, dishes, and soup",
-      chars: ["酒","茶","饭","菜","汤"], answer: ["jiu","cha","fan","cai","tang"] },
-    { clue: "A piping-hot bowl of noodle soup",
-      chars: ["大","碗","汤","面","热"], answer: ["da","wan","tang","mian","re"] },
+  // 6 — Teacher · Rainbow · Sparkling Eyes
+  // A1[2]=画=D[0] ✓  A3[2]=亮=D[4] ✓
+  makePuzzle(6, "Teacher, Rainbow & Eyes",
+    { clue: "Writing and drawing on the board at the front of the classroom",
+      chars: ["老","师","画","黑","板"], answer: ["lao","shi","hua","hei","ban"] },
+    { clue: "The colorful arc that appears in the sky after it rains",
+      chars: ["画","彩","虹","漂","亮"], answer: ["hua","cai","hong","piao","liang"] },
+    { clue: "Happy, alert eyes that shine like little stars",
+      chars: ["眼","睛","亮","晶","晶"], answer: ["yan","jing","liang","jing","jing"] },
   ),
 
-  // 7 — Good Fortune (DOWN: 福气满满来)
-  // A1[2]=福=D[0] ✓  A3[2]=来=D[4] ✓
-  makePuzzle(7, "Good Fortune",
-    { clue: "May good fortune and blessings always be present",
-      chars: ["但","愿","福","常","在"], answer: ["dan","yuan","fu","chang","zai"] },
-    { clue: "Wishing an abundance of good luck and blessings",
-      chars: ["福","气","满","满","来"], answer: ["fu","qi","man","man","lai"] },
-    { clue: "Swallows return to herald the coming of spring",
-      chars: ["燕","子","来","报","春"], answer: ["yan","zi","lai","bao","chun"] },
+  // 7 — Little Birds · Singing · Warm Feelings
+  // A1[2]=唱=D[0] ✓  A3[2]=心=D[4] ✓
+  makePuzzle(7, "Birds, Songs & Warmth",
+    { clue: "Feathered friends who serenade everyone at dawn every morning",
+      chars: ["小","鸟","唱","晨","歌"], answer: ["xiao","niao","chang","chen","ge"] },
+    { clue: "This activity lets you express yourself through music and melody",
+      chars: ["唱","歌","很","开","心"], answer: ["chang","ge","hen","kai","xin"] },
+    { clue: "The cozy, warm feeling in your chest when something is sweet",
+      chars: ["暖","暖","心","窝","里"], answer: ["nuan","nuan","xin","wo","li"] },
   ),
 
-  // 8 — Landscapes (DOWN: 山川湖海岛)
-  // A1[2]=山=D[0] ✓  A3[2]=岛=D[4] ✓
-  makePuzzle(8, "Landscapes",
-    { clue: "The splendid beauty of China's mountains and rivers",
-      chars: ["大","好","山","河","美"], answer: ["da","hao","shan","he","mei"] },
-    { clue: "Natural wonders: mountains, rivers, lakes, seas, and islands",
-      chars: ["山","川","湖","海","岛"], answer: ["shan","chuan","hu","hai","dao"] },
-    { clue: "China's tropical paradise island in the south",
-      chars: ["海","南","岛","美","丽"], answer: ["hai","nan","dao","mei","li"] },
+  // 8 — Ancient Knights · Bicycle · High Grades
+  // A1[2]=骑=D[0] ✓  A3[2]=棒=D[4] ✓
+  makePuzzle(8, "Knights, Bikes & Grades",
+    { clue: "A brave warrior in shiny armor from a long time ago",
+      chars: ["古","代","骑","士","帅"], answer: ["gu","dai","qi","shi","shuai"] },
+    { clue: "A healthy, eco-friendly way to get around on two wheels",
+      chars: ["骑","自","行","车","棒"], answer: ["qi","zi","xing","che","bang"] },
+    { clue: "When you ace every test and make your parents super proud",
+      chars: ["成","绩","棒","上","天"], answer: ["cheng","ji","bang","shang","tian"] },
   ),
 
-  // 9 — 《静夜思》(DOWN: 望穿秋水思)
-  // A1[2]=望=D[0] ✓  A3[2]=思=D[4] ✓
-  // Both ACROSS words are consecutive lines from Li Bai's most famous poem!
-  makePuzzle(9, "Quiet Night Thoughts",
-    { clue: "Raise your head and gaze at the bright moon (Li Bai, 《静夜思》)",
-      chars: ["举","头","望","明","月"], answer: ["ju","tou","wang","ming","yue"] },
-    { clue: "Gazing with longing through the autumn waters — connects two lines of 《静夜思》",
-      chars: ["望","穿","秋","水","思"], answer: ["wang","chuan","qiu","shui","si"] },
-    { clue: "Lower your head and think of home (Li Bai, 《静夜思》)",
-      chars: ["低","头","思","故","乡"], answer: ["di","tou","si","gu","xiang"] },
+  // 9 — Shuttlecock · Soccer · Summer Sweat
+  // A1[2]=踢=D[0] ✓  A3[2]=汗=D[4] ✓
+  makePuzzle(9, "Recess, Soccer & Summer",
+    { clue: "Keeping a weighted feathered toy in the air with your feet — classic recess game",
+      chars: ["课","间","踢","毽","子"], answer: ["ke","jian","ti","jian","zi"] },
+    { clue: "After 90 minutes chasing the ball on the field, your shirt is soaked",
+      chars: ["踢","足","球","出","汗"], answer: ["ti","zu","qiu","chu","han"] },
+    { clue: "Hot temperatures and dripping foreheads in July and August",
+      chars: ["夏","天","汗","水","多"], answer: ["xia","tian","han","shui","duo"] },
   ),
 
-  // 10 — Compass Directions (DOWN: 东西南北中)
-  // A1[2]=东=D[0] ✓  A3[2]=中=D[4] ✓
-  makePuzzle(10, "Compass Directions",
-    { clue: "Walking toward the eastern side",
-      chars: ["走","到","东","边","去"], answer: ["zou","dao","dong","bian","qu"] },
-    { clue: "The four compass points plus the center",
-      chars: ["东","西","南","北","中"], answer: ["dong","xi","nan","bei","zhong"] },
-    { clue: "Soaring freely through the open sky",
-      chars: ["半","空","中","翱","翔"], answer: ["ban","kong","zhong","ao","xiang"] },
+  // 10 — Frogs · Dancing · Joy
+  // A1[2]=跳=D[0] ✓  A3[2]=心=D[4] ✓
+  makePuzzle(10, "Frogs, Dancing & Joy",
+    { clue: "This green amphibian leaps off the lily pad with a big splash",
+      chars: ["青","蛙","跳","进","水"], answer: ["qing","wa","tiao","jin","shui"] },
+    { clue: "Moving your body to music at a party, concert, or on stage",
+      chars: ["跳","舞","真","开","心"], answer: ["tiao","wu","zhen","kai","xin"] },
+    { clue: "Playing and laughing with friends — pure, carefree happiness",
+      chars: ["开","开","心","心","玩"], answer: ["kai","kai","xin","xin","wan"] },
   ),
 
-  // 11 — Year of the Dragon (DOWN: 龙年春节好)
-  // A1[2]=龙=D[0] ✓  A3[2]=好=D[4] ✓
-  makePuzzle(11, "Year of the Dragon",
-    { clue: "The Chinese dragon — national symbol and ancient totem",
-      chars: ["中","国","龙","图","腾"], answer: ["zhong","guo","long","tu","teng"] },
-    { clue: "Happy Spring Festival in the Year of the Dragon",
-      chars: ["龙","年","春","节","好"], answer: ["long","nian","chun","jie","hao"] },
-    { clue: "Feels absolutely wonderful!",
-      chars: ["感","觉","好","极","了"], answer: ["gan","jue","hao","ji","le"] },
+  // 11 — Teddy Bear · Giant Panda · Tall Classmate
+  // A1[2]=熊=D[0] ✓  A3[2]=子=D[4] ✓
+  makePuzzle(11, "Bears, Pandas & Classmates",
+    { clue: "A huggable stuffed animal that kids sleep with at night",
+      chars: ["泰","迪","熊","玩","具"], answer: ["tai","di","xiong","wan","ju"] },
+    { clue: "China's famous black-and-white national treasure loves bamboo",
+      chars: ["熊","猫","吃","竹","子"], answer: ["xiong","mao","chi","zhu","zi"] },
+    { clue: "The really tall kid you always have to look up at in class",
+      chars: ["高","个","子","同","学"], answer: ["gao","ge","zi","tong","xue"] },
   ),
 
-  // 12 — Tea Culture (DOWN: 茶道品味香)
-  // A1[2]=茶=D[0] ✓  A3[2]=香=D[4] ✓
-  makePuzzle(12, "Tea Culture",
-    { clue: "Savoring the rich, fragrant aroma of fresh green tea",
-      chars: ["品","绿","茶","香","浓"], answer: ["pin","lv","cha","xiang","nong"] },
-    { clue: "The art and philosophy of tea: taste, aroma, and mindfulness",
-      chars: ["茶","道","品","味","香"], answer: ["cha","dao","pin","wei","xiang"] },
-    { clue: "Fragrant rice blossoms — a bountiful harvest is near (from Xin Qiji's 《西江月》)",
-      chars: ["稻","花","香","里","说"], answer: ["dao","hua","xiang","li","shuo"] },
+  // 12 — Elephant · Bubble Tea · Flowers
+  // A1[2]=喝=D[0] ✓  A3[2]=香=D[4] ✓
+  makePuzzle(12, "Elephants, Tea & Flowers",
+    { clue: "The biggest land animal has a long trunk and drinks gallons of water",
+      chars: ["大","象","喝","水","多"], answer: ["da","xiang","he","shui","duo"] },
+    { clue: "Taiwan's most popular sweet drink with chewy tapioca balls",
+      chars: ["喝","奶","茶","真","香"], answer: ["he","nai","cha","zhen","xiang"] },
+    { clue: "Roses and jasmine do this to make you sniff the air",
+      chars: ["花","朵","香","扑","鼻"], answer: ["hua","duo","xiang","pu","bi"] },
   ),
 
-  // 13 — Four Seasons (DOWN: 春夏秋冬暖)
-  // A1[2]=春=D[0] ✓  A3[2]=暖=D[4] ✓
-  makePuzzle(13, "Four Seasons",
-    { clue: "Just like a gentle spring breeze coming",
-      chars: ["恰","似","春","风","来"], answer: ["qia","si","chun","feng","lai"] },
-    { clue: "The four seasons plus warmth: spring, summer, autumn, winter, warm",
-      chars: ["春","夏","秋","冬","暖"], answer: ["chun","xia","qiu","dong","nuan"] },
-    { clue: "The sunshine is warm and cozy",
-      chars: ["阳","光","暖","洋","洋"], answer: ["yang","guang","nuan","yang","yang"] },
+  // 13 — Bees · Learning English · Sunny Weather
+  // A1[2]=学=D[0] ✓  A3[2]=好=D[4] ✓
+  makePuzzle(13, "Bees, English & Sunshine",
+    { clue: "These buzzing yellow-and-black insects collect pollen and make honey",
+      chars: ["蜜","蜂","学","飞","翔"], answer: ["mi","feng","xue","fei","xiang"] },
+    { clue: "Studying this subject lets you communicate with people around the world",
+      chars: ["学","英","语","真","好"], answer: ["xue","ying","yu","zhen","hao"] },
+    { clue: "Not a cloud in the sky, warm sun, perfect day to go outside",
+      chars: ["天","气","好","晴","朗"], answer: ["tian","qi","hao","qing","lang"] },
   ),
 
 ];
