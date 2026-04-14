@@ -593,7 +593,7 @@ export class DatabaseStorage implements IStorage {
     // Only show puzzles from the user's join date onward
     const [user] = await db.select({ createdAt: users.createdAt }).from(users).where(eq(users.id, userId)).limit(1);
     const joinDay = user?.createdAt ? Math.floor(user.createdAt.getTime() / (1000 * 60 * 60 * 24)) : daysSinceEpoch;
-    const maxLookback = Math.max(0, Math.min(13, daysSinceEpoch - joinDay));
+    const maxLookback = Math.max(0, Math.min(59, daysSinceEpoch - joinDay));
 
     // Fetch all completions for this user in one query (select both puzzleId AND puzzleDate)
     const completions = await db
