@@ -590,6 +590,11 @@ export class DatabaseStorage implements IStorage {
     const total = all.length;
     const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
 
+    // Only show puzzles from the user's join date onward
+    const [user] = await db.select({ createdAt: users.createdAt }).from(users).where(eq(users.id, userId));
+    const joinDay = user ? Math.floor(user.createdAt.getTime() / (1000 * 60 * 60 * 24)) : daysSinceEpoch;
+    const maxLookback = Math.min(13, daysSinceEpoch - joinDay);
+
     // Fetch all completions for this user in one query (select both puzzleId AND puzzleDate)
     const completions = await db
       .select({ puzzleId: crosswordCompletions.puzzleId, puzzleDate: crosswordCompletions.puzzleDate })
@@ -599,7 +604,7 @@ export class DatabaseStorage implements IStorage {
     const completedKeys = new Set(completions.map(c => `${c.puzzleId}:${c.puzzleDate}`));
 
     const result: Array<{ puzzle: DailyCrossword; date: string; isComplete: boolean }> = [];
-    for (let n = 1; n <= 13; n++) {
+    for (let n = 1; n <= maxLookback; n++) {
       const pastDay = daysSinceEpoch - n;
       const pastIdx = ((pastDay % total) + total) % total;
       const puzzle = all.find(p => p.puzzleIndex === pastIdx);
