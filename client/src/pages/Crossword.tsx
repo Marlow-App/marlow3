@@ -13,6 +13,7 @@ import {
 import { SiX, SiFacebook, SiWhatsapp, SiThreads } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { CrosswordGrid, cellKey } from "@/components/CrosswordGrid";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -44,7 +45,7 @@ type GamePhase = "pre-start" | "playing" | "completed";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function cellKey(row: number, col: number) { return `${row}-${col}`; }
+
 
 function getWordCells(word: CrosswordWord) {
   return Array.from({ length: word.length }, (_, i) => ({
@@ -440,96 +441,19 @@ export default function CrosswordPage() {
         <div className="md:flex md:gap-6 space-y-5 md:space-y-0">
           {/* Grid */}
           <div className="flex flex-col items-center gap-3">
-            <div className="relative">
-              {/* Blur overlay for pre-start */}
-              {phase === "pre-start" && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-xl backdrop-blur-sm bg-background/50 px-4">
-                  <div className="text-center">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      {format(new Date(), "EEEE, MMMM d")}
-                    </p>
-                    <p className="text-base font-bold mt-0.5">
-                      {puzzle.wordCount ?? puzzle.words.length} words to solve
-                    </p>
-                  </div>
-                  <Button
-                    size="lg"
-                    className="text-base px-7 py-5 rounded-2xl shadow-lg shadow-primary/20 font-bold"
-                    onClick={handleStart}
-                    data-testid="start-btn"
-                  >
-                    Start Puzzle
-                  </Button>
-                </div>
-              )}
-
-              {/* Grid */}
-              <div
-                ref={gridRef}
-                tabIndex={0}
-                onKeyDown={handleKeyDown}
-                className="outline-none focus:ring-2 focus:ring-primary/30 rounded-xl"
-                data-testid="crossword-grid"
-              >
-                <div
-                  className="grid gap-1 p-2 bg-foreground/5 rounded-xl border border-border"
-                  style={{ gridTemplateColumns: "repeat(5, 1fr)" }}
-                >
-                  {puzzle.grid.map((row, r) =>
-                    row.map((isWhite, c) => {
-                      const k = cellKey(r, c);
-                      const num = cellNumbers[k];
-                      const isSelected = selectedKey === k;
-                      const isHighlighted = activeCellKeys.has(k);
-                      const checkResult = checkState[k];
-                      const value = cells[k] ?? "";
-
-                      if (!isWhite) {
-                        return (
-                          <div
-                            key={k}
-                            className="w-14 h-14 md:w-16 md:h-16 rounded-md bg-foreground/80 dark:bg-foreground/60"
-                            data-testid={`cell-black-${k}`}
-                          />
-                        );
-                      }
-
-                      return (
-                        <div
-                          key={k}
-                          onClick={() => phase !== "pre-start" && selectCell(r, c, puzzle)}
-                          className={cn(
-                            "w-14 h-14 md:w-16 md:h-16 rounded-md border-2 relative cursor-pointer select-none transition-all duration-100 flex items-center justify-center",
-                            isSelected
-                              ? "border-primary bg-primary/15 shadow-sm"
-                              : isHighlighted
-                                ? "border-primary/40 bg-primary/8"
-                                : "border-border bg-card hover:border-primary/30",
-                            checkResult === true && "border-green-500 bg-green-50 dark:bg-green-950/30",
-                            checkResult === false && "border-red-500 bg-red-50 dark:bg-red-950/30",
-                          )}
-                          data-testid={`cell-${k}`}
-                        >
-                          {num && (
-                            <span className="absolute top-0.5 left-1 text-[9px] font-bold text-muted-foreground leading-none">
-                              {num}
-                            </span>
-                          )}
-                          <span className={cn(
-                            "text-sm font-bold font-mono tracking-tight",
-                            value.length > 4 ? "text-[10px]" : value.length > 2 ? "text-xs" : "text-sm",
-                            checkResult === true && "text-green-700 dark:text-green-400",
-                            checkResult === false && "text-red-600 dark:text-red-400",
-                          )}>
-                            {value}
-                          </span>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            </div>
+            <CrosswordGrid
+              puzzle={puzzle}
+              cells={cells}
+              checkState={checkState}
+              phase={phase}
+              selectedKey={selectedKey}
+              activeCellKeys={activeCellKeys}
+              cellNumbers={cellNumbers}
+              gridRef={gridRef}
+              onCellClick={(r, c) => selectCell(r, c, puzzle)}
+              onKeyDown={handleKeyDown}
+              onStart={handleStart}
+            />
 
             {/* Action buttons */}
             {phase === "playing" && (
