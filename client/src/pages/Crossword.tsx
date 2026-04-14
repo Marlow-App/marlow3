@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { format, parseISO } from "date-fns";
 import {
   Timer, CheckCircle2, RotateCcw, Trophy,
-  Copy, Grid3X3, ChevronRight, CheckCircle,
+  Copy, Grid3X3, ChevronRight, CheckCircle, Lightbulb,
 } from "lucide-react";
 import { SiX, SiFacebook, SiWhatsapp, SiThreads } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
@@ -143,6 +143,7 @@ export default function CrosswordPage() {
   const [activeWordNum, setActiveWordNum] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
+  const [hintedKeys, setHintedKeys] = useState<Set<string>>(new Set());
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -156,6 +157,7 @@ export default function CrosswordPage() {
     setActiveWordNum(null);
     setCheckState({});
     setStartTime(null);
+    setHintedKeys(new Set());
     // Apply saved status for this specific puzzle
     if (puzzle.status?.isComplete) {
       setCells((puzzle.status.cells as Record<string, string>) ?? {});
@@ -265,7 +267,27 @@ export default function CrosswordPage() {
     setElapsedSeconds(0);
     setPhase("pre-start");
     setStartTime(null);
+    setHintedKeys(new Set());
   }, []);
+
+  const hintMutation = useMutation({
+    mutationFn: async (data: { puzzleId: number; cells: Record<string, string> }) => {
+      const res = await apiRequest("POST", "/api/crossword/hint", data);
+      return res.json() as Promise<{ key: string; char: string }>;
+    },
+    onSuccess: ({ key, char }) => {
+      setCells(prev => ({ ...prev, [key]: char }));
+      setHintedKeys(prev => new Set(prev).add(key));
+    },
+    onError: () => {
+      toast({ title: "No hints needed!", description: "All cells are already correct.", variant: "destructive" });
+    },
+  });
+
+  const handleHint = useCallback(() => {
+    if (!puzzle || phase !== "playing") return;
+    hintMutation.mutate({ puzzleId: puzzle.id, cells });
+  }, [puzzle, phase, cells]);
 
   // ─── Cell interactions ────────────────────────────────────────────────────
 
@@ -334,8 +356,9 @@ export default function CrosswordPage() {
 
   const handleCellFocus = useCallback((row: number, col: number) => {
     if (!puzzle) return;
+    if (phase === "pre-start") handleStart();
     selectCell(row, col, puzzle);
-  }, [puzzle, selectCell]);
+  }, [puzzle, phase, selectCell, handleStart]);
 
   const handleCellKeyDown = useCallback((key: string, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!puzzle || phase !== "playing") return;
@@ -508,16 +531,16 @@ export default function CrosswordPage() {
               selectedKey={selectedKey}
               activeCellKeys={activeCellKeys}
               cellNumbers={cellNumbers}
+              hintedKeys={hintedKeys}
               onCellFocus={handleCellFocus}
               onCellChar={handleCellChar}
               onCellKeyDown={handleCellKeyDown}
-              onStart={handleStart}
               readOnly={phase === "completed"}
             />
 
             {/* Action buttons */}
             {phase === "playing" && (
-              <div className="flex gap-2" data-testid="playing-actions">
+              <div className="flex gap-2 flex-wrap justify-center" data-testid="playing-actions">
                 <Button
                   variant="outline"
                   size="sm"
@@ -527,6 +550,17 @@ export default function CrosswordPage() {
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   Reset
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleHint}
+                  disabled={hintMutation.isPending}
+                  className="gap-1.5 text-violet-600 border-violet-200 hover:bg-violet-50 hover:border-violet-300 dark:text-violet-400 dark:border-violet-800 dark:hover:bg-violet-950/30"
+                  data-testid="hint-btn"
+                >
+                  <Lightbulb className="w-3.5 h-3.5" />
+                  Hint
                 </Button>
                 <Button
                   size="sm"
@@ -573,7 +607,7 @@ export default function CrosswordPage() {
                         data-testid={`clue-across-${word.number}`}
                       >
                         <span className="font-bold shrink-0 w-5 text-right">{word.number}</span>
-                        <span className="leading-snug">{word.clue}</span>
+                        <span className="leading-snug italic text-muted-foreground">"{word.clue}"</span>
                       </div>
                     );
                   })}
@@ -604,7 +638,7 @@ export default function CrosswordPage() {
                         data-testid={`clue-down-${word.number}`}
                       >
                         <span className="font-bold shrink-0 w-5 text-right">{word.number}</span>
-                        <span className="leading-snug">{word.clue}</span>
+                        <span className="leading-snug italic text-muted-foreground">"{word.clue}"</span>
                       </div>
                     );
                   })}

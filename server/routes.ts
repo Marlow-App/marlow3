@@ -1115,6 +1115,47 @@ export async function registerRoutes(
     }
   });
 
+  // Hint — reveal one random unfilled or wrong cell
+  app.post("/api/crossword/hint", isAuthenticated, async (req, res) => {
+    try {
+      const { puzzleId, cells } = req.body as { puzzleId: number; cells: Record<string, string> };
+      if (!puzzleId) return res.status(400).json({ message: "puzzleId required" });
+
+      const all = await storage.getAllCrosswords();
+      const puzzle = all.find(p => p.id === puzzleId);
+      if (!puzzle) return res.status(404).json({ message: "Puzzle not found" });
+
+      const words = (puzzle.words as unknown) as CrosswordWord[];
+      // Build a map of cellKey → correct char
+      const correctMap: Record<string, string> = {};
+      for (const word of words) {
+        for (let i = 0; i < word.length; i++) {
+          const r = word.direction === "across" ? word.startRow : word.startRow + i;
+          const c = word.direction === "across" ? word.startCol + i : word.startCol;
+          const key = `${r}-${c}`;
+          correctMap[key] = (word.chars[i] ?? "").trim();
+        }
+      }
+
+      // Find cells that are empty or wrong
+      const needHint = Object.entries(correctMap).filter(([key, correct]) => {
+        const typed = (cells?.[key] ?? "").trim();
+        return typed !== correct;
+      });
+
+      if (needHint.length === 0) {
+        return res.status(400).json({ message: "All cells are already correct!" });
+      }
+
+      // Pick one at random
+      const [key, char] = needHint[Math.floor(Math.random() * needHint.length)];
+      res.json({ key, char });
+    } catch (err) {
+      console.error("Error getting crossword hint:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Save progress (supports both /today/progress and legacy /progress)
   const saveProgressHandler = async (req: Request, res: Response) => {
     try {

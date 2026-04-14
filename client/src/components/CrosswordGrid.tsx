@@ -1,7 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 
 export type GamePhase = "pre-start" | "playing" | "completed";
 
@@ -27,10 +25,10 @@ export interface CrosswordGridProps {
   selectedKey: string | null;
   activeCellKeys: Set<string>;
   cellNumbers: Record<string, number>;
+  hintedKeys?: Set<string>;
   onCellFocus: (row: number, col: number) => void;
   onCellChar: (key: string, char: string) => void;
   onCellKeyDown: (key: string, e: React.KeyboardEvent<HTMLInputElement>) => void;
-  onStart: () => void;
   readOnly?: boolean;
 }
 
@@ -46,16 +44,14 @@ export function CrosswordGrid({
   selectedKey,
   activeCellKeys,
   cellNumbers,
+  hintedKeys = new Set(),
   onCellFocus,
   onCellChar,
   onCellKeyDown,
-  onStart,
   readOnly = false,
 }: CrosswordGridProps) {
-  // Refs to the invisible input overlays — uncontrolled so React never touches their value
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  // Focus the selected cell's input when selectedKey changes
   useEffect(() => {
     if (!selectedKey || phase !== "playing" || readOnly) return;
     const input = inputRefs.current[selectedKey];
@@ -66,29 +62,6 @@ export function CrosswordGrid({
 
   return (
     <div className="relative">
-      {/* Blur overlay + start gate */}
-      {phase === "pre-start" && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-xl backdrop-blur-sm bg-background/50 px-4">
-          <div className="text-center">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              {format(new Date(), "EEEE, MMMM d")}
-            </p>
-            <p className="text-base font-bold mt-0.5">
-              {puzzle.wordCount ?? puzzle.words.length} words to solve
-            </p>
-          </div>
-          <Button
-            size="lg"
-            className="text-base px-7 py-5 rounded-2xl shadow-lg shadow-primary/20 font-bold"
-            onClick={onStart}
-            data-testid="start-btn"
-          >
-            Start Puzzle
-          </Button>
-        </div>
-      )}
-
-      {/* Grid */}
       <div
         className="grid gap-1 p-2 bg-foreground/5 rounded-xl border border-border"
         style={{ gridTemplateColumns: "repeat(5, 1fr)" }}
@@ -100,6 +73,7 @@ export function CrosswordGrid({
             const num = cellNumbers[k];
             const isSelected = selectedKey === k;
             const isHighlighted = activeCellKeys.has(k);
+            const isHinted = hintedKeys.has(k);
             const checkResult = checkState[k];
             const charValue = cells[k] ?? "";
 
@@ -123,30 +97,30 @@ export function CrosswordGrid({
                     : isHighlighted
                       ? "border-primary/40 bg-primary/8"
                       : "border-border bg-card",
-                  !readOnly && !isSelected && !isHighlighted && "hover:border-primary/30",
+                  isHinted && !isSelected && "border-violet-400 bg-violet-50 dark:bg-violet-950/30",
+                  !readOnly && !isSelected && !isHighlighted && !isHinted && "hover:border-primary/30",
                   checkResult === true && "border-green-500 bg-green-50 dark:bg-green-950/30",
                   checkResult === false && "border-red-500 bg-red-50 dark:bg-red-950/30",
                 )}
                 data-testid={`cell-${k}`}
                 onClick={() => {
-                  if (phase === "playing") {
+                  if (phase !== "completed") {
                     onCellFocus(r, c);
                     inputRefs.current[k]?.focus({ preventScroll: true });
                   }
                 }}
               >
-                {/* Cell number */}
                 {num && (
                   <span className="absolute top-0.5 left-1 text-[9px] font-bold text-muted-foreground leading-none z-10 pointer-events-none">
                     {num}
                   </span>
                 )}
 
-                {/* Character display — always visible, React-controlled */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                   <span
                     className={cn(
                       "text-2xl font-bold",
+                      isHinted && "text-violet-600 dark:text-violet-400",
                       checkResult === true && "text-green-700 dark:text-green-400",
                       checkResult === false && "text-red-600 dark:text-red-400",
                     )}
@@ -155,12 +129,6 @@ export function CrosswordGrid({
                   </span>
                 </div>
 
-                {/*
-                  Invisible, UNCONTROLLED input overlay.
-                  No `value` prop — React never touches the input's content,
-                  so the browser's IME composition flow is never interrupted.
-                  We read the confirmed character only from compositionEnd.
-                */}
                 {!readOnly && (
                   <input
                     key={k}
@@ -172,27 +140,24 @@ export function CrosswordGrid({
                     autoCorrect="off"
                     autoCapitalize="off"
                     spellCheck={false}
-                    tabIndex={phase === "playing" ? 0 : -1}
-                    readOnly={phase !== "playing"}
+                    tabIndex={phase === "completed" ? -1 : 0}
+                    readOnly={phase === "completed"}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 caret-transparent"
                     data-testid={`input-${k}`}
                     onFocus={() => {
-                      if (phase === "playing") onCellFocus(r, c);
+                      if (phase !== "completed") onCellFocus(r, c);
                     }}
                     onCompositionEnd={(e) => {
-                      // IME confirmed: e.data contains the composed character(s)
                       const composed = (e.data || "").trim();
-                      const char = [...composed][0]; // safe Unicode-aware first char
+                      const char = [...composed][0];
                       if (char) {
                         onCellChar(k, char);
                       }
-                      // Clear the raw input buffer so it's ready for the next character
                       if (e.currentTarget) {
                         e.currentTarget.value = "";
                       }
                     }}
                     onKeyDown={(e) => {
-                      // Skip navigation shortcuts while IME is still composing
                       if (e.nativeEvent.isComposing) return;
                       onCellKeyDown(k, e);
                     }}
