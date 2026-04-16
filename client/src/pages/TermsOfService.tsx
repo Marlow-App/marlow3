@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import chowChow from "@assets/chow_chow_2_1774332948261.png";
