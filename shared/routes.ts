@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertRecordingSchema, insertFeedbackSchema, recordings, feedback } from './schema';
+import { insertRecordingSchema, insertFeedbackSchema, recordings, feedback } from './schema.js';
 
 export const errorSchemas = {
   validation: z.object({
