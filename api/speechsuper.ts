@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 import { spawn } from "child_process";
-import { ObjectStorageService } from "./replit_integrations/object_storage";
+import { ObjectStorageService } from "./replit_integrations/object_storage/index.js";
 import type { CharacterRating, SpeechSuperScores } from "@shared/schema";
 
 export interface ISEResult {
