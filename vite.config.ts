@@ -1,21 +1,28 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { fileURLToPath } from "url";
+
+// This ensures paths are calculated correctly regardless of the environment
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(process.cwd(), "client/src"),
-      "@shared": path.resolve(process.cwd(), "shared"),
+      "@": path.resolve(__dirname, "./client/src"),
+      "@shared": path.resolve(__dirname, "./shared"),
+      "@assets": path.resolve(__dirname, "./client/src/assets"),
     },
   },
-  // This helps if there are circular dependencies or minor code smells
   build: {
     outDir: "dist",
     emptyOutDir: true,
     sourcemap: false,
     minify: "esbuild",
     reportCompressedSize: false,
+    // This tells Vite to handle larger assets properly
+    assetsInlineLimit: 0, 
   },
 });
