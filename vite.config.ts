@@ -10,7 +10,6 @@ export default defineConfig({
       "@shared": path.resolve(process.cwd(), "shared"),
     },
   },
-  // We no longer need root: "client" because index.html is at the project root
   build: {
     outDir: "dist",
     emptyOutDir: true,
