@@ -2,7 +2,7 @@ import { pgTable, text, serial, timestamp, boolean, integer, varchar, jsonb } fr
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
-import { users } from "./models/auth";
+import { users } from "./models/auth.js"; // ADDED .js
 
 export const pronunciationErrors = pgTable("pronunciation_errors", {
   id: text("id").primaryKey(),
@@ -18,7 +18,7 @@ export const pronunciationErrors = pgTable("pronunciation_errors", {
   createdBy: varchar("created_by").references(() => users.id),
 });
 
-export * from "./models/auth";
+export * from "./models/auth.js"; // ADDED .js
 
 export const recordings = pgTable("recordings", {
   id: serial("id").primaryKey(),
@@ -40,24 +40,23 @@ export const characterRatingSchema = z.object({
   initialError: z.string().optional(),
   finalError: z.string().optional(),
   toneError: z.string().optional(),
-  // SpeechSuper fields — only populated on AI feedback, optional for backward compat
-  detectedTone: z.number().int().min(1).max(5).optional(),   // tone SpeechSuper detected (1-5)
-  expectedTone: z.number().int().min(1).max(5).optional(),   // tone the character should be (1-5)
-  toneScoreRaw: z.number().min(0).max(100).optional(),       // SpeechSuper 0-100 tone accuracy score
-  phoneScoreRaw: z.number().min(0).max(100).optional(),      // SpeechSuper 0-100 consonant+vowel quality
-  initialScoreRaw: z.number().min(0).max(100).optional(),    // SpeechSuper 0-100 initial consonant accuracy
-  finalScoreRaw: z.number().min(0).max(100).optional(),      // SpeechSuper 0-100 final (rhyme) accuracy
-  initialSymbol: z.string().optional(),                      // initial phone symbol from SpeechSuper (e.g. "zh")
-  finalSymbol: z.string().optional(),                        // final phone symbol from SpeechSuper (e.g. "eng")
-  hasInitial: z.boolean().optional(),                        // true if character has an initial consonant
+  detectedTone: z.number().int().min(1).max(5).optional(),
+  expectedTone: z.number().int().min(1).max(5).optional(),
+  toneScoreRaw: z.number().min(0).max(100).optional(),
+  phoneScoreRaw: z.number().min(0).max(100).optional(),
+  initialScoreRaw: z.number().min(0).max(100).optional(),
+  finalScoreRaw: z.number().min(0).max(100).optional(),
+  initialSymbol: z.string().optional(),
+  finalSymbol: z.string().optional(),
+  hasInitial: z.boolean().optional(),
 });
 
 export const speechSuperScoresSchema = z.object({
-  tone: z.number().optional(),         // sentence-level tone accuracy (0-100)
-  rearTone: z.number().optional(),     // rear tone / sandhi context (0-100)
-  rhythm: z.number().optional(),       // rhythm / intonation flow (0-100)
-  speed: z.number().optional(),        // speaking pace (0-100)
-  pronunciation: z.number().optional(), // overall phoneme accuracy (0-100)
+  tone: z.number().optional(),
+  rearTone: z.number().optional(),
+  rhythm: z.number().optional(),
+  speed: z.number().optional(),
+  pronunciation: z.number().optional(),
 });
 
 export type SpeechSuperScores = z.infer<typeof speechSuperScoresSchema>;
