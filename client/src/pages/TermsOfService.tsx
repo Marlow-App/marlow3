@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
-import pandaLogo from "@assets/chow_chow_2_1774332948261.png";
+import chowChow from "@assets/chow_chow_2_1774332948261.png";
 
 export default function TermsOfService() {
   return (
