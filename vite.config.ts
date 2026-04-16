@@ -10,10 +10,8 @@ export default defineConfig({
       "@shared": path.resolve(process.cwd(), "shared"),
     },
   },
-  root: path.resolve(process.cwd(), "client"),
   build: {
-    // This ensures the build goes to /dist at the project root
-    outDir: path.resolve(process.cwd(), "dist"),
+    outDir: "dist",
     emptyOutDir: true,
   },
 });
