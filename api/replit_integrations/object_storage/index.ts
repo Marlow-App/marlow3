@@ -2,20 +2,19 @@ export {
   ObjectStorageService,
   ObjectNotFoundError,
   objectStorageClient,
-} from "./objectStorage";
+} from "./objectStorage.js"; // ADDED .js
 
 export type {
   ObjectAclPolicy,
   ObjectAccessGroup,
   ObjectAccessGroupType,
   ObjectAclRule,
-} from "./objectAcl";
+} from "./objectAcl.js"; // ADDED .js
 
 export {
   canAccessObject,
   getObjectAclPolicy,
   setObjectAclPolicy,
-} from "./objectAcl";
+} from "./objectAcl.js"; // ADDED .js
 
-export { registerObjectStorageRoutes } from "./routes";
-
+export { registerObjectStorageRoutes } from "./routes.js"; // ADDED .js
