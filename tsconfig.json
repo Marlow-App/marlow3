@@ -4,7 +4,6 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./client/src/*"],
@@ -16,11 +15,9 @@
     "jsx": "react-jsx",
     "strict": true,
     "noEmit": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
-    "incremental": true,
-    "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo"
+    "esModuleInterop": true
   },
   "include": ["client/src/**/*", "shared/**/*", "server/**/*", "api/**/*"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts"]
+  "exclude": ["node_modules", "dist"]
 }
