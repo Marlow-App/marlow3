@@ -1,5 +1,5 @@
-import { getStripeSync, getUncachableStripeClient } from './stripeClient';
-import { storage } from '../storage';
+import { getStripeSync, getUncachableStripeClient } from './stripeClient.js';
+import { storage } from '../storage.js';
 
 export class WebhookHandlers {
   static async processWebhook(payload: Buffer, signature: string): Promise<void> {
