@@ -1,13 +1,13 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { serveStatic } from "./static";
+import { registerRoutes } from "./routes.js";      // Added .js
+import { serveStatic } from "./static.js";        // Added .js
 import { createServer } from "http";
 import { runMigrations } from 'stripe-replit-sync';
-import { getStripeSync } from './stripe/stripeClient';
-import { WebhookHandlers } from './stripe/webhookHandlers';
-import { seedPronunciationErrors } from './seed/pronunciationErrors';
-import { seedCrosswords } from './crossword-seed';
-import { authStorage } from './replit_integrations/auth/storage';
+import { getStripeSync } from './stripe/stripeClient.js';    // Added .js
+import { WebhookHandlers } from './stripe/webhookHandlers.js'; // Added .js
+import { seedPronunciationErrors } from './seed/pronunciationErrors.js'; // Added .js
+import { seedCrosswords } from './crossword-seed.js';        // Added .js
+import { authStorage } from './replit_integrations/auth/storage.js'; // Added .js
 
 const app = express();
 const httpServer = createServer(app);
