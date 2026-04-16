@@ -1,5 +1,7 @@
 import * as client from "openid-client";
-import { Strategy, type VerifyFunction } from "openid-client/passport";
+import { Strategy } from "openid-client/passport";
+// Remove 'type VerifyFunction' from that line if it's causing a squiggly, 
+// as it's often not exported cleanly in all resolution modes.
 
 import passport from "passport";
 import session from "express-session";
