@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { ObjectStorageService } from "./objectStorage.js";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage.js"; // Add it here
 
 /**
  * Register object storage routes for file uploads.
