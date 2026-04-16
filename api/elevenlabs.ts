@@ -1,6 +1,6 @@
 import { createHash, createHmac } from "crypto";
 import WebSocket from "ws";
-import { objectStorageClient } from "./replit_integrations/object_storage/objectStorage";
+import { objectStorageClient } from "./replit_integrations/object_storage/objectStorage.js";
 
 const IFLYTEK_HOST = "tts-api-sg.xf-yun.com";
 const IFLYTEK_PATH = "/v2/tts";
