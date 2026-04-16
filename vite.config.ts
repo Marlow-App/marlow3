@@ -10,8 +10,12 @@ export default defineConfig({
       "@shared": path.resolve(process.cwd(), "shared"),
     },
   },
+  // This helps if there are circular dependencies or minor code smells
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    sourcemap: false,
+    minify: "esbuild",
+    reportCompressedSize: false,
   },
 });
