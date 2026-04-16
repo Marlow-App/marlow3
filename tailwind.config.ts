@@ -4,7 +4,8 @@ import typography from "@tailwindcss/typography";
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ["class"],
-  content: ["./index.html", "./client/src/**/*.{js,jsx,ts,tsx}"], // Updated to root index.html
+  // Since index.html is now at the root, we point to ./index.html
+  content: ["./index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
       borderRadius: {
