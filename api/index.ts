@@ -121,7 +121,7 @@ app.use((req, res, next) => {
 // 4. Main App Lifecycle
 (async () => {
   // Run Initializations
-  await initStripe().catch(err => console.error("Stripe init error:", err));
+initStripe().catch(err => console.error("Stripe init error:", err));
   await seedPronunciationErrors().catch(err => console.error("Error seeding pronunciation errors:", err));
   await seedCrosswords().catch(err => console.error("Error seeding crossword puzzles:", err));
 
