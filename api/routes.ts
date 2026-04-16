@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage.js";
-import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth/index.js";
+import { setupReplitAuth, isAuthenticated } from "./replit_integrations/auth/index.js";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage/index.js";
 import { api } from "../shared/routes.js";
 import type { CrosswordWord } from "../shared/schema.js";
