@@ -22,10 +22,10 @@ import {
   type DailyCrossword,
   type CrosswordCompletion,
   type CrosswordWord,
-} from "@shared/schema";
+} from "../shared/schema.js"; // FIX: Relative path + .js
 import { eq, desc, and, sql, gte, count } from "drizzle-orm";
-import { authStorage } from "./replit_integrations/auth/storage";
-import { ObjectStorageService } from "./replit_integrations/object_storage";
+import { authStorage } from "./replit_integrations/auth/storage.js"; // FIX: Added .js
+import { ObjectStorageService } from "./replit_integrations/object_storage/index.js"; // FIX: Added /index.js
 
 export interface IStorage {
   createRecording(userId: string, recording: InsertRecording, parentRecordingId?: number): Promise<Recording>;
