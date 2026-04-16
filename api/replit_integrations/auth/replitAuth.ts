@@ -1,7 +1,6 @@
 import * as client from "openid-client";
+// @ts-ignore
 import { Strategy } from "openid-client/passport";
-// Remove 'type VerifyFunction' from that line if it's causing a squiggly, 
-// as it's often not exported cleanly in all resolution modes.
 
 import passport from "passport";
 import session from "express-session";
@@ -12,7 +11,7 @@ import connectPg from "connect-pg-simple";
 import { authStorage } from "./storage.js";
 
 // FALLBACK: Vercel needs a non-empty string for clientId. 
-// Go to Vercel Settings -> Environment Variables and add REPL_ID
+// We use the environment variable first, then the hardcoded fallback.
 const REPL_ID = process.env.REPL_ID || "vercel-deployment";
 
 const getOidcConfig = memoize(
@@ -43,7 +42,7 @@ export function getSession() {
       httpOnly: true,
       secure: true,
       maxAge: sessionTtl,
-      sameSite: 'lax' // Recommended for OIDC redirects
+      sameSite: 'lax' 
     },
   });
 }
