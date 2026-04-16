@@ -1,10 +1,10 @@
 import tailwindcssAnimate from "tailwindcss-animate";
 import typography from "@tailwindcss/typography";
+import type { Config } from "tailwindcss";
 
-/** @type {import('tailwindcss').Config} */
-export default {
+const config: Config = {
   darkMode: ["class"],
-  // Since index.html is now at the root, we point to ./index.html
+  // Points to your root index.html and all source files
   content: ["./index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
@@ -107,3 +107,5 @@ export default {
   },
   plugins: [tailwindcssAnimate, typography],
 };
+
+export default config;
