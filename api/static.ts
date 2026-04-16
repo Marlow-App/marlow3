@@ -3,7 +3,6 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Define __dirname for ESM (ECMAScript Modules)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -14,20 +13,11 @@ export function serveStatic(app: Express) {
     console.error(`Build directory missing: ${distPath}`);
   }
 
-  /**
-   * Serve static files (CSS, JS, Images).
-   * { index: false } tells Express NOT to automatically serve index.html 
-   * when a user hits the root path, letting our wildcard handler below 
-   * handle it instead. This prevents "double-serving" issues.
-   */
   app.use(express.static(distPath, { index: false }));
 
-  /**
-   * The SPA Catch-all:
-   * (.*) ensures that any request not caught by an API route or 
-   * a physical static file gets sent to index.html.
-   */
-  app.get("(.*)", (_req, res) => {
+  // The '/:any*' syntax is the foolproof way to catch all routes 
+  // in the newest versions of Express/path-to-regexp.
+  app.get("/:any*", (_req, res) => {
     const indexPath = path.resolve(distPath, "index.html");
     
     if (fs.existsSync(indexPath)) {
