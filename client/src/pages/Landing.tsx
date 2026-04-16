@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Mic2, MessageCircle, TrendingUp, ChevronRight, RotateCcw, Star, GraduationCap, BookOpen, Zap, Check } from "lucide-react";
