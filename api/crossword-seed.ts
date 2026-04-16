@@ -723,8 +723,9 @@ export const SEED_PUZZLES: CrosswordPuzzleData[] = [
 ];
 
 export async function seedCrosswords(): Promise<void> {
-  const { db } = await import("./db");
-  const { dailyCrosswords } = await import("@shared/schema");
+  const { db } = await import("./db.js");
+  // Move up one directory (..) to reach the project root, then into shared
+const { dailyCrosswords } = await import("../shared/schema.js");
 
   let upserted = 0;
   for (const puzzle of SEED_PUZZLES) {
