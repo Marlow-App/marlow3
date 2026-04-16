@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Mic2, MessageCircle, TrendingUp, ChevronRight, RotateCcw, Star, GraduationCap, BookOpen, Zap, Check } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { SUBSCRIPTION_PLANS, FREE_RECORDINGS_PER_DAY, FREE_PRACTICE_LIST_MAX } from "@shared/credits";
-import pandaLogo from "@assets/chow_chow_2_1774332948261.png";
+import chowChow from "@assets/chow_chow_2_1774332948261.png";
 import julesyPhoto from "@assets/IMG_4243_1774760935474.jpg";
 import { SiYoutube } from "react-icons/si";
 
