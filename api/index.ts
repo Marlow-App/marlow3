@@ -29,15 +29,15 @@ async function initStripe() {
 
   try {
     console.log('Initializing Stripe schema...');
+    // Increased timeout for migrations in case DB is waking up
     await runMigrations({ databaseUrl });
     console.log('Stripe schema ready');
 
     const stripeSync = await getStripeSync();
 
     console.log('Setting up managed webhook...');
-    // Fallback for Vercel environment where REPLIT_DOMAINS isn't present
     const domain = process.env.REPLIT_DOMAINS?.split(',')[0] || process.env.VERCEL_URL;
-    const webhookBaseUrl = `https://${domain}`;
+    const webhookBaseUrl = domain?.includes('://') ? domain : `https://${domain}`;
     
     const webhookResult = await stripeSync.findOrCreateManagedWebhook(
       `${webhookBaseUrl}/api/stripe/webhook`
@@ -120,13 +120,19 @@ app.use((req, res, next) => {
 
 // 4. Main App Lifecycle
 (async () => {
-  // Run Initializations
-initStripe().catch(err => console.error("Stripe init error:", err));
-  await seedPronunciationErrors().catch(err => console.error("Error seeding pronunciation errors:", err));
-  await seedCrosswords().catch(err => console.error("Error seeding crossword puzzles:", err));
+  // FIXED: Remove 'await' from background seeding/sync tasks.
+  // This prevents Vercel from timing out during the "cold start" of your Neon database.
+  initStripe().catch(err => console.error("Stripe init error:", err));
+  
+  seedPronunciationErrors().catch(err => 
+    console.error("Error seeding pronunciation errors:", err)
+  );
+  
+  seedCrosswords().catch(err => 
+    console.error("Error seeding crossword puzzles:", err)
+  );
 
-  // Upsert AI system user
-  await authStorage.upsertUser({
+  authStorage.upsertUser({
     id: "iflytek-ai",
     email: null,
     firstName: "AI Review",
@@ -134,7 +140,7 @@ initStripe().catch(err => console.error("Stripe init error:", err));
     role: "reviewer",
   }).catch(err => console.error("Error upserting system user:", err));
 
-  // Routes
+  // Keep these awaited as they define the server's core functionality
   await registerRoutes(httpServer, app);
 
   // Global Error Handler
@@ -154,7 +160,7 @@ initStripe().catch(err => console.error("Stripe init error:", err));
     await setupVite(httpServer, app);
   }
 
-  // Local Server Start (Vercel ignores this, but useful for Replit/Local)
+  // Server Start
   const port = parseInt(process.env.PORT || "5000", 10);
   if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
     httpServer.listen({ port, host: "0.0.0.0" }, () => {
@@ -163,5 +169,5 @@ initStripe().catch(err => console.error("Stripe init error:", err));
   }
 })();
 
-// 5. CRITICAL FIX: The Default Export for Vercel
+// 5. Default Export for Vercel Serverless
 export default app;
