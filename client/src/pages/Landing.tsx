@@ -6,6 +6,7 @@ import { SUBSCRIPTION_PLANS, FREE_RECORDINGS_PER_DAY, FREE_PRACTICE_LIST_MAX } f
 import chowChow from "@assets/chow_chow_2_1774332948261.png";
 import julesyPhoto from "@assets/IMG_4243_1774760935474.jpg";
 import { SiYoutube } from "react-icons/si";
+const pandaLogo = chowChow;
 
 function YouTubeCard({ videoId }: { videoId: string }) {
   const [title, setTitle] = useState<string | null>(null);
