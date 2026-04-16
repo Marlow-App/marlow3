@@ -1,5 +1,5 @@
 import { db } from "../db.js";
-import { pronunciationErrors } from "@shared/schema.js";
+import { pronunciationErrors } from "../../shared/schema.js";
 
 const SEED_ERRORS = [
   // ─── TONES ────────────────────────────────────────────────────────────────
