@@ -77,7 +77,8 @@ let stripeSync: any = null;
 
 export async function getStripeSync() {
   if (!stripeSync) {
-    const { StripeSync } = await import('stripe-replit-sync');
+    // Some environments struggle with dynamic imports without full paths
+    const { StripeSync } = await import('stripe-replit-sync'); 
     const secretKey = await getStripeSecretKey();
 
     stripeSync = new StripeSync({
