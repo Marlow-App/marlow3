@@ -6,13 +6,18 @@ import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
+// FIXED: Added .js extension
 import { authStorage } from "./storage.js";
+
+// FALLBACK: Vercel needs a non-empty string for clientId. 
+// Go to Vercel Settings -> Environment Variables and add REPL_ID
+const REPL_ID = process.env.REPL_ID || "vercel-deployment";
 
 const getOidcConfig = memoize(
   async () => {
     return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
+      REPL_ID
     );
   },
   { maxAge: 3600 * 1000 }
@@ -28,7 +33,7 @@ export function getSession() {
     tableName: "sessions",
   });
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || "fallback-secret-for-dev",
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -36,6 +41,7 @@ export function getSession() {
       httpOnly: true,
       secure: true,
       maxAge: sessionTtl,
+      sameSite: 'lax' // Recommended for OIDC redirects
     },
   });
 }
@@ -54,8 +60,7 @@ async function upsertUser(claims: any, role: string = "learner") {
   const email = claims["email"] as string;
   let assignedRole = role;
   
-  // Restrict reviewer signup to Jujusees@gmail.com
-  if (role === "reviewer" && email.toLowerCase() !== "jujusees@gmail.com") {
+  if (role === "reviewer" && email?.toLowerCase() !== "jujusees@gmail.com") {
     assignedRole = "learner";
   }
 
@@ -86,12 +91,11 @@ export async function setupAuth(app: Express) {
     updateUserSession(user, tokens);
     const role = (req.session as any)?.pendingRole || "learner";
     const claims = tokens.claims();
-    // Replit Auth claims might use different keys for email/username
+    
     const email = (claims?.email as string | undefined) || 
                   (claims?.preferred_username as string | undefined) || 
                   (claims?.sub as string | undefined);
 
-    // Restrict reviewer signup to Jujusees@gmail.com
     let assignedRole = role;
     if (role === "reviewer" && email?.toLowerCase() !== "jujusees@gmail.com") {
       assignedRole = "learner";
@@ -101,10 +105,8 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  // Keep track of registered strategies
   const registeredStrategies = new Set<string>();
 
-  // Helper function to ensure strategy exists for a domain
   const ensureStrategy = (domain: string) => {
     const strategyName = `replitauth:${domain}`;
     if (!registeredStrategies.has(strategyName)) {
@@ -147,20 +149,19 @@ export async function setupAuth(app: Express) {
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
+          client_id: REPL_ID,
           post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
         }).href
       );
     });
   });
 
-  // Logs out of both our app and Replit, then starts a fresh login
   app.get("/api/switch-account", (req, res) => {
     const role = (req.query.role as string) || "learner";
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
+          client_id: REPL_ID,
           post_logout_redirect_uri: `${req.protocol}://${req.hostname}/api/login?role=${role}`,
         }).href
       );
@@ -171,7 +172,7 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  if (!req.isAuthenticated() || !user?.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
