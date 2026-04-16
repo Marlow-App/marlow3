@@ -3,37 +3,43 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Re-defining __dirname for ESM environment
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(__dirname, "public");
+  // We check multiple locations because Vercel's file structure 
+  // changes depending on how the build is configured.
+  const possiblePaths = [
+    path.resolve(__dirname, "public"),         // /var/task/api/public
+    path.resolve(__dirname, "..", "public"),    // /var/task/public (Most likely)
+    path.resolve(process.cwd(), "public"),     // Current working directory/public
+    path.resolve(process.cwd(), "dist/public") // Root/dist/public
+  ];
 
-  // Log error if public folder is missing, but don't crash the server
+  // Find the first path that actually exists
+  const distPath = possiblePaths.find(p => fs.existsSync(p)) || possiblePaths[0];
+
+  console.log(`[Static] Verified Path: ${distPath}`);
+
   if (!fs.existsSync(distPath)) {
-    console.error(`[Static] Build directory missing at: ${distPath}`);
+    console.error(`[Static] CRITICAL: No build directory found. Checked: ${possiblePaths.join(", ")}`);
   }
 
-  // 1. Serve physical files (js, css, png, etc.)
-  // { index: false } prevents it from trying to serve index.html automatically
+  // 1. Serve physical files
   app.use(express.static(distPath, { index: false }));
 
-  // 2. The Universal Catch-All Middleware
-  // This replaces app.get("(.*)") to avoid the path-to-regexp library errors
+  // 2. Catch-all for SPA routing
   app.use((req, res, next) => {
-    // If the request is for the API, let it pass through to the error handlers
     if (req.path.startsWith('/api')) {
       return next();
     }
 
-    // For all other requests (navigation), serve the index.html
     const indexPath = path.resolve(distPath, "index.html");
     
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
     } else {
-      // If index.html is missing, we hand off to the next middleware (likely a 404)
+      console.error(`[Static] index.html missing at: ${indexPath}`);
       next();
     }
   });
